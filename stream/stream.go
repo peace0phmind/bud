@@ -54,14 +54,14 @@ func (s Stream[T]) Append(values ...T) Stream[T] {
 	return s
 }
 
-// AllMatch returns true if all elements in the stream satisfy the given predicate function.
+// AllMatch returns true if all elements in the stream satisfy the given matchFunc function.
 //
-// It iterates through each element in the stream and applies the predicate function to determine if the element satisfies the condition.
+// It iterates through each element in the stream and applies the matchFunc function to determine if the element satisfies the condition.
 // If any element fails the condition, the function immediately returns false.
 // If all elements pass the condition, the function returns true.
 //
 // The original stream is not modified.
-// The predicate function should return true for elements that satisfy the condition, and false for elements that do not.
+// The matchFunc function should return true for elements that satisfy the condition, and false for elements that do not.
 // The stream is a pointer to Stream[T] type.
 //
 // Example usage:
@@ -75,13 +75,13 @@ func (s Stream[T]) Append(values ...T) Stream[T] {
 // Note: The elements of the stream should be of the same type as the type specified for Stream[T].
 // For example, if the Stream[T] is created with Stream[int], the elements should be of type int.
 // The behavior of the method is undefined if this condition is violated.
-func (s Stream[T]) AllMatch(predicate func(T) bool) (bool, error) {
+func (s Stream[T]) AllMatch(matchFunc func(T) bool) (bool, error) {
 	if s.err != nil {
 		return false, s.err
 	}
 
 	for _, elem := range s.elems {
-		if !predicate(elem) {
+		if !matchFunc(elem) {
 			return false, nil
 		}
 	}
@@ -89,24 +89,104 @@ func (s Stream[T]) AllMatch(predicate func(T) bool) (bool, error) {
 	return true, nil
 }
 
-// AnyMatch checks if any element in the stream satisfies the given predicate.
-// It iterates over each element in the stream and applies the predicate function to it.
-// If the predicate returns true for any element, the method returns true.
-// If the predicate returns false for all elements, the method returns false.
+// MustAllMatch returns true if all elements of the stream satisfy the matchFunc,
+// and panics with the stored stream error otherwise.
+// It iterates over each element of the stream and checks if it satisfies the matchFunc.
+// If any element does not satisfy the matchFunc, it returns false.
+// If the stream contains an error, it panics with the stored stream error.
+// If all elements satisfy the matchFunc, it returns true.
+// Example:
+//
+//	stream := Of([]int{1, 2, 3, 4, 5})
+//	allMatch := stream.MustAllMatch(func(n int) bool {
+//		return n > 0
+//	})
+//	// allMatch is true
+//
+//	stream = Of([]int{1, 2, 3, 4, 5})
+//	allMatch = stream.MustAllMatch(func(n int) bool {
+//		return n > 3
+//	})
+//	// allMatch is false
+//
+//	stream = Of([]int{1, 2, 3, 4, 5})
+//	stream = stream.Filter(func(n int) bool {
+//		return n < 3
+//	})
+//	allMatch = stream.MustAllMatch(func(n int) bool {
+//		return n > 0
+//	})
+//	// allMatch panics with the error: Stream is empty
+//
+//	stream = Of([]int{1, 2, 3, 4, 5})
+//	stream = stream.Filter(func(n int) bool {
+//		return n < 3
+//	})
+//	allMatch = stream.MustAllMatch(func(n int) bool {
+//		return n > 3
+//	})
+//	// allMatch panics with the error: Stream is empty
+func (s Stream[T]) MustAllMatch(matchFunc func(T) bool) bool {
+	if s.err != nil {
+		panic(s.err)
+	}
+
+	for _, elem := range s.elems {
+		if !matchFunc(elem) {
+			return false
+		}
+	}
+
+	return true
+}
+
+// AnyMatch checks if any element in the stream satisfies the given matchFunc.
+// It iterates over each element in the stream and applies the matchFunc function to it.
+// If the matchFunc returns true for any element, the method returns true.
+// If the matchFunc returns false for all elements, the method returns false.
 // The original stream is not modified.
-// The predicate function should return true for elements that satisfy the condition and false otherwise.
-// Returns true if any element in the stream satisfies the predicate, false otherwise.
-func (s Stream[T]) AnyMatch(predicate func(T) bool) (bool, error) {
+// The matchFunc function should return true for elements that satisfy the condition and false otherwise.
+// Returns true if any element in the stream satisfies the matchFunc, false otherwise.
+func (s Stream[T]) AnyMatch(matchFunc func(T) bool) (bool, error) {
 	if s.err != nil {
 		return false, s.err
 	}
 
 	for _, elem := range s.elems {
-		if predicate(elem) {
+		if matchFunc(elem) {
 			return true, nil
 		}
 	}
+
 	return false, nil
+}
+
+// MustAnyMatch checks if any element in the stream matches the given matchFunc.
+// If the stream contains an error, it panics with the error message.
+// It iterates over each element in the stream and calls matchFunc on each element.
+// If matchFunc returns true for any element, it returns true.
+// If matchFunc returns false for all elements, it returns false.
+// The elements are checked in the order they appear in the stream.
+// The matchFunc should return true for elements that match the condition, and false for elements that don't match.
+// If the stream is empty, it returns false.
+// Example usage:
+//
+//	s := Stream[Int]{elems: []Int{1, 2, 3, 4, 5}}
+//	result := s.MustAnyMatch(func(elem Int) bool {
+//	  return elem > 3
+//	})
+//	// result: true
+func (s Stream[T]) MustAnyMatch(matchFunc func(T) bool) bool {
+	if s.err != nil {
+		panic(s.err)
+	}
+
+	for _, elem := range s.elems {
+		if matchFunc(elem) {
+			return true
+		}
+	}
+	return false
 }
 
 // Shuffle randomly rearranges the elements in the stream.
