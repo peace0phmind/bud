@@ -24,6 +24,10 @@ func Of[T any](values []T) *Stream[T] {
 // The keep function should return true for elements that should be kept in the new stream, and false for elements that should be excluded.
 // The new stream is returned as a pointer to Stream[T].
 func (s *Stream[T]) Filter(keep func(T) bool) *Stream[T] {
+	if s.err != nil {
+		return s
+	}
+
 	var result Stream[T]
 
 	for _, v := range s.elems {
@@ -42,6 +46,10 @@ func (s *Stream[T]) Filter(keep func(T) bool) *Stream[T] {
 // The appended values can be of any type specified by T in the stream declaration.
 // The modified stream is returned as a pointer to Stream[T].
 func (s *Stream[T]) Append(values ...T) *Stream[T] {
+	if s.err != nil {
+		return s
+	}
+
 	s.elems = append(s.elems, values...)
 	return s
 }
@@ -67,14 +75,18 @@ func (s *Stream[T]) Append(values ...T) *Stream[T] {
 // Note: The elements of the stream should be of the same type as the type specified for Stream[T].
 // For example, if the Stream[T] is created with Stream[int], the elements should be of type int.
 // The behavior of the method is undefined if this condition is violated.
-func (s *Stream[T]) AllMatch(predicate func(T) bool) bool {
+func (s *Stream[T]) AllMatch(predicate func(T) bool) (bool, error) {
+	if s.err != nil {
+		return false, s.err
+	}
+
 	for _, elem := range s.elems {
 		if !predicate(elem) {
-			return false
+			return false, nil
 		}
 	}
 
-	return true
+	return true, nil
 }
 
 // AnyMatch checks if any element in the stream satisfies the given predicate.
@@ -84,13 +96,17 @@ func (s *Stream[T]) AllMatch(predicate func(T) bool) bool {
 // The original stream is not modified.
 // The predicate function should return true for elements that satisfy the condition and false otherwise.
 // Returns true if any element in the stream satisfies the predicate, false otherwise.
-func (s *Stream[T]) AnyMatch(predicate func(T) bool) bool {
+func (s *Stream[T]) AnyMatch(predicate func(T) bool) (bool, error) {
+	if s.err != nil {
+		return false, s.err
+	}
+
 	for _, elem := range s.elems {
 		if predicate(elem) {
-			return true
+			return true, nil
 		}
 	}
-	return false
+	return false, nil
 }
 
 // Shuffle randomly rearranges the elements in the stream.
@@ -106,6 +122,10 @@ func (s *Stream[T]) AnyMatch(predicate func(T) bool) bool {
 //	shuffledElems := shuffled.ToSlice()
 //	fmt.Println(shuffledElems)  // Output: [4 3 1 2 5]
 func (s *Stream[T]) Shuffle() *Stream[T] {
+	if s.err != nil {
+		return s
+	}
+
 	//Create a new Stream and copy the data from the original Stream over
 	newStream := &Stream[T]{elems: append([]T(nil), s.elems...)}
 
@@ -128,6 +148,11 @@ func (s *Stream[T]) Shuffle() *Stream[T] {
 //		stream := Of([]int{1, 2, 3})
 //	 result := stream.ToSlice() // result is []int{1, 2, 3}
 func (s *Stream[T]) ToSlice() []T {
+	if s.err != nil {
+		var ret []T
+		return ret
+	}
+
 	return s.elems
 }
 
@@ -137,6 +162,11 @@ func (s *Stream[T]) ToSlice() []T {
 // The elements in the resulting slice follow the same order as in the original stream.
 // The resulting slice is returned as a value of type `[]any`.
 func (s *Stream[T]) ToAny() []any {
+	if s.err != nil {
+		var ret []any
+		return ret
+	}
+
 	var result []any
 
 	for _, v := range s.elems {
@@ -168,12 +198,18 @@ func (s *Stream[T]) Err() error {
 // This method does not modify the original stream.
 // The elements are iterated in the same order as in the stream.
 // This method does not return any value.
-func (s *Stream[T]) Range(forEach func(T) bool) {
+func (s *Stream[T]) Range(forEach func(T) bool) error {
+	if s.err != nil {
+		return s.err
+	}
+
 	for _, elem := range s.elems {
 		if !forEach(elem) {
 			break
 		}
 	}
+
+	return nil
 }
 
 // GroupBy groups the elements of the input stream based on the provided key function.
@@ -243,6 +279,10 @@ func GroupBy[T any, K comparable](s *Stream[T], getKey func(T) K) map[K]*Stream[
 //	fmt.Println(lengthStr.ToSlice()) // Output: [5, 5]
 func Map[In any, Out any](s *Stream[In], f func(In) (Out, error)) *Stream[Out] {
 	var result Stream[Out]
+	if s.err != nil {
+		result.err = s.err
+		return &result
+	}
 
 	for _, v := range s.elems {
 		elem, err := f(v)
