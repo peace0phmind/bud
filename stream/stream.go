@@ -1,5 +1,10 @@
 package stream
 
+import (
+	"math/rand"
+	"time"
+)
+
 // Stream is a generic type representing a stream of elems of type T.
 // It contains a slice of elems of type T.
 type Stream[T any] struct {
@@ -72,10 +77,65 @@ func (s *Stream[T]) AllMatch(predicate func(T) bool) bool {
 	return true
 }
 
+// AnyMatch checks if any element in the stream satisfies the given predicate.
+// It iterates over each element in the stream and applies the predicate function to it.
+// If the predicate returns true for any element, the method returns true.
+// If the predicate returns false for all elements, the method returns false.
+// The original stream is not modified.
+// The predicate function should return true for elements that satisfy the condition and false otherwise.
+// Returns true if any element in the stream satisfies the predicate, false otherwise.
+func (s *Stream[T]) AnyMatch(predicate func(T) bool) bool {
+	for _, elem := range s.elems {
+		if predicate(elem) {
+			return true
+		}
+	}
+	return false
+}
+
+// Shuffle randomly rearranges the elements in the stream.
+// It creates a new stream with the same elements as the original stream, but in a random order.
+// The original stream remains unchanged.
+// The new stream is returned as a pointer to Stream[T].
+// The shuffle algorithm used is the Fisher-Yates shuffle.
+// The seed for the random number generator is set using the current time.
+// Example usage:
+//
+//	stream := Of([]int{1, 2, 3, 4, 5})
+//	shuffled := stream.Shuffle()
+//	shuffledElems := shuffled.ToSlice()
+//	fmt.Println(shuffledElems)  // Output: [4 3 1 2 5]
+func (s *Stream[T]) Shuffle() *Stream[T] {
+	//Create a new Stream and copy the data from the original Stream over
+	newStream := &Stream[T]{elems: append([]T(nil), s.elems...)}
+
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	for n := len(newStream.elems); n > 0; n-- {
+		randIndex := r.Intn(n)
+		newStream.elems[n-1], newStream.elems[randIndex] = newStream.elems[randIndex], newStream.elems[n-1]
+	}
+
+	return newStream
+}
+
+// ToSlice returns a slice containing all the elements of the stream.
+// The original stream is not modified.
+// The elements in the returned slice are in the same order as in the original stream.
+// The returned slice has the type []T, where T is the type of elements in the stream.
+// Example usage:
+//
+//		stream := Of([]int{1, 2, 3})
+//	 result := stream.ToSlice() // result is []int{1, 2, 3}
 func (s *Stream[T]) ToSlice() []T {
 	return s.elems
 }
 
+// ToAny converts the elements of the stream to the `any` type and returns them as a slice.
+// It creates a new slice and appends the converted elements of the stream to it.
+// The original stream is not modified.
+// The elements in the resulting slice follow the same order as in the original stream.
+// The resulting slice is returned as a value of type `[]any`.
 func (s *Stream[T]) ToAny() []any {
 	var result []any
 
@@ -86,10 +146,28 @@ func (s *Stream[T]) ToAny() []any {
 	return result
 }
 
+// Err returns the error associated with the stream.
+// It retrieves the error value stored in the 'err' field of the Stream struct.
+// This method can be used to check if an error occurred during stream processing.
+// If no error occurred, it returns nil.
+// The error value is returned as an instance of the 'error' interface.
+// Example usage:
+//
+//	stream := &Stream[T]{}
+//	err := stream.Err()
+//	if err != nil {
+//	    fmt.Println("An error occurred:", err.Error())
+//	}
 func (s *Stream[T]) Err() error {
 	return s.err
 }
 
+// Range iterates over each element in the stream and applies the forEach function to it.
+// If the forEach function returns false for any element, the iteration is stopped.
+// The forEach function should return true for elements that need to be processed, and false for elements that can be skipped.
+// This method does not modify the original stream.
+// The elements are iterated in the same order as in the stream.
+// This method does not return any value.
 func (s *Stream[T]) Range(forEach func(T) bool) {
 	for _, elem := range s.elems {
 		if !forEach(elem) {
@@ -144,6 +222,25 @@ func GroupBy[T any, K comparable](s *Stream[T], getKey func(T) K) map[K]*Stream[
 	return result
 }
 
+// Map applies the provided function `f` to each element of the input stream `s`
+// and returns a new stream containing the resulting elements. If an error occurs during
+// the mapping process, the resulting stream will have the corresponding error value.
+//
+// Example:
+//
+//	str := Of([]int{1, 2, 3, 4})
+//	double := func(i int) (int, error) {
+//	    return i * 2, nil
+//	}
+//	doubledStr := Map(str, double)
+//	fmt.Println(doubledStr.ToSlice()) // Output: [2, 4, 6, 8]
+//
+//	str2 := Of([]string{"hello", "world"})
+//	length := func(s string) (int, error) {
+//	    return len(s), nil
+//	}
+//	lengthStr := Map(str2, length)
+//	fmt.Println(lengthStr.ToSlice()) // Output: [5, 5]
 func Map[In any, Out any](s *Stream[In], f func(In) (Out, error)) *Stream[Out] {
 	var result Stream[Out]
 
