@@ -1,15 +1,15 @@
 package stream
 
-// _stream is a generic type representing a stream of elems of type T.
+// Stream is a generic type representing a stream of elems of type T.
 // It contains a slice of elems of type T.
-type _stream[T any] struct {
+type Stream[T any] struct {
 	elems []T
 	err   error
 }
 
 // Of creates a new stream with the given elems.
-func Of[T any](values []T) *_stream[T] {
-	return &_stream[T]{elems: values}
+func Of[T any](values []T) *Stream[T] {
+	return &Stream[T]{elems: values}
 }
 
 // Filter filters the stream by applying the keep function to each element.
@@ -17,9 +17,9 @@ func Of[T any](values []T) *_stream[T] {
 // The original stream is not modified.
 // The elements of the new stream are in the same order as in the original stream.
 // The keep function should return true for elements that should be kept in the new stream, and false for elements that should be excluded.
-// The new stream is returned as a pointer to _stream[T].
-func (s *_stream[T]) Filter(keep func(T) bool) *_stream[T] {
-	var result _stream[T]
+// The new stream is returned as a pointer to Stream[T].
+func (s *Stream[T]) Filter(keep func(T) bool) *Stream[T] {
+	var result Stream[T]
 
 	for _, v := range s.elems {
 		if keep(v) {
@@ -35,8 +35,8 @@ func (s *_stream[T]) Filter(keep func(T) bool) *_stream[T] {
 // The original stream is modified.
 // The elements are appended in the order they are supplied.
 // The appended values can be of any type specified by T in the stream declaration.
-// The modified stream is returned as a pointer to _stream[T].
-func (s *_stream[T]) Append(values ...T) *_stream[T] {
+// The modified stream is returned as a pointer to Stream[T].
+func (s *Stream[T]) Append(values ...T) *Stream[T] {
 	s.elems = append(s.elems, values...)
 	return s
 }
@@ -49,7 +49,7 @@ func (s *_stream[T]) Append(values ...T) *_stream[T] {
 //
 // The original stream is not modified.
 // The predicate function should return true for elements that satisfy the condition, and false for elements that do not.
-// The stream is a pointer to _stream[T] type.
+// The stream is a pointer to Stream[T] type.
 //
 // Example usage:
 //
@@ -59,10 +59,10 @@ func (s *_stream[T]) Append(values ...T) *_stream[T] {
 //	})
 //	// result is true, since all elements in the stream are greater than 0
 //
-// Note: The elements of the stream should be of the same type as the type specified for _stream[T].
-// For example, if the _stream[T] is created with _stream[int], the elements should be of type int.
+// Note: The elements of the stream should be of the same type as the type specified for Stream[T].
+// For example, if the Stream[T] is created with Stream[int], the elements should be of type int.
 // The behavior of the method is undefined if this condition is violated.
-func (s *_stream[T]) AllMatch(predicate func(T) bool) bool {
+func (s *Stream[T]) AllMatch(predicate func(T) bool) bool {
 	for _, elem := range s.elems {
 		if !predicate(elem) {
 			return false
@@ -72,15 +72,25 @@ func (s *_stream[T]) AllMatch(predicate func(T) bool) bool {
 	return true
 }
 
-func (s *_stream[T]) ToSlice() []T {
+func (s *Stream[T]) ToSlice() []T {
 	return s.elems
 }
 
-func (s *_stream[T]) Err() error {
+func (s *Stream[T]) ToAny() []any {
+	var result []any
+
+	for _, v := range s.elems {
+		result = append(result, any(v))
+	}
+
+	return result
+}
+
+func (s *Stream[T]) Err() error {
 	return s.err
 }
 
-func (s *_stream[T]) Range(forEach func(T) bool) {
+func (s *Stream[T]) Range(forEach func(T) bool) {
 	for _, elem := range s.elems {
 		if !forEach(elem) {
 			break
@@ -119,8 +129,8 @@ func (s *_stream[T]) Range(forEach func(T) bool) {
 // Returns:
 //   - A map where each key corresponds to a group, and the value is a stream
 //     containing the elements that belong to that group.
-func GroupBy[T any, K comparable](s *_stream[T], getKey func(T) K) map[K]*_stream[T] {
-	result := make(map[K]*_stream[T])
+func GroupBy[T any, K comparable](s *Stream[T], getKey func(T) K) map[K]*Stream[T] {
+	result := make(map[K]*Stream[T])
 
 	for _, v := range s.elems {
 		key := getKey(v)
@@ -134,8 +144,8 @@ func GroupBy[T any, K comparable](s *_stream[T], getKey func(T) K) map[K]*_strea
 	return result
 }
 
-func Map[In any, Out any](s *_stream[In], f func(In) (Out, error)) *_stream[Out] {
-	var result _stream[Out]
+func Map[In any, Out any](s *Stream[In], f func(In) (Out, error)) *Stream[Out] {
+	var result Stream[Out]
 
 	for _, v := range s.elems {
 		elem, err := f(v)
