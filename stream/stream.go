@@ -13,8 +13,8 @@ type Stream[T any] struct {
 }
 
 // Of creates a new stream with the given elems.
-func Of[T any](values []T) *Stream[T] {
-	return &Stream[T]{elems: values}
+func Of[T any](values []T) Stream[T] {
+	return Stream[T]{elems: values}
 }
 
 // Filter filters the stream by applying the keep function to each element.
@@ -23,7 +23,7 @@ func Of[T any](values []T) *Stream[T] {
 // The elements of the new stream are in the same order as in the original stream.
 // The keep function should return true for elements that should be kept in the new stream, and false for elements that should be excluded.
 // The new stream is returned as a pointer to Stream[T].
-func (s *Stream[T]) Filter(keep func(T) bool) *Stream[T] {
+func (s Stream[T]) Filter(keep func(T) bool) Stream[T] {
 	if s.err != nil {
 		return s
 	}
@@ -36,7 +36,7 @@ func (s *Stream[T]) Filter(keep func(T) bool) *Stream[T] {
 		}
 	}
 
-	return &result
+	return result
 }
 
 // Append appends the given values to the stream.
@@ -45,7 +45,7 @@ func (s *Stream[T]) Filter(keep func(T) bool) *Stream[T] {
 // The elements are appended in the order they are supplied.
 // The appended values can be of any type specified by T in the stream declaration.
 // The modified stream is returned as a pointer to Stream[T].
-func (s *Stream[T]) Append(values ...T) *Stream[T] {
+func (s Stream[T]) Append(values ...T) Stream[T] {
 	if s.err != nil {
 		return s
 	}
@@ -75,7 +75,7 @@ func (s *Stream[T]) Append(values ...T) *Stream[T] {
 // Note: The elements of the stream should be of the same type as the type specified for Stream[T].
 // For example, if the Stream[T] is created with Stream[int], the elements should be of type int.
 // The behavior of the method is undefined if this condition is violated.
-func (s *Stream[T]) AllMatch(predicate func(T) bool) (bool, error) {
+func (s Stream[T]) AllMatch(predicate func(T) bool) (bool, error) {
 	if s.err != nil {
 		return false, s.err
 	}
@@ -96,7 +96,7 @@ func (s *Stream[T]) AllMatch(predicate func(T) bool) (bool, error) {
 // The original stream is not modified.
 // The predicate function should return true for elements that satisfy the condition and false otherwise.
 // Returns true if any element in the stream satisfies the predicate, false otherwise.
-func (s *Stream[T]) AnyMatch(predicate func(T) bool) (bool, error) {
+func (s Stream[T]) AnyMatch(predicate func(T) bool) (bool, error) {
 	if s.err != nil {
 		return false, s.err
 	}
@@ -121,13 +121,13 @@ func (s *Stream[T]) AnyMatch(predicate func(T) bool) (bool, error) {
 //	shuffled := stream.Shuffle()
 //	shuffledElems := shuffled.ToSlice()
 //	fmt.Println(shuffledElems)  // Output: [4 3 1 2 5]
-func (s *Stream[T]) Shuffle() *Stream[T] {
+func (s Stream[T]) Shuffle() Stream[T] {
 	if s.err != nil {
 		return s
 	}
 
 	//Create a new Stream and copy the data from the original Stream over
-	newStream := &Stream[T]{elems: append([]T(nil), s.elems...)}
+	newStream := Stream[T]{elems: append([]T(nil), s.elems...)}
 
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
@@ -150,7 +150,7 @@ func (s *Stream[T]) Shuffle() *Stream[T] {
 //	s := NewStream([]int{1, 2, 3, 4, 5})
 //	limited := s.Limit(3)
 //	limited.ToSlice() // returns [1, 2, 3]
-func (s *Stream[T]) Limit(n int) *Stream[T] {
+func (s Stream[T]) Limit(n int) Stream[T] {
 	if n < 0 {
 		n = 0
 	} else if n > len(s.elems) {
@@ -172,7 +172,7 @@ func (s *Stream[T]) Limit(n int) *Stream[T] {
 //	newStream := s.Skip(2)
 //	fmt.Println(newStream.ToSlice()) // Output: [3 4 5]
 //	fmt.Println(s.ToSlice()) // Output: [1 2 3 4 5]
-func (s *Stream[T]) Skip(n int) *Stream[T] {
+func (s Stream[T]) Skip(n int) Stream[T] {
 	if n < 0 {
 		n = 0
 	} else if n > len(s.elems) {
@@ -190,14 +190,14 @@ func (s *Stream[T]) Skip(n int) *Stream[T] {
 //
 //		stream := Of([]int{1, 2, 3})
 //	 result := stream.ToSlice() // result is []int{1, 2, 3}
-func (s *Stream[T]) ToSlice() ([]T, error) {
+func (s Stream[T]) ToSlice() ([]T, error) {
 	return s.elems, s.err
 }
 
 // MustToSlice returns the elements of the stream as a slice of type []T.
 // If the stream has an error, it panics with the error message.
 // The order of the elements in the returned slice is the same as in the stream.
-func (s *Stream[T]) MustToSlice() []T {
+func (s Stream[T]) MustToSlice() []T {
 	if s.err != nil {
 		panic(s.err)
 	}
@@ -210,7 +210,7 @@ func (s *Stream[T]) MustToSlice() []T {
 // The original stream is not modified.
 // The elements in the resulting slice follow the same order as in the original stream.
 // The resulting slice is returned as a value of type `[]any`.
-func (s *Stream[T]) ToAny() ([]any, error) {
+func (s Stream[T]) ToAny() ([]any, error) {
 	if s.err != nil {
 		return nil, s.err
 	}
@@ -234,7 +234,7 @@ func (s *Stream[T]) ToAny() ([]any, error) {
 // - If an error occurs during the conversion.
 // Returns:
 // - A slice of `any` type containing the converted elements of the stream.
-func (s *Stream[T]) MustToAny() []any {
+func (s Stream[T]) MustToAny() []any {
 	ret, err := s.ToAny()
 	if err != nil {
 		panic(err)
@@ -246,7 +246,7 @@ func (s *Stream[T]) MustToAny() []any {
 // MustFirst returns the first element of the stream.
 // If the stream is empty, it panics with the message "Stream is empty".
 // The element is returned of type T.
-func (s *Stream[T]) MustFirst() T {
+func (s Stream[T]) MustFirst() T {
 	if len(s.elems) == 0 {
 		panic("Stream is empty")
 	}
@@ -259,7 +259,7 @@ func (s *Stream[T]) MustFirst() T {
 // This method does not modify the original stream.
 // The elements are iterated in the same order as in the stream.
 // This method does not return any value.
-func (s *Stream[T]) Range(forEach func(T) bool) error {
+func (s Stream[T]) Range(forEach func(T) bool) error {
 	if s.err != nil {
 		return s.err
 	}
@@ -277,7 +277,7 @@ func (s *Stream[T]) Range(forEach func(T) bool) error {
 // It calculates and returns the length of s.elems.
 // The count includes all elements in the stream, regardless of any filters applied.
 // The returned value is an integer representing the size of the stream.
-func (s *Stream[T]) Size() int {
+func (s Stream[T]) Size() int {
 	return len(s.elems)
 }
 
@@ -293,7 +293,7 @@ func (s *Stream[T]) Size() int {
 //	if err != nil {
 //	    fmt.Println("An error occurred:", err.Error())
 //	}
-func (s *Stream[T]) Err() error {
+func (s Stream[T]) Err() error {
 	return s.err
 }
 
@@ -328,15 +328,15 @@ func (s *Stream[T]) Err() error {
 // Returns:
 //   - A map where each key corresponds to a group, and the value is a stream
 //     containing the elements that belong to that group.
-func GroupBy[T any, K comparable](s *Stream[T], getKey func(T) K) map[K]*Stream[T] {
-	result := make(map[K]*Stream[T])
+func GroupBy[T any, K comparable](s Stream[T], getKey func(T) K) map[K]Stream[T] {
+	result := make(map[K]Stream[T])
 
 	for _, v := range s.elems {
 		key := getKey(v)
 		if _, ok := result[key]; !ok {
 			result[key] = Of([]T{v})
 		} else {
-			result[key].Append(v)
+			result[key] = result[key].Append(v)
 		}
 	}
 
@@ -362,21 +362,21 @@ func GroupBy[T any, K comparable](s *Stream[T], getKey func(T) K) map[K]*Stream[
 //	}
 //	lengthStr := Map(str2, length)
 //	fmt.Println(lengthStr.ToSlice()) // Output: [5, 5]
-func Map[In any, Out any](s *Stream[In], f func(In) (Out, error)) *Stream[Out] {
+func Map[In any, Out any](s Stream[In], f func(In) (Out, error)) Stream[Out] {
 	var result Stream[Out]
 	if s.err != nil {
 		result.err = s.err
-		return &result
+		return result
 	}
 
 	for _, v := range s.elems {
 		elem, err := f(v)
 		if err != nil {
 			result.err = err
-			return &result
+			return result
 		}
 		result.elems = append(result.elems, elem)
 	}
 
-	return &result
+	return result
 }

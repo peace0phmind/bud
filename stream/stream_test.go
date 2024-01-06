@@ -44,7 +44,7 @@ func TestStream_Shuffle(t *testing.T) {
 				t.Errorf("Shuffle() must return new stream object")
 			}
 
-			shuffledElems := shuffled.ToSlice()
+			shuffledElems := shuffled.MustToSlice()
 
 			// Check the number of elements is same in the original and shuffled stream
 			if got, want := len(tt.elems), len(shuffledElems); got != want {
@@ -82,9 +82,9 @@ func TestMap(t *testing.T) {
 
 	tests := []struct {
 		name     string
-		stream   *Stream[int]
+		stream   Stream[int]
 		funcMap  func(int) (int, error)
-		expected *Stream[int]
+		expected Stream[int]
 		err      error
 	}{
 		{
@@ -134,13 +134,13 @@ func TestMap(t *testing.T) {
 
 func TestGroupBy(t *testing.T) {
 	type args struct {
-		s      *Stream[int]
+		s      Stream[int]
 		getKey func(int) int
 	}
 	tests := []struct {
 		name string
 		args args
-		want map[int]*Stream[int]
+		want map[int]Stream[int]
 	}{
 		{
 			name: "Test with empty stream",
@@ -150,7 +150,7 @@ func TestGroupBy(t *testing.T) {
 					return i % 2
 				},
 			},
-			want: make(map[int]*Stream[int]),
+			want: make(map[int]Stream[int]),
 		},
 		{
 			name: "Test with non empty stream",
@@ -160,7 +160,7 @@ func TestGroupBy(t *testing.T) {
 					return i % 2
 				},
 			},
-			want: map[int]*Stream[int]{
+			want: map[int]Stream[int]{
 				// Assuming that Of and Append works properly.
 				0: Of([]int{2, 4}),
 				1: Of([]int{1, 3, 5}),
@@ -174,7 +174,7 @@ func TestGroupBy(t *testing.T) {
 					return i % 2
 				},
 			},
-			want: map[int]*Stream[int]{
+			want: map[int]Stream[int]{
 				// Assuming that Of and Append works properly.
 				1: Of([]int{1, 1, 1, 1}),
 			},
@@ -187,4 +187,12 @@ func TestGroupBy(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGroupByGetNotExistKey(t *testing.T) {
+	ret := GroupBy(Of([]int{1, 2, 3, 4, 5}), func(i int) int {
+		return i % 2
+	})
+
+	println(ret[3].Size())
 }
