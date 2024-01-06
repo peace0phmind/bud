@@ -1,0 +1,5 @@
+.idea
+.history
+*.log
+bin/
+.env
