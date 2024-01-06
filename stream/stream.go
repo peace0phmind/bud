@@ -139,6 +139,49 @@ func (s *Stream[T]) Shuffle() *Stream[T] {
 	return newStream
 }
 
+// Limit returns a new Stream containing at most `n` elements from the current Stream.
+// If `n` is negative, it is set to 0.
+// If `n` is greater than the number of elements in the current Stream, it is set to the number of elements.
+// The order of the elements in the new Stream is the same as in the current Stream.
+// The new Stream is returned as a pointer to Stream[T].
+//
+// Example usage:
+//
+//	s := NewStream([]int{1, 2, 3, 4, 5})
+//	limited := s.Limit(3)
+//	limited.ToSlice() // returns [1, 2, 3]
+func (s *Stream[T]) Limit(n int) *Stream[T] {
+	if n < 0 {
+		n = 0
+	} else if n > len(s.elems) {
+		n = len(s.elems)
+	}
+
+	return Of(s.elems[:n])
+}
+
+// Skip skips the first `n` elements in the stream and returns a new stream without those elements.
+// If `n` is negative, Skip behaves as if `n` is 0.
+// If `n` is greater than the number of elements in the stream, Skip behaves as if `n` is equal to the number of elements in the stream.
+// The original stream is not modified.
+// The elements of the new stream are in the same order as in the original stream, starting from the `n+1`th element.
+// The new stream is returned as a pointer to Stream[T].
+// Example usage:
+//
+//	s := Of([]int{1, 2, 3, 4, 5})
+//	newStream := s.Skip(2)
+//	fmt.Println(newStream.ToSlice()) // Output: [3 4 5]
+//	fmt.Println(s.ToSlice()) // Output: [1 2 3 4 5]
+func (s *Stream[T]) Skip(n int) *Stream[T] {
+	if n < 0 {
+		n = 0
+	} else if n > len(s.elems) {
+		n = len(s.elems)
+	}
+
+	return Of(s.elems[n:])
+}
+
 // ToSlice returns a slice containing all the elements of the stream.
 // The original stream is not modified.
 // The elements in the returned slice are in the same order as in the original stream.
@@ -170,6 +213,26 @@ func (s *Stream[T]) ToAny() ([]any, error) {
 	return result, nil
 }
 
+// Range iterates over each element in the stream and applies the forEach function to it.
+// If the forEach function returns false for any element, the iteration is stopped.
+// The forEach function should return true for elements that need to be processed, and false for elements that can be skipped.
+// This method does not modify the original stream.
+// The elements are iterated in the same order as in the stream.
+// This method does not return any value.
+func (s *Stream[T]) Range(forEach func(T) bool) error {
+	if s.err != nil {
+		return s.err
+	}
+
+	for _, elem := range s.elems {
+		if !forEach(elem) {
+			break
+		}
+	}
+
+	return nil
+}
+
 // Size returns the number of elements in the stream.
 // It calculates and returns the length of s.elems.
 // The count includes all elements in the stream, regardless of any filters applied.
@@ -192,26 +255,6 @@ func (s *Stream[T]) Size() int {
 //	}
 func (s *Stream[T]) Err() error {
 	return s.err
-}
-
-// Range iterates over each element in the stream and applies the forEach function to it.
-// If the forEach function returns false for any element, the iteration is stopped.
-// The forEach function should return true for elements that need to be processed, and false for elements that can be skipped.
-// This method does not modify the original stream.
-// The elements are iterated in the same order as in the stream.
-// This method does not return any value.
-func (s *Stream[T]) Range(forEach func(T) bool) error {
-	if s.err != nil {
-		return s.err
-	}
-
-	for _, elem := range s.elems {
-		if !forEach(elem) {
-			break
-		}
-	}
-
-	return nil
 }
 
 // GroupBy groups the elements of the input stream based on the provided key function.
