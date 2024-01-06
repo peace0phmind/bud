@@ -194,6 +194,17 @@ func (s *Stream[T]) ToSlice() ([]T, error) {
 	return s.elems, s.err
 }
 
+// MustToSlice returns the elements of the stream as a slice of type []T.
+// If the stream has an error, it panics with the error message.
+// The order of the elements in the returned slice is the same as in the stream.
+func (s *Stream[T]) MustToSlice() []T {
+	if s.err != nil {
+		panic(s.err)
+	}
+
+	return s.elems
+}
+
 // ToAny converts the elements of the stream to the `any` type and returns them as a slice.
 // It creates a new slice and appends the converted elements of the stream to it.
 // The original stream is not modified.
@@ -211,6 +222,35 @@ func (s *Stream[T]) ToAny() ([]any, error) {
 	}
 
 	return result, nil
+}
+
+// MustToAny converts the elements of the stream to a slice of `any` type.
+// If an error occurs during the conversion, it will panic and propagate the error.
+// The elements of the new slice will have the same values as the original elements of the stream,
+// but their type will be `any`.
+// The original stream is not modified.
+// The new slice is returned.
+// Panics:
+// - If an error occurs during the conversion.
+// Returns:
+// - A slice of `any` type containing the converted elements of the stream.
+func (s *Stream[T]) MustToAny() []any {
+	ret, err := s.ToAny()
+	if err != nil {
+		panic(err)
+	}
+
+	return ret
+}
+
+// MustFirst returns the first element of the stream.
+// If the stream is empty, it panics with the message "Stream is empty".
+// The element is returned of type T.
+func (s *Stream[T]) MustFirst() T {
+	if len(s.elems) == 0 {
+		panic("Stream is empty")
+	}
+	return s.elems[0]
 }
 
 // Range iterates over each element in the stream and applies the forEach function to it.
