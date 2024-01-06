@@ -170,6 +170,14 @@ func (s *Stream[T]) ToAny() ([]any, error) {
 	return result, nil
 }
 
+// Size returns the number of elements in the stream.
+// It calculates and returns the length of s.elems.
+// The count includes all elements in the stream, regardless of any filters applied.
+// The returned value is an integer representing the size of the stream.
+func (s *Stream[T]) Size() int {
+	return len(s.elems)
+}
+
 // Err returns the error associated with the stream.
 // It retrieves the error value stored in the 'err' field of the Stream struct.
 // This method can be used to check if an error occurred during stream processing.
