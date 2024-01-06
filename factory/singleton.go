@@ -16,13 +16,13 @@ import "sync"
 //	The singleton object provides builder functions that return a closure
 //	for easy initialization of dependency injection containers.
 //
-// Initialization can be done through the initialization method of singleton, or the corresponding interface
-// implemented by T type. If you call Singleton and set the initialization methods InitOnce and
-// MustInitOnce at the same time, initialization will only execute the InitOnce method. If T implements
-// the ISingleton and MustInitOnce interfaces at the same time, initialization will only execute the
-// InitOnce interface. If both the initialization method of Singleton is set and T also implements the
-// corresponding interface, only the method of Singleton is executed during initialization,
-// and the interface implemented by T is not executed.
+//	Initialization can be done through the initialization method of singleton, or the corresponding interface
+//	implemented by T type. If you call Singleton and set the initialization methods InitOnce and
+//	MustInitOnce at the same time, initialization will only execute the InitOnce method. If T implements
+//	the ISingleton and MustInitOnce interfaces at the same time, initialization will only execute the
+//	InitOnce interface. If both the initialization method of Singleton is set and T also implements the
+//	corresponding interface, only the method of Singleton is executed during initialization,
+//	and the interface implemented by T is not executed.
 //
 // Example:
 //
@@ -63,7 +63,7 @@ func (s *singleton[T]) GetInstance() (*T, error) {
 		} else if s.mustInitOnce != nil {
 			s.obj = s.mustInitOnce()
 		} else {
-			s.obj = new(T)
+			s.obj = New[T]()
 			if initializer, ok := any(s.obj).(ISingleton); ok {
 				s.err = initializer.InitOnce()
 			} else if mustInitializer, mustOk := any(s.obj).(IMustSingleton); mustOk {
@@ -99,4 +99,9 @@ func (s *singleton[T]) MustBuilder() func() *T {
 			return instance
 		}
 	}
+}
+
+func New[T any]() *T {
+	t := new(T)
+	return t
 }
