@@ -147,13 +147,8 @@ func (s *Stream[T]) Shuffle() *Stream[T] {
 //
 //		stream := Of([]int{1, 2, 3})
 //	 result := stream.ToSlice() // result is []int{1, 2, 3}
-func (s *Stream[T]) ToSlice() []T {
-	if s.err != nil {
-		var ret []T
-		return ret
-	}
-
-	return s.elems
+func (s *Stream[T]) ToSlice() ([]T, error) {
+	return s.elems, s.err
 }
 
 // ToAny converts the elements of the stream to the `any` type and returns them as a slice.
@@ -161,10 +156,9 @@ func (s *Stream[T]) ToSlice() []T {
 // The original stream is not modified.
 // The elements in the resulting slice follow the same order as in the original stream.
 // The resulting slice is returned as a value of type `[]any`.
-func (s *Stream[T]) ToAny() []any {
+func (s *Stream[T]) ToAny() ([]any, error) {
 	if s.err != nil {
-		var ret []any
-		return ret
+		return nil, s.err
 	}
 
 	var result []any
@@ -173,7 +167,7 @@ func (s *Stream[T]) ToAny() []any {
 		result = append(result, any(v))
 	}
 
-	return result
+	return result, nil
 }
 
 // Err returns the error associated with the stream.
