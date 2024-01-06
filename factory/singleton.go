@@ -13,30 +13,29 @@ import "sync"
 //	To get the instance, call the GetInstance method on the singleton object.
 //	You can set an initialization function using the SetInitOnce method or a must
 //	initialization function using the SetMustInitOnce method.
-//	The singleton object also provides builder functions that return a closure
+//	The singleton object provides builder functions that return a closure
 //	for easy initialization of dependency injection containers.
 //
-// singleton Initialization can be done through the initialization method of singleton, or the corresponding interface implemented by T type
-//
-// If you call Singleton and set the initialization methods InitOnce and MustInitOnce at the same time
-// Initialization will only execute the InitOnce method
-//
-// If T implements the ISingleton and MustInitOnce interfaces at the same time
-// Initialization will only execute the InitOnce interface
-//
-// If both the initialization method of Singleton is set and T also implements the corresponding interface
-// Only the method of Singleton is executed during initialization, and the interface implemented by T is not executed
+// Initialization can be done through the initialization method of singleton, or the corresponding interface
+// implemented by T type. If you call Singleton and set the initialization methods InitOnce and
+// MustInitOnce at the same time, initialization will only execute the InitOnce method. If T implements
+// the ISingleton and MustInitOnce interfaces at the same time, initialization will only execute the
+// InitOnce interface. If both the initialization method of Singleton is set and T also implements the
+// corresponding interface, only the method of Singleton is executed during initialization,
+// and the interface implemented by T is not executed.
 //
 // Example:
-// type cat struct {
-// }
-// func (c* cat) Meow() {
-// }
+//
+//	type cat struct {
+//	}
+//	func (c* cat) Meow() {
+//	}
 //
 //	var Cat = Singleton[cat]().MustBuilder()
 //
-// call method:
-// Cat().Meow()
+// Call method:
+//
+//	Cat().Meow()
 type singleton[T any] struct {
 	once         sync.Once
 	obj          *T
