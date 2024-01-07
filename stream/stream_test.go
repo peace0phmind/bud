@@ -52,7 +52,7 @@ func TestFilter(t *testing.T) {
 	}
 }
 
-func TestFlatMap(t *testing.T) {
+func TestStreamFlatMap(t *testing.T) {
 	testCases := []struct {
 		name    string
 		stream  Stream[int]
@@ -430,13 +430,13 @@ func TestStream_AnyMatch(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			result, err := tc.stream.AnyMatch(tc.matchFunc)
 			if err != nil && !tc.expectError {
-				t.Fatalf("expected no error, but got: %v", err)
+				t.Fatalf("want no error, but got: %v", err)
 			}
 			if err == nil && tc.expectError {
-				t.Fatalf("expected error, but got none")
+				t.Fatalf("want error, but got none")
 			}
 			if result != tc.expectedResult {
-				t.Fatalf("expected %v, but got %v", tc.expectedResult, result)
+				t.Fatalf("want %v, but got %v", tc.expectedResult, result)
 			}
 		})
 	}
@@ -589,7 +589,7 @@ func TestMustFirst(t *testing.T) {
 			defer func() {
 				if r := recover(); r != nil {
 					if tc.err == nil {
-						t.Errorf("MustFirst() panic = %v, no panic expected", r)
+						t.Errorf("MustFirst() panic = %v, no panic want", r)
 					} else if r.(error).Error() != tc.err.Error() {
 						t.Errorf("MustFirst() panic = %v, want panic = %v", r, tc.err.Error())
 					}
@@ -905,6 +905,65 @@ func TestFindFirst(t *testing.T) {
 			}
 			if !tc.wantErr && got != tc.want {
 				t.Errorf("FindFirst() got = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestFlatMap(t *testing.T) {
+	testCases := []struct {
+		name    string
+		input   Stream[int]
+		flatMap func(int) Stream[int]
+		want    Stream[int]
+	}{
+		{
+			name:    "empty stream",
+			input:   Of([]int{}),
+			flatMap: func(x int) Stream[int] { return Of([]int{x, x * 2}) },
+			want:    Of([]int{}),
+		},
+		{
+			name:    "non-empty stream",
+			input:   Of([]int{1, 2, 3}),
+			flatMap: func(x int) Stream[int] { return Of([]int{x, x * 2}) },
+			want:    Of([]int{1, 2, 2, 4, 3, 6}),
+		},
+		{
+			name:    "mapToInt error",
+			input:   Stream[int]{err: errors.New("stream error")},
+			flatMap: func(x int) Stream[int] { return Of([]int{x, x * 2}) },
+			want:    Stream[int]{err: errors.New("stream error")},
+		},
+		{
+			name:  "flatMap error",
+			input: Of([]int{1, 2, 3}),
+			flatMap: func(x int) Stream[int] {
+				if x == 2 {
+					return Stream[int]{err: errors.New("flatMap error")}
+				}
+				return Of([]int{x, x * 2})
+			},
+			want: Stream[int]{err: errors.New("flatMap error")},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := FlatMap(tc.input, tc.flatMap)
+
+			if tc.want.err != nil {
+				if got.err.Error() != tc.want.err.Error() {
+					t.Errorf("FlatMap error: want: %v, got: %v", tc.want.err, got.err)
+				} else {
+					return
+				}
+			}
+
+			for i, v := range got.elems {
+				if v != tc.want.elems[i] {
+					t.Errorf("Filter failed for case %s, want %#v, got %#v", tc.name, tc.want, got)
+				}
 			}
 		})
 	}
