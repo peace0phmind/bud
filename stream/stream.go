@@ -2,6 +2,7 @@ package stream
 
 import (
 	"math/rand"
+	"sort"
 	"time"
 )
 
@@ -52,6 +53,151 @@ func (s Stream[T]) Append(values ...T) Stream[T] {
 
 	s.elems = append(s.elems, values...)
 	return s
+}
+
+// Shuffle randomly rearranges the elements in the stream.
+// It creates a new stream with the same elements as the original stream, but in a random order.
+// The original stream remains unchanged.
+// The new stream is returned as a pointer to Stream[T].
+// The shuffle algorithm used is the Fisher-Yates shuffle.
+// The seed for the random number generator is set using the current time.
+// Example usage:
+//
+//	stream := Of([]int{1, 2, 3, 4, 5})
+//	shuffled := stream.Shuffle()
+//	shuffledElems := shuffled.ToSlice()
+//	fmt.Println(shuffledElems)  // Output: [4 3 1 2 5]
+func (s Stream[T]) Shuffle() Stream[T] {
+	if s.err != nil {
+		return s
+	}
+
+	//Create a new Stream and copy the data from the original Stream over
+	newStream := Stream[T]{elems: append([]T(nil), s.elems...)}
+
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	for n := len(newStream.elems); n > 0; n-- {
+		randIndex := r.Intn(n)
+		newStream.elems[n-1], newStream.elems[randIndex] = newStream.elems[randIndex], newStream.elems[n-1]
+	}
+
+	return newStream
+}
+
+func (s Stream[T]) Sort(compareFunc func(x, y T) int) Stream[T] {
+	if s.err != nil {
+		return s
+	}
+
+	sort.Slice(s.elems, func(i, j int) bool {
+		return compareFunc(s.elems[i], s.elems[j]) < 0
+	})
+	return s
+}
+
+// Limit returns a new Stream containing at most `n` elements from the current Stream.
+// If `n` is negative, it is set to 0.
+// If `n` is greater than the number of elements in the current Stream, it is set to the number of elements.
+// The order of the elements in the new Stream is the same as in the current Stream.
+// The new Stream is returned as a pointer to Stream[T].
+//
+// Example usage:
+//
+//	s := NewStream([]int{1, 2, 3, 4, 5})
+//	limited := s.Limit(3)
+//	limited.ToSlice() // returns [1, 2, 3]
+func (s Stream[T]) Limit(n int) Stream[T] {
+	if n < 0 {
+		n = 0
+	} else if n > len(s.elems) {
+		n = len(s.elems)
+	}
+
+	return Of(s.elems[:n])
+}
+
+// Skip skips the first `n` elements in the stream and returns a new stream without those elements.
+// If `n` is negative, Skip behaves as if `n` is 0.
+// If `n` is greater than the number of elements in the stream, Skip behaves as if `n` is equal to the number of elements in the stream.
+// The original stream is not modified.
+// The elements of the new stream are in the same order as in the original stream, starting from the `n+1`th element.
+// The new stream is returned as a pointer to Stream[T].
+// Example usage:
+//
+//	s := Of([]int{1, 2, 3, 4, 5})
+//	newStream := s.Skip(2)
+//	fmt.Println(newStream.ToSlice()) // Output: [3 4 5]
+//	fmt.Println(s.ToSlice()) // Output: [1 2 3 4 5]
+func (s Stream[T]) Skip(n int) Stream[T] {
+	if n < 0 {
+		n = 0
+	} else if n > len(s.elems) {
+		n = len(s.elems)
+	}
+
+	return Of(s.elems[n:])
+}
+
+// ToSlice returns a slice containing all the elements of the stream.
+// The original stream is not modified.
+// The elements in the returned slice are in the same order as in the original stream.
+// The returned slice has the type []T, where T is the type of elements in the stream.
+// Example usage:
+//
+//		stream := Of([]int{1, 2, 3})
+//	 result := stream.ToSlice() // result is []int{1, 2, 3}
+func (s Stream[T]) ToSlice() ([]T, error) {
+	return s.elems, s.err
+}
+
+// MustToSlice returns the elements of the stream as a slice of type []T.
+// If the stream has an error, it panics with the error message.
+// The order of the elements in the returned slice is the same as in the stream.
+func (s Stream[T]) MustToSlice() []T {
+	if s.err != nil {
+		panic(s.err)
+	}
+
+	return s.elems
+}
+
+// ToAny converts the elements of the stream to the `any` type and returns them as a slice.
+// It creates a new slice and appends the converted elements of the stream to it.
+// The original stream is not modified.
+// The elements in the resulting slice follow the same order as in the original stream.
+// The resulting slice is returned as a value of type `[]any`.
+func (s Stream[T]) ToAny() ([]any, error) {
+	if s.err != nil {
+		return nil, s.err
+	}
+
+	var result []any
+
+	for _, v := range s.elems {
+		result = append(result, any(v))
+	}
+
+	return result, nil
+}
+
+// MustToAny converts the elements of the stream to a slice of `any` type.
+// If an error occurs during the conversion, it will panic and propagate the error.
+// The elements of the new slice will have the same values as the original elements of the stream,
+// but their type will be `any`.
+// The original stream is not modified.
+// The new slice is returned.
+// Panics:
+// - If an error occurs during the conversion.
+// Returns:
+// - A slice of `any` type containing the converted elements of the stream.
+func (s Stream[T]) MustToAny() []any {
+	ret, err := s.ToAny()
+	if err != nil {
+		panic(err)
+	}
+
+	return ret
 }
 
 // AllMatch returns true if all elements in the stream satisfy the given matchFunc function.
@@ -189,140 +335,6 @@ func (s Stream[T]) MustAnyMatch(matchFunc func(T) bool) bool {
 	return false
 }
 
-// Shuffle randomly rearranges the elements in the stream.
-// It creates a new stream with the same elements as the original stream, but in a random order.
-// The original stream remains unchanged.
-// The new stream is returned as a pointer to Stream[T].
-// The shuffle algorithm used is the Fisher-Yates shuffle.
-// The seed for the random number generator is set using the current time.
-// Example usage:
-//
-//	stream := Of([]int{1, 2, 3, 4, 5})
-//	shuffled := stream.Shuffle()
-//	shuffledElems := shuffled.ToSlice()
-//	fmt.Println(shuffledElems)  // Output: [4 3 1 2 5]
-func (s Stream[T]) Shuffle() Stream[T] {
-	if s.err != nil {
-		return s
-	}
-
-	//Create a new Stream and copy the data from the original Stream over
-	newStream := Stream[T]{elems: append([]T(nil), s.elems...)}
-
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-
-	for n := len(newStream.elems); n > 0; n-- {
-		randIndex := r.Intn(n)
-		newStream.elems[n-1], newStream.elems[randIndex] = newStream.elems[randIndex], newStream.elems[n-1]
-	}
-
-	return newStream
-}
-
-// Limit returns a new Stream containing at most `n` elements from the current Stream.
-// If `n` is negative, it is set to 0.
-// If `n` is greater than the number of elements in the current Stream, it is set to the number of elements.
-// The order of the elements in the new Stream is the same as in the current Stream.
-// The new Stream is returned as a pointer to Stream[T].
-//
-// Example usage:
-//
-//	s := NewStream([]int{1, 2, 3, 4, 5})
-//	limited := s.Limit(3)
-//	limited.ToSlice() // returns [1, 2, 3]
-func (s Stream[T]) Limit(n int) Stream[T] {
-	if n < 0 {
-		n = 0
-	} else if n > len(s.elems) {
-		n = len(s.elems)
-	}
-
-	return Of(s.elems[:n])
-}
-
-// Skip skips the first `n` elements in the stream and returns a new stream without those elements.
-// If `n` is negative, Skip behaves as if `n` is 0.
-// If `n` is greater than the number of elements in the stream, Skip behaves as if `n` is equal to the number of elements in the stream.
-// The original stream is not modified.
-// The elements of the new stream are in the same order as in the original stream, starting from the `n+1`th element.
-// The new stream is returned as a pointer to Stream[T].
-// Example usage:
-//
-//	s := Of([]int{1, 2, 3, 4, 5})
-//	newStream := s.Skip(2)
-//	fmt.Println(newStream.ToSlice()) // Output: [3 4 5]
-//	fmt.Println(s.ToSlice()) // Output: [1 2 3 4 5]
-func (s Stream[T]) Skip(n int) Stream[T] {
-	if n < 0 {
-		n = 0
-	} else if n > len(s.elems) {
-		n = len(s.elems)
-	}
-
-	return Of(s.elems[n:])
-}
-
-// ToSlice returns a slice containing all the elements of the stream.
-// The original stream is not modified.
-// The elements in the returned slice are in the same order as in the original stream.
-// The returned slice has the type []T, where T is the type of elements in the stream.
-// Example usage:
-//
-//		stream := Of([]int{1, 2, 3})
-//	 result := stream.ToSlice() // result is []int{1, 2, 3}
-func (s Stream[T]) ToSlice() ([]T, error) {
-	return s.elems, s.err
-}
-
-// MustToSlice returns the elements of the stream as a slice of type []T.
-// If the stream has an error, it panics with the error message.
-// The order of the elements in the returned slice is the same as in the stream.
-func (s Stream[T]) MustToSlice() []T {
-	if s.err != nil {
-		panic(s.err)
-	}
-
-	return s.elems
-}
-
-// ToAny converts the elements of the stream to the `any` type and returns them as a slice.
-// It creates a new slice and appends the converted elements of the stream to it.
-// The original stream is not modified.
-// The elements in the resulting slice follow the same order as in the original stream.
-// The resulting slice is returned as a value of type `[]any`.
-func (s Stream[T]) ToAny() ([]any, error) {
-	if s.err != nil {
-		return nil, s.err
-	}
-
-	var result []any
-
-	for _, v := range s.elems {
-		result = append(result, any(v))
-	}
-
-	return result, nil
-}
-
-// MustToAny converts the elements of the stream to a slice of `any` type.
-// If an error occurs during the conversion, it will panic and propagate the error.
-// The elements of the new slice will have the same values as the original elements of the stream,
-// but their type will be `any`.
-// The original stream is not modified.
-// The new slice is returned.
-// Panics:
-// - If an error occurs during the conversion.
-// Returns:
-// - A slice of `any` type containing the converted elements of the stream.
-func (s Stream[T]) MustToAny() []any {
-	ret, err := s.ToAny()
-	if err != nil {
-		panic(err)
-	}
-
-	return ret
-}
-
 // MustFirst returns the first element of the stream.
 // If the stream is empty, it panics with the message "Stream is empty".
 // The element is returned of type T.
@@ -331,6 +343,86 @@ func (s Stream[T]) MustFirst() T {
 		panic("Stream is empty")
 	}
 	return s.elems[0]
+}
+
+func (s Stream[T]) _reduce(initItem T, beginItem int, accumulator func(preItem, nextItem T) (T, error)) (t T, err error) {
+
+	result := initItem
+	for i := beginItem; i < len(s.elems); i++ {
+		result, err = accumulator(result, s.elems[i])
+		if err != nil {
+			return t, err
+		}
+	}
+
+	return result, nil
+}
+
+// Reduce applies the accumulator function to each element in the stream,
+// starting with the initial value and the second element.
+// The result is passed as the first argument of the accumulator function,
+// along with the next element of the stream as the second argument.
+// This process continues until all elements in the stream have been processed.
+// The accumulator function should return the accumulated value and an error.
+// If the accumulator function returns an error at any point, Reduce will stop processing and return that error.
+// If the stream is empty, Reduce will return the initial value and a nil error.
+// Reduce returns the accumulated value and an error as a tuple.
+// Without duplicating the example above, document the following code:
+func (s Stream[T]) Reduce(accumulator func(preItem, nextItem T) (T, error)) (t T, err error) {
+	if s.err != nil {
+		return t, s.err
+	}
+
+	if len(s.elems) == 0 {
+		return t, nil
+	}
+
+	return s._reduce(s.elems[0], 1, accumulator)
+}
+
+func (s Stream[T]) MustReduce(accumulator func(preItem, nextItem T) (T, error)) T {
+	ret, err := s.Reduce(accumulator)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return ret
+}
+
+// ReduceWithInit reduces the stream by applying the accumulator function to each element,
+// starting with the initial value initItem. The accumulator function takes the previous
+// accumulated value and the next element of the stream, and returns the new accumulated value.
+// The result of the reduction is the final accumulated value.
+// If the stream is empty, the initial value initItem is returned.
+// The accumulator function can also return an error, which will be propagated and
+// cause the reduction to stop and return the error immediately.
+// The initial value initItem can be of any type T, and the return value of the accumulator
+// function must be of type T as well.
+// The original stream remains unchanged.
+// The reduction is performed in the order of the elements in the stream.
+// The result of the reduction and any error encountered are returned as a tuple.
+// If an error is encountered during the reduction, the value of the result is undefined.
+func (s Stream[T]) ReduceWithInit(initItem T, accumulator func(preItem, nextItem T) (T, error)) (t T, err error) {
+	if s.err != nil {
+		return t, s.err
+	}
+
+	if len(s.elems) == 0 {
+		return t, nil
+	}
+
+	return s._reduce(initItem, 0, accumulator)
+}
+
+func (s Stream[T]) MustReduceWithInit(initItem T, accumulator func(preItem, nextItem T) (T, error)) T {
+	ret, err := s.ReduceWithInit(initItem, accumulator)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return ret
 }
 
 // Range iterates over each element in the stream and applies the forEach function to it.

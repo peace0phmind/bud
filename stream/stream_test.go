@@ -196,3 +196,86 @@ func TestGroupByGetNotExistKey(t *testing.T) {
 
 	println(ret[3].Size())
 }
+
+func TestStreamMustSort(t *testing.T) {
+	// Comparing function.
+	compare := func(a, b int) int {
+		return a - b
+	}
+	testCases := []struct {
+		name     string
+		input    []int
+		expected []int
+	}{
+		{"Empty Slice", []int{}, []int{}},
+		{"Single Element", []int{1}, []int{1}},
+		{"Two Elements Sorted", []int{1, 2}, []int{1, 2}},
+		{"Two Elements Unsorted", []int{2, 1}, []int{1, 2}},
+		{"Multiple Elements", []int{3, 1, 2}, []int{1, 2, 3}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			stream := Of(tc.input).Sort(compare)
+			result := stream.MustToSlice()
+
+			if len(tc.expected) != len(result) {
+				t.Fatalf("expected length %v but got %v", len(tc.expected), len(result))
+			}
+
+			for i, v := range tc.expected {
+				if v != result[i] {
+					t.Fatalf("at index %d, expected %v but got %v", i, v, result[i])
+				}
+			}
+		})
+	}
+}
+
+func TestMustReduceWithInit(t *testing.T) {
+	accumulator := func(preItem, nextItem int) (int, error) {
+		return preItem + nextItem, nil
+	}
+
+	tests := []struct {
+		name  string
+		elems []int
+		init  int
+		want  int
+	}{
+		{
+			name:  "EmptyStream",
+			elems: []int{},
+			init:  0,
+			want:  0,
+		},
+		{
+			name:  "SingleElement",
+			elems: []int{5},
+			init:  0,
+			want:  5,
+		},
+		{
+			name:  "MultipleElements",
+			elems: []int{1, 2, 3, 4, 5},
+			init:  0,
+			want:  15,
+		},
+		{
+			name:  "MultipleElementsWithInit",
+			elems: []int{1, 2, 3, 4, 5},
+			init:  10,
+			want:  25,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := Of(tt.elems)
+			got := s.MustReduceWithInit(tt.init, accumulator)
+			if got != tt.want {
+				t.Errorf("MustReduceWithInit() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
