@@ -108,6 +108,10 @@ func (s Stream[T]) Sort(compareFunc func(x, y T) int) Stream[T] {
 //	limited := s.Limit(3)
 //	limited.ToSlice() // returns [1, 2, 3]
 func (s Stream[T]) Limit(n int) Stream[T] {
+	if s.err != nil {
+		return s
+	}
+
 	if n < 0 {
 		n = 0
 	} else if n > len(s.elems) {
@@ -130,6 +134,10 @@ func (s Stream[T]) Limit(n int) Stream[T] {
 //	fmt.Println(newStream.ToSlice()) // Output: [3 4 5]
 //	fmt.Println(s.ToSlice()) // Output: [1 2 3 4 5]
 func (s Stream[T]) Skip(n int) Stream[T] {
+	if s.err != nil {
+		return s
+	}
+
 	if n < 0 {
 		n = 0
 	} else if n > len(s.elems) {
@@ -339,9 +347,14 @@ func (s Stream[T]) MustAnyMatch(matchFunc func(T) bool) bool {
 // If the stream is empty, it panics with the message "Stream is empty".
 // The element is returned of type T.
 func (s Stream[T]) MustFirst() T {
+	if s.err != nil {
+		panic(s.err)
+	}
+
 	if len(s.elems) == 0 {
 		panic("Stream is empty")
 	}
+
 	return s.elems[0]
 }
 
@@ -431,14 +444,14 @@ func (s Stream[T]) MustReduceWithInit(initItem T, accumulator func(preItem, next
 // This method does not modify the original stream.
 // The elements are iterated in the same order as in the stream.
 // This method does not return any value.
-func (s Stream[T]) Range(forEach func(T) bool) error {
+func (s Stream[T]) Range(forEach func(T) error) error {
 	if s.err != nil {
 		return s.err
 	}
 
 	for _, elem := range s.elems {
-		if !forEach(elem) {
-			break
+		if err := forEach(elem); err != nil {
+			return err
 		}
 	}
 
@@ -502,6 +515,9 @@ func (s Stream[T]) Err() error {
 //     containing the elements that belong to that group.
 func GroupBy[T any, K comparable](s Stream[T], getKey func(T) K) map[K]Stream[T] {
 	result := make(map[K]Stream[T])
+	if s.err != nil {
+		return result
+	}
 
 	for _, v := range s.elems {
 		key := getKey(v)
