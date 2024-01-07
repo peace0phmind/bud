@@ -27,7 +27,7 @@ func Of[T any](elems []T) Stream[T] {
 // The new stream is returned as a pointer to Stream[T].
 func (s Stream[T]) Filter(keep func(T) (bool, error)) Stream[T] {
 	if s.err != nil {
-		return s
+		return Stream[T]{err: s.err}
 	}
 
 	var result Stream[T]
@@ -55,7 +55,7 @@ func (s Stream[T]) Filter(keep func(T) (bool, error)) Stream[T] {
 // The modified stream is returned as a pointer to Stream[T].
 func (s Stream[T]) Append(values ...T) Stream[T] {
 	if s.err != nil {
-		return s
+		return Stream[T]{err: s.err}
 	}
 
 	s.elems = append(s.elems, values...)
@@ -72,10 +72,11 @@ func (s Stream[T]) Append(values ...T) Stream[T] {
 // The new stream is returned as a pointer to Stream[T].
 func (s Stream[T]) FlatMap(flatFun func(T) Stream[T]) Stream[T] {
 	if s.err != nil {
-		return s
+		return Stream[T]{err: s.err}
 	}
 
 	var result Stream[T]
+
 	for _, elem := range s.elems {
 		stream := flatFun(elem)
 		if stream.err != nil {
@@ -103,7 +104,7 @@ func (s Stream[T]) FlatMap(flatFun func(T) Stream[T]) Stream[T] {
 //	fmt.Println(shuffledElems)  // Output: [4 3 1 2 5]
 func (s Stream[T]) Shuffle() Stream[T] {
 	if s.err != nil {
-		return s
+		return Stream[T]{err: s.err}
 	}
 
 	//Create a new Stream and copy the data from the original Stream over
@@ -121,7 +122,7 @@ func (s Stream[T]) Shuffle() Stream[T] {
 
 func (s Stream[T]) Distinct(equalFunc func(preItem, nextItem T) (bool, error)) Stream[T] {
 	if s.err != nil {
-		return s
+		return Stream[T]{err: s.err}
 	}
 
 	if len(s.elems) == 0 {
@@ -168,7 +169,7 @@ func (s Stream[T]) Distinct(equalFunc func(preItem, nextItem T) (bool, error)) S
 //	result := stream.MustToSlice() // [1, 2, 3]
 func (s Stream[T]) Sort(compareFunc func(x, y T) int) Stream[T] {
 	if s.err != nil {
-		return s
+		return Stream[T]{err: s.err}
 	}
 
 	sort.Slice(s.elems, func(i, j int) bool {
@@ -190,7 +191,7 @@ func (s Stream[T]) Sort(compareFunc func(x, y T) int) Stream[T] {
 //	limited.ToSlice() // returns [1, 2, 3]
 func (s Stream[T]) Limit(n int) Stream[T] {
 	if s.err != nil {
-		return s
+		return Stream[T]{err: s.err}
 	}
 
 	if n < 0 {
@@ -216,7 +217,7 @@ func (s Stream[T]) Limit(n int) Stream[T] {
 //	fmt.Println(s.ToSlice()) // Output: [1 2 3 4 5]
 func (s Stream[T]) Skip(n int) Stream[T] {
 	if s.err != nil {
-		return s
+		return Stream[T]{err: s.err}
 	}
 
 	if n < 0 {

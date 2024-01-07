@@ -6,17 +6,134 @@ import (
 	"testing"
 )
 
-// Function for generating sample data
-func generateData(n int) []int {
-	data := make([]int, n)
-	for i := 0; i < n; i++ {
-		data[i] = i
+func TestFilter(t *testing.T) {
+	testCases := []struct {
+		name     string
+		initial  Stream[int]
+		keepFunc func(int) (bool, error)
+		want     Stream[int]
+	}{
+		{
+			"EmptyStream",
+			Stream[int]{elems: []int{}},
+			func(v int) (bool, error) { return v%2 == 0, nil },
+			Stream[int]{elems: []int{}},
+		},
+		{
+			"AllElementsFilteredOut",
+			Stream[int]{elems: []int{1, 3, 5, 7, 9}},
+			func(v int) (bool, error) { return v%2 == 0, nil },
+			Stream[int]{elems: []int{}},
+		},
+		{
+			"SomeElementsFilteredOut",
+			Stream[int]{elems: []int{1, 2, 3, 4, 5}},
+			func(v int) (bool, error) { return v%2 == 0, nil },
+			Stream[int]{elems: []int{2, 4}},
+		},
+		{
+			"NoElementsFilteredOut",
+			Stream[int]{elems: []int{2, 4, 6, 8, 10}},
+			func(v int) (bool, error) { return v%2 == 0, nil },
+			Stream[int]{elems: []int{2, 4, 6, 8, 10}},
+		},
 	}
-	return data
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := tc.initial.Filter(tc.keepFunc)
+
+			for i, v := range got.elems {
+				if v != tc.want.elems[i] {
+					t.Errorf("Filter failed for case %s, want %#v, got %#v", tc.name, tc.want, got)
+				}
+			}
+		})
+	}
+}
+
+func TestFlatMap(t *testing.T) {
+	testCases := []struct {
+		name    string
+		stream  Stream[int]
+		flatFun func(int) Stream[int]
+		want    Stream[int]
+		wantErr bool
+	}{
+		{
+			name: "empty stream",
+			stream: Stream[int]{
+				elems: []int{},
+			},
+			flatFun: func(n int) Stream[int] {
+				return Stream[int]{elems: []int{n, n}}
+			},
+			want:    Stream[int]{elems: []int{}},
+			wantErr: false,
+		},
+		{
+			name: "stream with error",
+			stream: Stream[int]{
+				elems: []int{1, 2, 3},
+				err:   errors.New("previous error"),
+			},
+			flatFun: func(n int) Stream[int] {
+				return Stream[int]{elems: []int{n, n}}
+			},
+			want:    Stream[int]{elems: []int{}, err: errors.New("previous error")},
+			wantErr: true,
+		},
+		{
+			name: "flat function returns error",
+			stream: Stream[int]{
+				elems: []int{1, 2, 3},
+			},
+			flatFun: func(n int) Stream[int] {
+				return Stream[int]{elems: []int{n, n}, err: errors.New("flat function error")}
+			},
+			want:    Stream[int]{elems: []int{}, err: errors.New("flat function error")},
+			wantErr: true,
+		},
+		{
+			name: "normal case",
+			stream: Stream[int]{
+				elems: []int{1, 2, 3},
+			},
+			flatFun: func(n int) Stream[int] {
+				return Stream[int]{elems: []int{n, n}}
+			},
+			want:    Stream[int]{elems: []int{1, 1, 2, 2, 3, 3}},
+			wantErr: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := tc.stream.FlatMap(tc.flatFun)
+			for i, v := range got.elems {
+				if v != tc.want.elems[i] {
+					t.Errorf("Filter failed for case %s, want %#v, got %#v", tc.name, tc.want, got)
+				}
+			}
+
+			if (got.Err() != nil) != tc.wantErr {
+				t.Errorf("FlatMap() error = %v, wantErr %v", got.Err(), tc.wantErr)
+			}
+		})
+	}
 }
 
 func TestStream_Shuffle(t *testing.T) {
-	tests := []struct {
+	// Function for generating sample data
+	generateData := func(n int) []int {
+		data := make([]int, n)
+		for i := 0; i < n; i++ {
+			data[i] = i
+		}
+		return data
+	}
+
+	testCases := []struct {
 		name  string
 		elems []int
 	}{
@@ -34,9 +151,9 @@ func TestStream_Shuffle(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			stream := Of(tt.elems)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			stream := Of(tc.elems)
 			shuffled := stream.Shuffle()
 
 			// Check if shuffle returns a new stream object
@@ -47,17 +164,17 @@ func TestStream_Shuffle(t *testing.T) {
 			shuffledElems := shuffled.MustToSlice()
 
 			// Check the number of elements is same in the original and shuffled stream
-			if got, want := len(tt.elems), len(shuffledElems); got != want {
+			if got, want := len(tc.elems), len(shuffledElems); got != want {
 				t.Errorf("len(shuffled) got %v, want %v", got, want)
 			}
 
-			if len(tt.elems) < 10 {
-				t.Logf("shuffled got %v, origin %v", shuffledElems, tt.elems)
+			if len(tc.elems) < 10 {
+				t.Logf("shuffled got %v, origin %v", shuffledElems, tc.elems)
 			}
 
 			// Check at least one element is in a different position
 			var found bool
-			for i, v := range tt.elems {
+			for i, v := range tc.elems {
 				if v != shuffledElems[i] {
 					found = true
 					break
@@ -80,24 +197,24 @@ func TestMap(t *testing.T) {
 		return 0, errors.New("Error")
 	}
 
-	tests := []struct {
-		name     string
-		stream   Stream[int]
-		funcMap  func(int) (int, error)
-		expected Stream[int]
-		err      error
+	testCases := []struct {
+		name    string
+		stream  Stream[int]
+		funcMap func(int) (int, error)
+		want    Stream[int]
+		err     error
 	}{
 		{
-			name:     "increment",
-			stream:   Of[int]([]int{1, 2, 3}),
-			funcMap:  increment,
-			expected: Of[int]([]int{2, 3, 4}),
+			name:    "increment",
+			stream:  Of[int]([]int{1, 2, 3}),
+			funcMap: increment,
+			want:    Of[int]([]int{2, 3, 4}),
 		},
 		{
-			name:     "empty",
-			stream:   Of[int]([]int{}),
-			funcMap:  increment,
-			expected: Of[int]([]int{}),
+			name:    "empty",
+			stream:  Of[int]([]int{}),
+			funcMap: increment,
+			want:    Of[int]([]int{}),
 		},
 		{
 			name:    "errorFunction",
@@ -107,25 +224,25 @@ func TestMap(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := Map[int, int](tt.stream, tt.funcMap)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := Map[int, int](tc.stream, tc.funcMap)
 
-			if tt.err != nil {
-				if result.err.Error() != tt.err.Error() {
-					t.Errorf("got error %q, want %q", result.err, tt.err)
+			if tc.err != nil {
+				if result.err.Error() != tc.err.Error() {
+					t.Errorf("got error %q, want %q", result.err, tc.err)
 				}
 				return
 			}
 
-			if len(result.elems) != len(tt.expected.elems) {
-				t.Errorf("got length %d, want %d", len(result.elems), len(tt.expected.elems))
+			if len(result.elems) != len(tc.want.elems) {
+				t.Errorf("got length %d, want %d", len(result.elems), len(tc.want.elems))
 				return
 			}
 
 			for i, v := range result.elems {
-				if v != tt.expected.elems[i] {
-					t.Errorf("at index %d: got %v, want %v", i, v, tt.expected.elems[i])
+				if v != tc.want.elems[i] {
+					t.Errorf("at index %d: got %v, want %v", i, v, tc.want.elems[i])
 				}
 			}
 		})
@@ -137,7 +254,8 @@ func TestGroupBy(t *testing.T) {
 		s      Stream[int]
 		getKey func(int) int
 	}
-	tests := []struct {
+
+	testCases := []struct {
 		name string
 		args args
 		want map[int]Stream[int]
@@ -180,10 +298,10 @@ func TestGroupBy(t *testing.T) {
 			},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := GroupBy(tt.args.s, tt.args.getKey); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GroupBy() = %v, want %v", got, tt.want)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := GroupBy(tc.args.s, tc.args.getKey); !reflect.DeepEqual(got, tc.want) {
+				t.Errorf("GroupBy() = %v, want %v", got, tc.want)
 			}
 		})
 	}
@@ -203,9 +321,9 @@ func TestStreamSort(t *testing.T) {
 		return a - b
 	}
 	testCases := []struct {
-		name     string
-		input    []int
-		expected []int
+		name  string
+		input []int
+		want  []int
 	}{
 		{"Empty Slice", []int{}, []int{}},
 		{"Single Element", []int{1}, []int{1}},
@@ -219,13 +337,13 @@ func TestStreamSort(t *testing.T) {
 			stream := Of(tc.input).Sort(compare)
 			result := stream.MustToSlice()
 
-			if len(tc.expected) != len(result) {
-				t.Fatalf("expected length %v but got %v", len(tc.expected), len(result))
+			if len(tc.want) != len(result) {
+				t.Fatalf("want length %v but got %v", len(tc.want), len(result))
 			}
 
-			for i, v := range tc.expected {
+			for i, v := range tc.want {
 				if v != result[i] {
-					t.Fatalf("at index %d, expected %v but got %v", i, v, result[i])
+					t.Fatalf("at index %d, want %v but got %v", i, v, result[i])
 				}
 			}
 		})
@@ -237,7 +355,7 @@ func TestMustReduceWithInit(t *testing.T) {
 		return preItem + nextItem, nil
 	}
 
-	tests := []struct {
+	testCases := []struct {
 		name  string
 		elems []int
 		init  int
@@ -269,12 +387,12 @@ func TestMustReduceWithInit(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := Of(tt.elems)
-			got := s.MustReduceWithInit(tt.init, accumulator)
-			if got != tt.want {
-				t.Errorf("MustReduceWithInit() = %v, want %v", got, tt.want)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := Of(tc.elems)
+			got := s.MustReduceWithInit(tc.init, accumulator)
+			if got != tc.want {
+				t.Errorf("MustReduceWithInit() = %v, want %v", got, tc.want)
 			}
 		})
 	}
@@ -285,7 +403,7 @@ func TestDistinct(t *testing.T) {
 		return preItem == nextItem, nil
 	}
 
-	tests := []struct {
+	testCases := []struct {
 		name     string
 		elems    []int
 		equalFun func(preItem, nextItem int) (bool, error)
@@ -317,20 +435,20 @@ func TestDistinct(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := Of(tt.elems)
-			distinctS := s.Distinct(tt.equalFun)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := Of(tc.elems)
+			distinctS := s.Distinct(tc.equalFun)
 			got, _ := distinctS.ToSlice()
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Stream.Distinct() = %v, want %v", got, tt.want)
+			if !reflect.DeepEqual(got, tc.want) {
+				t.Errorf("Stream.Distinct() = %v, want %v", got, tc.want)
 			}
 		})
 	}
 }
 
 func TestFindFirst(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
 		name    string
 		stream  Stream[int]
 		keep    func(int) (bool, error)
@@ -363,15 +481,15 @@ func TestFindFirst(t *testing.T) {
 			wantErr: true,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.stream.FindFirst(tt.keep)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("FindFirst() error = %v, wantErr %v", err, tt.wantErr)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := tc.stream.FindFirst(tc.keep)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("FindFirst() error = %v, wantErr %v", err, tc.wantErr)
 				return
 			}
-			if !tt.wantErr && got != tt.want {
-				t.Errorf("FindFirst() got = %v, want %v", got, tt.want)
+			if !tc.wantErr && got != tc.want {
+				t.Errorf("FindFirst() got = %v, want %v", got, tc.want)
 			}
 		})
 	}
