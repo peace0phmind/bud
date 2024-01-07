@@ -1,6 +1,7 @@
 package stream
 
 import (
+	"errors"
 	"math/rand"
 	"sort"
 	"time"
@@ -24,7 +25,7 @@ func Of[T any](values []T) Stream[T] {
 // The elements of the new stream are in the same order as in the original stream.
 // The keep function should return true for elements that should be kept in the new stream, and false for elements that should be excluded.
 // The new stream is returned as a pointer to Stream[T].
-func (s Stream[T]) Filter(keep func(T) bool) Stream[T] {
+func (s Stream[T]) Filter(keep func(T) (bool, error)) Stream[T] {
 	if s.err != nil {
 		return s
 	}
@@ -32,7 +33,13 @@ func (s Stream[T]) Filter(keep func(T) bool) Stream[T] {
 	var result Stream[T]
 
 	for _, v := range s.elems {
-		if keep(v) {
+		ok, err := keep(v)
+		if err != nil {
+			result.err = err
+			return result
+		}
+
+		if ok {
 			result.elems = append(result.elems, v)
 		}
 	}
@@ -85,6 +92,53 @@ func (s Stream[T]) Shuffle() Stream[T] {
 	return newStream
 }
 
+func (s Stream[T]) Distinct(equalFunc func(preItem, nextItem T) (bool, error)) Stream[T] {
+	if s.err != nil {
+		return s
+	}
+
+	if len(s.elems) == 0 {
+		return s
+	}
+
+	var result Stream[T]
+	result.elems = append(result.elems, s.elems[0])
+	for _, newItem := range s.elems[1:] {
+		unique := true
+		for _, existingItem := range result.elems {
+			ok, err := equalFunc(existingItem, newItem)
+			if err != nil {
+				result.err = err
+				return result
+			}
+			if ok {
+				unique = false
+				break
+			}
+		}
+		if unique {
+			result.elems = append(result.elems, newItem)
+		}
+	}
+
+	return result
+}
+
+// Sort sorts the elements in the stream in ascending order according to the compareFunc.
+// It uses the sort.Slice function to perform the sorting.
+// The compareFunc should take two elements of type T and return an integer value.
+// If the value is less than 0, the first element is considered smaller than the second element.
+// If the value is equal to 0, the elements are considered equal.
+// If the value is greater than 0, the first element is considered greater than the second element.
+// The original stream is modified in place.
+// The sorted stream is returned.
+// Example Usage:
+//
+//	compare := func(a, b int) int {
+//	    return a - b
+//	}
+//	stream := Of([]int{3, 1, 2}).Sort(compare)
+//	result := stream.MustToSlice() // [1, 2, 3]
 func (s Stream[T]) Sort(compareFunc func(x, y T) int) Stream[T] {
 	if s.err != nil {
 		return s
@@ -200,12 +254,12 @@ func (s Stream[T]) ToAny() ([]any, error) {
 // Returns:
 // - A slice of `any` type containing the converted elements of the stream.
 func (s Stream[T]) MustToAny() []any {
-	ret, err := s.ToAny()
+	result, err := s.ToAny()
 	if err != nil {
 		panic(err)
 	}
 
-	return ret
+	return result
 }
 
 // AllMatch returns true if all elements in the stream satisfy the given matchFunc function.
@@ -229,13 +283,18 @@ func (s Stream[T]) MustToAny() []any {
 // Note: The elements of the stream should be of the same type as the type specified for Stream[T].
 // For example, if the Stream[T] is created with Stream[int], the elements should be of type int.
 // The behavior of the method is undefined if this condition is violated.
-func (s Stream[T]) AllMatch(matchFunc func(T) bool) (bool, error) {
+func (s Stream[T]) AllMatch(matchFunc func(T) (bool, error)) (bool, error) {
 	if s.err != nil {
 		return false, s.err
 	}
 
 	for _, elem := range s.elems {
-		if !matchFunc(elem) {
+		match, err := matchFunc(elem)
+		if err != nil {
+			return false, err
+		}
+
+		if !match {
 			return false, nil
 		}
 	}
@@ -280,18 +339,12 @@ func (s Stream[T]) AllMatch(matchFunc func(T) bool) (bool, error) {
 //		return n > 3
 //	})
 //	// allMatch panics with the error: Stream is empty
-func (s Stream[T]) MustAllMatch(matchFunc func(T) bool) bool {
-	if s.err != nil {
-		panic(s.err)
+func (s Stream[T]) MustAllMatch(matchFunc func(T) (bool, error)) bool {
+	match, err := s.AllMatch(matchFunc)
+	if err != nil {
+		panic(err)
 	}
-
-	for _, elem := range s.elems {
-		if !matchFunc(elem) {
-			return false
-		}
-	}
-
-	return true
+	return match
 }
 
 // AnyMatch checks if any element in the stream satisfies the given matchFunc.
@@ -301,13 +354,18 @@ func (s Stream[T]) MustAllMatch(matchFunc func(T) bool) bool {
 // The original stream is not modified.
 // The matchFunc function should return true for elements that satisfy the condition and false otherwise.
 // Returns true if any element in the stream satisfies the matchFunc, false otherwise.
-func (s Stream[T]) AnyMatch(matchFunc func(T) bool) (bool, error) {
+func (s Stream[T]) AnyMatch(matchFunc func(T) (bool, error)) (bool, error) {
 	if s.err != nil {
 		return false, s.err
 	}
 
 	for _, elem := range s.elems {
-		if matchFunc(elem) {
+		match, err := matchFunc(elem)
+		if err != nil {
+			return false, err
+		}
+
+		if match {
 			return true, nil
 		}
 	}
@@ -330,32 +388,153 @@ func (s Stream[T]) AnyMatch(matchFunc func(T) bool) (bool, error) {
 //	  return elem > 3
 //	})
 //	// result: true
-func (s Stream[T]) MustAnyMatch(matchFunc func(T) bool) bool {
+func (s Stream[T]) MustAnyMatch(matchFunc func(T) (bool, error)) bool {
+	match, err := s.AnyMatch(matchFunc)
+	if err != nil {
+		panic(err)
+	}
+	return match
+}
+
+// FindFirst returns the first element in the stream that satisfies the keep function.
+// It iterates through each element in the stream and applies the keep function to determine if it should be kept.
+// The keep function should return true for elements that should be returned as the first element, and false for elements that should be skipped.
+// If an error occurs while applying the keep function, that error is returned along with the default value for type T.
+// If no matching element is found, an error is returned with the default value for type T.
+// The original stream is not modified.
+// FindFirst returns the first matching element as type T and an error.
+// Example:
+//
+//	stream := Stream[int]{1, 2, 3, 4, 5}
+//	keep := func(n int) (bool, error) {
+//	    return n > 3, nil
+//	}
+//	first, err := stream.FindFirst(keep)
+//	// first = 4, err = nil
+//
+// Note: Replace "T" with the actual type used in the implementation.
+func (s Stream[T]) FindFirst(keep func(T) (bool, error)) (t T, err error) {
 	if s.err != nil {
-		panic(s.err)
+		return t, s.err
 	}
 
+	ok := false
 	for _, elem := range s.elems {
-		if matchFunc(elem) {
-			return true
+		ok, err = keep(elem)
+		if err != nil {
+			return t, err
+		}
+		if ok {
+			return elem, nil
 		}
 	}
-	return false
+
+	return t, errors.New("no matching element found")
+}
+
+func (s Stream[T]) Max(compareFunc func(x, y T) (int, error)) (t T, err error) {
+	if s.err != nil {
+		return t, s.err
+	}
+
+	if len(s.elems) == 0 {
+		return t, errors.New("elems is empty")
+	}
+
+	max := s.elems[0]
+	compared := 0
+	for _, elem := range s.elems[1:] {
+		compared, err = compareFunc(elem, max)
+		if err != nil {
+			return t, err
+		}
+
+		if compared > 0 {
+			max = elem
+		}
+	}
+
+	return max, nil
+}
+
+// MustMax returns the maximum element of the stream based on the provided compareFunc.
+// If an error occurs during the calculation of the maximum element, it panics.
+// The compareFunc is used to determine the ordering of the elements.
+// It should return a negative value if x is less than y, 0 if x is equal to y, and a positive value if x is greater than y.
+// The maximum element is returned as a single value of type T.
+// The original stream is not modified.
+// Note: This function assumes that the stream is not empty.
+func (s Stream[T]) MustMax(compareFunc func(x, y T) (int, error)) T {
+	result, err := s.Max(compareFunc)
+	if err != nil {
+		panic(err)
+	}
+	return result
+}
+
+func (s Stream[T]) Min(compareFunc func(x, y T) (int, error)) (t T, err error) {
+	if s.err != nil {
+		return t, s.err
+	}
+
+	if len(s.elems) == 0 {
+		return t, errors.New("elems is empty")
+	}
+
+	min := s.elems[0]
+	compared := 0
+	for _, elem := range s.elems[1:] {
+		compared, err = compareFunc(elem, min)
+		if err != nil {
+			return t, err
+		}
+
+		if compared < 0 {
+			min = elem
+		}
+	}
+
+	return min, nil
+}
+
+// MustMin returns the minimum element in the stream, determined by the compareFunc.
+// It first calls the Min method of the stream with the compareFunc to get the minimum element and the error.
+// If the Min method returns an error, MustMin panics with that error.
+// Otherwise, it returns the minimum element.
+// The compareFunc should return a negative value if x < y, zero if x == y, and a positive value if x > y.
+// The type T should be comparable with the compareFunc.
+// This method does not modify the original stream.
+// It returns the minimum element as the result.
+// It does not return an error because it panics if the Min method returns an error.
+func (s Stream[T]) MustMin(compareFunc func(x, y T) (int, error)) T {
+	result, err := s.Min(compareFunc)
+	if err != nil {
+		panic(err)
+	}
+	return result
+}
+
+func (s Stream[T]) First() (t T, err error) {
+	if s.err != nil {
+		return t, s.err
+	}
+
+	if len(s.elems) == 0 {
+		return t, errors.New("stream is empty")
+	}
+
+	return s.elems[0], nil
 }
 
 // MustFirst returns the first element of the stream.
 // If the stream is empty, it panics with the message "Stream is empty".
 // The element is returned of type T.
 func (s Stream[T]) MustFirst() T {
-	if s.err != nil {
-		panic(s.err)
+	result, err := s.First()
+	if err != nil {
+		panic(err)
 	}
-
-	if len(s.elems) == 0 {
-		panic("Stream is empty")
-	}
-
-	return s.elems[0]
+	return result
 }
 
 func (s Stream[T]) _reduce(initItem T, beginItem int, accumulator func(preItem, nextItem T) (T, error)) (t T, err error) {
@@ -394,13 +573,11 @@ func (s Stream[T]) Reduce(accumulator func(preItem, nextItem T) (T, error)) (t T
 }
 
 func (s Stream[T]) MustReduce(accumulator func(preItem, nextItem T) (T, error)) T {
-	ret, err := s.Reduce(accumulator)
-
+	result, err := s.Reduce(accumulator)
 	if err != nil {
 		panic(err)
 	}
-
-	return ret
+	return result
 }
 
 // ReduceWithInit reduces the stream by applying the accumulator function to each element,
@@ -429,13 +606,11 @@ func (s Stream[T]) ReduceWithInit(initItem T, accumulator func(preItem, nextItem
 }
 
 func (s Stream[T]) MustReduceWithInit(initItem T, accumulator func(preItem, nextItem T) (T, error)) T {
-	ret, err := s.ReduceWithInit(initItem, accumulator)
-
+	result, err := s.ReduceWithInit(initItem, accumulator)
 	if err != nil {
 		panic(err)
 	}
-
-	return ret
+	return result
 }
 
 // Range iterates over each element in the stream and applies the forEach function to it.

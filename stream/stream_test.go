@@ -197,7 +197,7 @@ func TestGroupByGetNotExistKey(t *testing.T) {
 	println(ret[3].Size())
 }
 
-func TestStreamMustSort(t *testing.T) {
+func TestStreamSort(t *testing.T) {
 	// Comparing function.
 	compare := func(a, b int) int {
 		return a - b
@@ -275,6 +275,103 @@ func TestMustReduceWithInit(t *testing.T) {
 			got := s.MustReduceWithInit(tt.init, accumulator)
 			if got != tt.want {
 				t.Errorf("MustReduceWithInit() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDistinct(t *testing.T) {
+	equalInt := func(preItem, nextItem int) bool {
+		return preItem == nextItem
+	}
+
+	tests := []struct {
+		name     string
+		elems    []int
+		equalFun func(preItem, nextItem int) bool
+		want     []int
+	}{
+		{
+			name:     "EmptySlice",
+			elems:    []int{},
+			equalFun: equalInt,
+			want:     []int{},
+		},
+		{
+			name:     "NoDuplicates",
+			elems:    []int{1, 2, 3, 4},
+			equalFun: equalInt,
+			want:     []int{1, 2, 3, 4},
+		},
+		{
+			name:     "AllDuplicates",
+			elems:    []int{2, 2, 2, 2, 2},
+			equalFun: equalInt,
+			want:     []int{2},
+		},
+		{
+			name:     "SomeDuplicates",
+			elems:    []int{1, 2, 2, 3, 3, 3, 4, 4, 4, 4},
+			equalFun: equalInt,
+			want:     []int{1, 2, 3, 4},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := Of(tt.elems)
+			distinctS := s.Distinct(tt.equalFun)
+			got, _ := distinctS.ToSlice()
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Stream.Distinct() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestFindFirst(t *testing.T) {
+	tests := []struct {
+		name    string
+		stream  Stream[int]
+		keep    func(int) (bool, error)
+		want    int
+		wantErr bool
+	}{
+		{
+			name:   "FindFirstPositiveNumberInIntStream",
+			stream: Of([]int{0, -1, -3, 10, -2, 100}),
+			keep: func(i int) (bool, error) {
+				return i > 0, nil
+			},
+			want:    10,
+			wantErr: false,
+		},
+		{
+			name:   "FindFirstError",
+			stream: Stream[int]{elems: []int{0, -1, -3, 10, -2, 100}, err: errors.New("test error")},
+			keep: func(i int) (bool, error) {
+				return i > 0, nil
+			},
+			wantErr: true,
+		},
+		{
+			name:   "FindFirstInEmptyStream",
+			stream: Stream[int]{elems: []int{}},
+			keep: func(i int) (bool, error) {
+				return i > 0, nil
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.stream.FindFirst(tt.keep)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("FindFirst() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && got != tt.want {
+				t.Errorf("FindFirst() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
