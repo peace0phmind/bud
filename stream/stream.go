@@ -15,8 +15,8 @@ type Stream[T any] struct {
 }
 
 // Of creates a new stream with the given elems.
-func Of[T any](values []T) Stream[T] {
-	return Stream[T]{elems: values}
+func Of[T any](elems []T) Stream[T] {
+	return Stream[T]{elems: elems}
 }
 
 // Filter filters the stream by applying the keep function to each element.
@@ -60,6 +60,33 @@ func (s Stream[T]) Append(values ...T) Stream[T] {
 
 	s.elems = append(s.elems, values...)
 	return s
+}
+
+// FlatMap applies the flatFun function to each element in the stream and flattens the resulting streams into a single stream.
+// It creates a new stream with the flattened elements.
+// The original stream is not modified.
+// The elements in the new stream are in the order they appear in the original stream.
+// The flatFun function takes an element from the original stream and returns a new stream.
+// The new stream will be flattened and its elements will be added to the new stream created by FlatMap.
+// If any of the calls to flatFun returns a stream with an error, the error will be propagated and the resulting stream will contain the error.
+// The new stream is returned as a pointer to Stream[T].
+func (s Stream[T]) FlatMap(flatFun func(T) Stream[T]) Stream[T] {
+	if s.err != nil {
+		return s
+	}
+
+	var result Stream[T]
+	for _, elem := range s.elems {
+		stream := flatFun(elem)
+		if stream.err != nil {
+			result.err = stream.err
+			return result
+		}
+
+		result.elems = append(result.elems, stream.elems...)
+	}
+
+	return result
 }
 
 // Shuffle randomly rearranges the elements in the stream.
@@ -739,6 +766,26 @@ func Map[In any, Out any](s Stream[In], f func(In) (Out, error)) Stream[Out] {
 			return result
 		}
 		result.elems = append(result.elems, elem)
+	}
+
+	return result
+}
+
+func FlatMap[In any, Out any](in Stream[In], flatMap func(In) Stream[Out]) Stream[Out] {
+	var result Stream[Out]
+	if in.err != nil {
+		result.err = in.err
+		return result
+	}
+
+	for _, v := range in.elems {
+		stream := flatMap(v)
+		if stream.err != nil {
+			result.err = stream.err
+			return result
+		}
+
+		result.elems = append(result.elems, stream.elems...)
 	}
 
 	return result

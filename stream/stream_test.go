@@ -281,14 +281,14 @@ func TestMustReduceWithInit(t *testing.T) {
 }
 
 func TestDistinct(t *testing.T) {
-	equalInt := func(preItem, nextItem int) bool {
-		return preItem == nextItem
+	equalInt := func(preItem, nextItem int) (bool, error) {
+		return preItem == nextItem, nil
 	}
 
 	tests := []struct {
 		name     string
 		elems    []int
-		equalFun func(preItem, nextItem int) bool
+		equalFun func(preItem, nextItem int) (bool, error)
 		want     []int
 	}{
 		{
