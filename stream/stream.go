@@ -112,9 +112,11 @@ func (s Stream[T]) Shuffle() Stream[T] {
 
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
-	for n := len(newStream.elems); n > 0; n-- {
-		randIndex := r.Intn(n)
-		newStream.elems[n-1], newStream.elems[randIndex] = newStream.elems[randIndex], newStream.elems[n-1]
+	for i := 0; i < r.Intn(3)+3; i++ {
+		for n := len(newStream.elems); n > 0; n-- {
+			randIndex := r.Intn(n)
+			newStream.elems[n-1], newStream.elems[randIndex] = newStream.elems[randIndex], newStream.elems[n-1]
+		}
 	}
 
 	return newStream
@@ -150,6 +152,23 @@ func (s Stream[T]) Distinct(equalFunc func(preItem, nextItem T) (bool, error)) S
 	}
 
 	return result
+}
+
+// Reverse reverses the order of elements in the stream.
+// If the stream contains an error, it returns a new Stream with the same error.
+// The original stream is modified in place.
+// It uses a two-pointer technique to swap elements starting from both ends of the stream until they meet in the middle.
+// The reversed stream is returned as a value of type Stream[T].
+func (s Stream[T]) Reverse() Stream[T] {
+	if s.err != nil {
+		return Stream[T]{err: s.err}
+	}
+
+	for i, j := 0, len(s.elems)-1; i < j; i, j = i+1, j-1 {
+		s.elems[i], s.elems[j] = s.elems[j], s.elems[i]
+	}
+
+	return s
 }
 
 // Sort sorts the elements in the stream in ascending order according to the compareFunc.
@@ -734,6 +753,29 @@ func GroupBy[T any, K comparable](s Stream[T], getKey func(T) K) map[K]Stream[T]
 	return result
 }
 
+// ToMap converts the elements of the input stream into a map using the provided map function.
+// The map function takes an element of the input stream and returns a key-value pair and an optional error.
+// If the input stream has an error, it is returned as it is.
+// The resulting map is returned along with a potential error.
+// If the map function returns an error, the conversion stops and the error is returned immediately.
+// The keys and values in the map are of types Key and Value, respectively.
+func ToMap[In any, Key comparable, Value any](in Stream[In], mapFunc func(In) (Key, Value, error)) (map[Key]Value, error) {
+	if in.err != nil {
+		return nil, in.err
+	}
+
+	result := make(map[Key]Value)
+
+	for _, v := range in.elems {
+		key, value, err := mapFunc(v)
+		if err != nil {
+			return nil, err
+		}
+		result[key] = value
+	}
+	return result, nil
+}
+
 // Map applies the provided function `f` to each element of the input stream `s`
 // and returns a new stream containing the resulting elements. If an error occurs during
 // the mapping process, the resulting stream will have the corresponding error value.
@@ -772,6 +814,10 @@ func Map[In any, Out any](s Stream[In], f func(In) (Out, error)) Stream[Out] {
 	return result
 }
 
+// FlatMap takes a Stream `in` and a `flatMap` function and applies the `flatMap` function to each element in the Stream `in`.
+// It returns a new Stream with the concatenated elements from all the resulting Streams.
+// If the Stream `in` has an error, the error is propagated to the result Stream.
+// If any resulting Stream from the `flatMap` function has an error, the error is also propagated to the result Stream.
 func FlatMap[In any, Out any](in Stream[In], flatMap func(In) Stream[Out]) Stream[Out] {
 	var result Stream[Out]
 	if in.err != nil {

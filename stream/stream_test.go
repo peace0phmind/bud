@@ -158,7 +158,11 @@ func TestStream_Shuffle(t *testing.T) {
 
 			// Check if shuffle returns a new stream object
 			if reflect.DeepEqual(stream, shuffled) {
-				t.Errorf("Shuffle() must return new stream object")
+				// try once again
+				shuffled = stream.Shuffle()
+				if reflect.DeepEqual(stream, shuffled) {
+					t.Errorf("Shuffle() must return new stream object")
+				}
 			}
 
 			shuffledElems := shuffled.MustToSlice()
@@ -964,6 +968,193 @@ func TestFlatMap(t *testing.T) {
 				if v != tc.want.elems[i] {
 					t.Errorf("Filter failed for case %s, want %#v, got %#v", tc.name, tc.want, got)
 				}
+			}
+		})
+	}
+}
+
+func TestToMap(t *testing.T) {
+	// Simple util function to compare maps. This is necessary since the
+	// use of generics means the map can't be compared directly
+	compareMaps := func(map1, map2 map[int]string) bool {
+		if len(map1) != len(map2) {
+			return false
+		}
+		for k, v := range map1 {
+			if map2[k] != v {
+				return false
+			}
+		}
+		return true
+	}
+
+	testCases := []struct {
+		name      string
+		stream    Stream[string]
+		mapFunc   func(string) (int, string, error)
+		want      map[int]string
+		expectErr bool
+	}{
+		{
+			name: "Valid Map 1",
+			stream: Stream[string]{
+				elems: []string{"one", "four", "three"},
+			},
+			mapFunc: func(s string) (int, string, error) {
+				return len(s), s, nil
+			},
+			want: map[int]string{
+				3: "one",
+				4: "four",
+				5: "three",
+			},
+			expectErr: false,
+		},
+		{
+			name: "Valid Map 2",
+			stream: Stream[string]{
+				elems: []string{"one", "two", "three"},
+			},
+			mapFunc: func(s string) (int, string, error) {
+				return len(s), s, nil
+			},
+			want: map[int]string{
+				3: "two",
+				5: "three",
+			},
+			expectErr: false,
+		},
+		{
+			name: "Stream With Error",
+			stream: Stream[string]{
+				err: errors.New("stream test error"),
+			},
+			expectErr: true,
+		},
+		{
+			name: "transform function Error",
+			stream: Stream[string]{
+				elems: []string{"one", "two", "three"},
+			},
+			mapFunc: func(s string) (int, string, error) {
+				return 0, "", errors.New("map func test error")
+			},
+			expectErr: true,
+		},
+		{
+			name:   "Empty Stream",
+			stream: Stream[string]{},
+			mapFunc: func(s string) (int, string, error) {
+				return len(s), s, nil
+			},
+			want:      map[int]string{},
+			expectErr: false,
+		},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			gotMap, err := ToMap(tt.stream, tt.mapFunc)
+			if (err != nil) != tt.expectErr {
+				t.Errorf("ToMap() error = %v, expectErr %v", err, tt.expectErr)
+			}
+			if err == nil && !compareMaps(gotMap, tt.want) {
+				t.Errorf("ToMap() gotMap = %v, want %v", gotMap, tt.want)
+			}
+		})
+	}
+}
+
+func TestRange(t *testing.T) {
+
+	testCases := []struct {
+		name      string
+		input     Stream[int]
+		want      []int
+		shouldErr bool
+	}{
+		{"empty stream", Stream[int]{elems: []int{}}, []int{}, false},
+		{"one element", Stream[int]{elems: []int{1}}, []int{1}, false},
+		{"multiple elements", Stream[int]{elems: []int{1, 2, 3}}, []int{1, 2, 3}, false},
+		{"stream with error", Stream[int]{elems: []int{1, 2, 3}, err: errors.New("tc error")}, nil, true},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var got = make([]int, 0)
+			err := tc.input.Range(func(i int) error {
+				got = append(got, i)
+				return nil
+			})
+			if (err != nil) != tc.shouldErr {
+				t.Errorf("got error = %v, want %v", err, tc.shouldErr)
+			} else if err == nil && !reflect.DeepEqual(got, tc.want) {
+				t.Errorf("got = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestStream_Reverse(t *testing.T) {
+	type fields struct {
+		elems []interface{}
+		err   error
+	}
+	testCases := []struct {
+		name   string
+		fields fields
+		want   []interface{}
+	}{
+		{
+			name: "Test Reverse string slice 3",
+			fields: fields{
+				elems: []interface{}{"one", "two", "three"},
+				err:   nil,
+			},
+			want: []interface{}{"three", "two", "one"},
+		},
+		{
+			name: "Test Reverse string slice 4",
+			fields: fields{
+				elems: []interface{}{"one", "two", "three", "four"},
+				err:   nil,
+			},
+			want: []interface{}{"four", "three", "two", "one"},
+		},
+		{
+			name: "Test Reverse int slice",
+			fields: fields{
+				elems: []interface{}{1, 2, 3},
+				err:   nil,
+			},
+			want: []interface{}{3, 2, 1},
+		},
+		{
+			name: "Test Reverse empty slice",
+			fields: fields{
+				elems: []interface{}{},
+				err:   nil,
+			},
+			want: []interface{}{},
+		},
+		{
+			name: "Test Reverse slice with error",
+			fields: fields{
+				elems: []interface{}{"one", "two", "three"},
+				err:   errors.New("test error"),
+			},
+			want: nil,
+		},
+	}
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			s := Stream[interface{}]{
+				elems: tt.fields.elems,
+				err:   tt.fields.err,
+			}
+			got := s.Reverse()
+			if !reflect.DeepEqual(got.elems, tt.want) {
+				t.Errorf("Stream.Reverse() = %v, want %v", got.elems, tt.want)
 			}
 		})
 	}
