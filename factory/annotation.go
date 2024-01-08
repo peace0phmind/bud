@@ -12,12 +12,13 @@ const AnnotationWire = "wire"
 // AnnotationWireSelf is a constant that defines the annotation string used for self injection in Go code.
 const AnnotationWireSelf = "self"
 
+// AnnotationWireAuto is a constant that defines the annotation string used for automatic wire injection in Go code. It is used in the AutoWire function.
 const AnnotationWireAuto = "auto"
 
 // AnnotationDefault is a constant that defines the annotation string used as the default value in Go code.
 const AnnotationDefault = "default"
 
-func UpdateDefault(v any) error {
+func SetDefault(v any) error {
 
 	return nil
 }
