@@ -378,8 +378,8 @@ func TestAllMatch(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			s := Stream[int]{elems: tc.elems}
-			got, err := s.AllMatch(tc.match)
-			if err == nil && got != tc.want {
+			got := s.MustAllMatch(tc.match)
+			if got != tc.want {
 				t.Errorf("AllMatch got = %v, want = %v", got, tc.want)
 			}
 		})
@@ -1214,6 +1214,48 @@ func TestStream_Reverse(t *testing.T) {
 			got := s.Reverse()
 			if !reflect.DeepEqual(got.elems, tt.want) {
 				t.Errorf("Stream.Reverse() = %v, want %v", got.elems, tt.want)
+			}
+		})
+	}
+}
+
+func TestMustToAny(t *testing.T) {
+	tests := []struct {
+		name string
+		data Stream[int]
+		want []any
+	}{
+		{
+			name: "non-err stream",
+			data: Stream[int]{elems: []int{1, 2, 3}},
+			want: []any{1, 2, 3},
+		},
+		{
+			name: "empty stream",
+			data: Stream[int]{elems: []int{}},
+			want: []any{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var err error
+			func() {
+				defer func() {
+					if r := recover(); r != nil {
+						err = errors.New("error occurred")
+					}
+				}()
+				got := tt.data.MustToAny()
+				for i, wantVal := range tt.want {
+					if got[i] != wantVal {
+						t.Errorf("MustToAny() = %v, want %v", got, tt.want)
+					}
+				}
+			}()
+
+			if tt.data.err != nil && err == nil {
+				t.Errorf("MustToAny() expected a panic but got nil")
 			}
 		})
 	}
