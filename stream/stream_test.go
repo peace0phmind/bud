@@ -172,10 +172,6 @@ func TestStream_Shuffle(t *testing.T) {
 				t.Errorf("len(shuffled) got %v, want %v", got, want)
 			}
 
-			if len(tc.elems) < 10 {
-				t.Logf("shuffled got %v, origin %v", shuffledElems, tc.elems)
-			}
-
 			// Check at least one element is in a different position
 			var found bool
 			for i, v := range tc.elems {
