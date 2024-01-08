@@ -432,15 +432,22 @@ func TestStream_AnyMatch(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			result, err := tc.stream.AnyMatch(tc.matchFunc)
-			if err != nil && !tc.expectError {
-				t.Fatalf("want no error, but got: %v", err)
-			}
-			if err == nil && tc.expectError {
-				t.Fatalf("want error, but got none")
-			}
-			if result != tc.expectedResult {
-				t.Fatalf("want %v, but got %v", tc.expectedResult, result)
+			if tc.expectError {
+				result, err := tc.stream.AnyMatch(tc.matchFunc)
+				if err != nil && !tc.expectError {
+					t.Fatalf("want no error, but got: %v", err)
+				}
+				if err == nil && tc.expectError {
+					t.Fatalf("want error, but got none")
+				}
+				if result != tc.expectedResult {
+					t.Fatalf("want %v, but got %v", tc.expectedResult, result)
+				}
+			} else {
+				result := tc.stream.MustAnyMatch(tc.matchFunc)
+				if result != tc.expectedResult {
+					t.Fatalf("want %v, but got %v", tc.expectedResult, result)
+				}
 			}
 		})
 	}
@@ -764,6 +771,62 @@ func TestStreamSort(t *testing.T) {
 				if v != result[i] {
 					t.Fatalf("at index %d, want %v but got %v", i, v, result[i])
 				}
+			}
+		})
+	}
+}
+
+func TestMustReduce(t *testing.T) {
+	tests := []struct {
+		name        string
+		stream      Stream[int]
+		accumulator func(int, int) (int, error)
+		want        int
+		expectPanic bool
+	}{
+		{
+			name:        "Sum of positive integers",
+			stream:      Of([]int{1, 2, 3, 4, 5}),
+			accumulator: func(a, b int) (int, error) { return a + b, nil },
+			want:        15,
+		},
+		{
+			name:        "Multiplication of integers",
+			stream:      Of([]int{1, 2, 3, 4, 5}),
+			accumulator: func(a, b int) (int, error) { return a * b, nil },
+			want:        120,
+		},
+		{
+			name:        "Empty stream",
+			stream:      Of([]int{}),
+			accumulator: func(a, b int) (int, error) { return a + b, nil },
+			want:        0,
+		},
+		{
+			name:        "Stream with single element",
+			stream:      Of([]int{5}),
+			accumulator: func(a, b int) (int, error) { return a + b, nil },
+			want:        5,
+		},
+		{
+			name:        "Error in accumulator",
+			stream:      Of([]int{1, 2, 3, 4, 5}),
+			accumulator: func(a, b int) (int, error) { return 0, errors.New("error in accumulator") },
+			want:        0,
+			expectPanic: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			defer func() {
+				r := recover()
+				if (r != nil) != tt.expectPanic {
+					t.Errorf("MustReduce() panic = %v, expectPanic = %v", r, tt.expectPanic)
+				}
+			}()
+			if got := tt.stream.MustReduce(tt.accumulator); got != tt.want {
+				t.Errorf("MustReduce() = %v, want %v", got, tt.want)
 			}
 		})
 	}
