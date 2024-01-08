@@ -139,6 +139,50 @@ type WalkStruct struct {
 	PS         PointStruct
 	PPS        *PointStruct
 	PPSNotInit *PointStruct
+
+	SlicePointStruct   []PointStruct
+	SlicePPointStruct  []*PointStruct
+	PSlicePointStruct  *[]PointStruct
+	PSlicePPointStruct *[]PointStruct
+}
+
+type WalkSliceStruct struct {
+	SlicePointStructInit   []PointStruct
+	SlicePPointStructInit  []*PointStruct
+	SlicePointStruct       []PointStruct
+	SlicePPointStruct      []*PointStruct
+	PSlicePointStructInit  *[]PointStruct
+	PSlicePPointStructInit *[]*PointStruct
+	PSlicePointStruct      *[]PointStruct
+	PSlicePPointStruct     *[]*PointStruct
+}
+
+func TestWalkSliceStruct(t *testing.T) {
+
+	init1 := make([]PointStruct, 2)
+	init2 := make([]*PointStruct, 2)
+	init2 = append(init2, &PointStruct{})
+	wk := &WalkSliceStruct{
+		SlicePointStructInit:   make([]PointStruct, 2),
+		SlicePPointStructInit:  make([]*PointStruct, 2),
+		PSlicePointStructInit:  &init1,
+		PSlicePPointStructInit: &init2,
+	}
+	wk.SlicePPointStructInit = append(wk.SlicePPointStructInit, &PointStruct{})
+
+	count := 0
+	err := WalkField(wk, func(ref reflect.Value, refStruct reflect.StructField, rootFields []reflect.StructField) error {
+		rootPaths := stream.Map(stream.Of(append(rootFields, refStruct)), func(in reflect.StructField) (string, error) {
+			return in.Name, nil
+		}).MustToSlice()
+		count++
+		println(count, "/"+strings.Join(rootPaths, "/"))
+		return nil
+	})
+
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 func TestWalk(t *testing.T) {

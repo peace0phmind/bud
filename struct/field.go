@@ -22,10 +22,6 @@ func _walk(v any, walkFn WalkFunc, rootFields []reflect.StructField) error {
 		fieldValue := val.Field(i)
 		structField := valType.Field(i)
 
-		if err := walkFn(fieldValue, structField, rootFields); err != nil {
-			return err
-		}
-
 		ff := fieldValue
 		// 尝试遍历指针型struct, 为空则不用遍历
 		if reflect.Ptr == fieldValue.Kind() && !fieldValue.IsNil() {
@@ -37,6 +33,34 @@ func _walk(v any, walkFn WalkFunc, rootFields []reflect.StructField) error {
 			if err := _walk(ff.Addr().Interface(), walkFn, append(rootFields, structField)); err != nil {
 				return err
 			}
+		}
+
+		if reflect.Slice == ff.Kind() {
+			// 处理slice下的point struct
+			if reflect.Ptr == ff.Type().Elem().Kind() && reflect.Struct == ff.Type().Elem().Elem().Kind() {
+				for i := 0; i < ff.Len(); i++ {
+					if ff.Index(i).CanAddr() && !ff.Index(i).IsNil() {
+						if err := _walk(ff.Index(i).Interface(), walkFn, append(rootFields, structField)); err != nil {
+							return err
+						}
+					}
+				}
+			}
+
+			// 获取slice下的元素类型是否是struct
+			if reflect.Struct == ff.Type().Elem().Kind() {
+				for i := 0; i < ff.Len(); i++ {
+					if ff.Index(i).CanAddr() {
+						if err := _walk(ff.Index(i).Addr().Interface(), walkFn, append(rootFields, structField)); err != nil {
+							return err
+						}
+					}
+				}
+			}
+		}
+
+		if err := walkFn(fieldValue, structField, rootFields); err != nil {
+			return err
 		}
 	}
 
