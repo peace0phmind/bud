@@ -103,5 +103,18 @@ func (s *singleton[T]) MustBuilder() func() *T {
 
 func New[T any]() *T {
 	t := new(T)
+
+	// 先update default
+	if err := UpdateDefault(t); err != nil {
+		panic(err)
+	}
+
+	// 在设置self
+	if err := AutoWire(t); err != nil {
+		panic(err)
+	}
+
+	// 最后执行ware
+
 	return t
 }

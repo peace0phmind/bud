@@ -3,6 +3,7 @@ package _struct
 import (
 	"errors"
 	"reflect"
+	"unsafe"
 )
 
 type WalkFunc func(fieldValue reflect.Value, structField reflect.StructField, rootFields []reflect.StructField) error
@@ -104,4 +105,14 @@ func WalkWithTagName(v any, tagName string, walkFn ParamsWalkFunc[string]) error
 		}
 		return nil
 	})
+}
+
+func SetField(fieldValue reflect.Value, v any) {
+	if fieldValue.CanSet() {
+		fieldValue.Set(reflect.ValueOf(v))
+	} else {
+		// 通过unsafe包绕过CanSet的限制
+		rf := reflect.NewAt(fieldValue.Type(), unsafe.Pointer(fieldValue.UnsafeAddr())).Elem()
+		rf.Set(reflect.ValueOf(v))
+	}
 }

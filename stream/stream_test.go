@@ -1205,15 +1205,15 @@ func TestStream_Reverse(t *testing.T) {
 			want: nil,
 		},
 	}
-	for _, tt := range testCases {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			s := Stream[interface{}]{
-				elems: tt.fields.elems,
-				err:   tt.fields.err,
+				elems: tc.fields.elems,
+				err:   tc.fields.err,
 			}
 			got := s.Reverse()
-			if !reflect.DeepEqual(got.elems, tt.want) {
-				t.Errorf("Stream.Reverse() = %v, want %v", got.elems, tt.want)
+			if !reflect.DeepEqual(got.elems, tc.want) {
+				t.Errorf("Stream.Reverse() = %v, want %v", got.elems, tc.want)
 			}
 		})
 	}

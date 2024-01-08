@@ -147,6 +147,7 @@ type WalkStruct struct {
 }
 
 type WalkSliceStruct struct {
+	PointStruct
 	SlicePointStructInit   []PointStruct
 	SlicePPointStructInit  []*PointStruct
 	SlicePointStruct       []PointStruct
