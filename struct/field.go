@@ -126,7 +126,7 @@ func SetField(fieldValue reflect.Value, v any) error {
 	return nil
 }
 
-func GetFieldPath(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type) string {
+func GetFieldPath(structField reflect.StructField, rootTypes []reflect.Type) string {
 	var results []string
 	if len(rootTypes) > 0 {
 		results = append(results, rootTypes[0].PkgPath())
@@ -141,7 +141,7 @@ func GetFieldPath(fieldValue reflect.Value, structField reflect.StructField, roo
 		result = strings.Join(results, "/") + "."
 	}
 
-	result += fmt.Sprintf("%s(%s)", structField.Name, fieldValue.Type().String())
+	result += fmt.Sprintf("%s(%s)", structField.Name, structField.Type.String())
 
 	return result
 }

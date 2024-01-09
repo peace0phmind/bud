@@ -24,8 +24,8 @@ const WireValueName = "name"
 // WireValueValue is a constant that defines the annotation string used for value injection in Go code.
 const WireValueValue = "value"
 
-func wireError(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type, wireRule string) error {
-	fieldPath := _struct.GetFieldPath(fieldValue, structField, rootTypes)
+func wireError(structField reflect.StructField, rootTypes []reflect.Type, wireRule string) error {
+	fieldPath := _struct.GetFieldPath(structField, rootTypes)
 	return errors.New(fmt.Sprintf("The field of 'wire' must be defined as a pointer to an object or an interface. %s, tag value: %s", fieldPath, wireRule))
 }
 
@@ -48,7 +48,7 @@ func AutoWire(v any) error {
 				}
 				return nil
 			} else {
-				return wireError(fieldValue, structField, rootTypes, wireRule)
+				return wireError(structField, rootTypes, wireRule)
 			}
 		}
 
@@ -59,7 +59,7 @@ func AutoWire(v any) error {
 				}
 				return nil
 			} else {
-				return wireError(fieldValue, structField, rootTypes, wireRule)
+				return wireError(structField, rootTypes, wireRule)
 			}
 		}
 
@@ -84,7 +84,7 @@ func AutoWire(v any) error {
 				}
 				return nil
 			} else {
-				return wireError(fieldValue, structField, rootTypes, wireRule)
+				return wireError(structField, rootTypes, wireRule)
 			}
 		}
 

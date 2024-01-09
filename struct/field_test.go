@@ -172,7 +172,7 @@ func TestWalkSliceStruct(t *testing.T) {
 	count := 0
 	err := WalkField(wk, func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type) error {
 		count++
-		println(count, GetFieldPath(fieldValue, structField, rootTypes), fieldValue.Kind().String())
+		println(count, GetFieldPath(structField, rootTypes), fieldValue.Kind().String())
 		return nil
 	})
 
@@ -191,7 +191,7 @@ func TestWalk(t *testing.T) {
 	}
 	err := WalkField(wk, func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type) error {
 		count++
-		println(count, GetFieldPath(fieldValue, structField, rootTypes), fieldValue.Kind().String())
+		println(count, GetFieldPath(structField, rootTypes), fieldValue.Kind().String())
 		return nil
 	})
 
@@ -211,7 +211,7 @@ func TestWalkWithTag(t *testing.T) {
 
 	err := WalkWithTagName(wk, "env", func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type, tagValue string) error {
 		count++
-		println(count, GetFieldPath(fieldValue, structField, rootTypes), fieldValue.Kind().String(), tagValue)
+		println(count, GetFieldPath(structField, rootTypes), fieldValue.Kind().String(), tagValue)
 		return nil
 	})
 
