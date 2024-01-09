@@ -40,14 +40,14 @@ func (c *cat) Meow() string {
 }
 
 func TestSingletonBuilder(t *testing.T) {
-	var Cat = factory.Singleton[cat]().MustBuilder()
+	var c = factory.Singleton[cat]().MustBuilder()
 
-	assert.Equal(t, "meow", Cat().Meow())
-	assert.Equal(t, "cat", Cat().Name)
-	assert.Equal(t, "animal", Cat().animal.Name)
+	assert.Equal(t, "meow", c().Meow())
+	assert.Equal(t, "cat", c().Name)
+	assert.Equal(t, "animal", c().animal.Name)
 
-	var Dog = factory.Singleton[dog]().MustBuilder()
+	var d = factory.Singleton[dog]().MustBuilder()
 
-	assert.Equal(t, "dog", Dog().Name)
-	assert.Equal(t, "dog", Dog().animal.Name)
+	assert.Equal(t, "dog", d().Name)
+	assert.Equal(t, "dog", d().animal.Name)
 }
