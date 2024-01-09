@@ -12,6 +12,7 @@ type DoInf interface {
 type BaseStruct struct {
 	self DoInf  `wire:"self"`
 	name string `wire:"value:cfg.Name"`
+	cfg  Cfg    `wire:"auto"`
 }
 
 func (b *BaseStruct) Greet() string {

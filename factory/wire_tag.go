@@ -43,7 +43,7 @@ func AutoWire(v any) error {
 				}
 				return nil
 			} else {
-				return errors.New(fmt.Sprintf("The field of 'wire' must be defined as a pointer to an object. %s:%s, tag value: %s", structField.PkgPath, structField.Name, wireRule))
+				return errors.New(fmt.Sprintf("The field of 'wire' must be defined as a pointer to an object. %s:%s, tag value: %s", fieldValue.Type().PkgPath(), fieldValue.Type().Name(), wireRule))
 			}
 		}
 
@@ -54,7 +54,7 @@ func AutoWire(v any) error {
 				}
 				return nil
 			} else {
-				return errors.New(fmt.Sprintf("The field of 'wire' must be defined as a pointer to an object. %s:%s, tag value: %s", structField.PkgPath, structField.Name, wireRule))
+				return errors.New(fmt.Sprintf("The field of 'wire' must be defined as a pointer to an object. %s:%s, tag value: %s", fieldValue.Type().PkgPath(), fieldValue.Type().Name(), wireRule))
 			}
 		}
 
@@ -79,7 +79,7 @@ func AutoWire(v any) error {
 				}
 				return nil
 			} else {
-				return errors.New(fmt.Sprintf("The field of 'wire' must be defined as a pointer to an object. %s:%s, tag value: %s", structField.PkgPath, structField.Name, wireRule))
+				return errors.New(fmt.Sprintf("The field of 'wire' must be defined as a pointer to an object. %s:%s, tag value: %s", fieldValue.Type().PkgPath(), fieldValue.Type().Name(), wireRule))
 			}
 		}
 

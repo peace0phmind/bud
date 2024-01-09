@@ -200,7 +200,7 @@ func TestWalk(t *testing.T) {
 			return in.Name, nil
 		}).MustToSlice()
 
-		println(count, "/"+strings.Join(rootPaths, "/"))
+		println(count, "/"+strings.Join(rootPaths, "/"), ref.Kind().String())
 		return nil
 	})
 
