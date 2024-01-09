@@ -2,6 +2,7 @@ package _struct
 
 import (
 	"errors"
+	"fmt"
 	"github.com/peace0phmind/bud/stream"
 	"reflect"
 	"strings"
@@ -140,7 +141,7 @@ func GetFieldPath(fieldValue reflect.Value, structField reflect.StructField, roo
 		result = strings.Join(results, "/") + "."
 	}
 
-	result += structField.Name
+	result += fmt.Sprintf("%s(%s)", structField.Name, fieldValue.Type().String())
 
 	return result
 }
