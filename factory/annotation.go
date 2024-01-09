@@ -56,11 +56,21 @@ func AutoWire(v any) error {
 
 		if strings.HasPrefix(lowRule, AnnotationWireName) {
 			if fieldValue.IsNil() {
-				rules := strings.Split(wireRule, ":")
-				if len(rules) != 2 {
-					return errors.New(fmt.Sprintf("wire format error, want 'name:NamedSingleton' got '%s'", wireRule))
+				name := strings.TrimSpace(wireRule[len(AnnotationWireName):])
+
+				if len(name) == 0 || name == ":" {
+					name = structField.Name
+				} else if strings.HasPrefix(name, ":") {
+					name = strings.TrimSpace(name[1:])
+				} else {
+					name = ""
 				}
-				return _struct.SetField(fieldValue, _context._getByName(strings.TrimSpace(rules[1])))
+
+				if len(name) > 0 {
+					return _struct.SetField(fieldValue, _context._getByName(strings.TrimSpace(name)))
+				}
+
+				return errors.New(fmt.Sprintf("wire format error, want 'name:NamedSingleton' or 'name:' or 'name', but got '%s'", wireRule))
 			}
 		}
 
