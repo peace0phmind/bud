@@ -13,7 +13,7 @@ func SetDefault(v any) error {
 		return nil
 	}
 
-	return _struct.WalkWithTagName(v, DefaultTag, func(fieldValue reflect.Value, structField reflect.StructField, rootFields []reflect.StructField, defaultValue string) error {
+	return _struct.WalkWithTagName(v, DefaultTag, func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type, defaultValue string) error {
 
 		return nil
 	})
