@@ -37,36 +37,49 @@ func AutoWire(v any) error {
 		lowRule := strings.ToLower(wireRule)
 
 		if WireValueSelf == lowRule {
-			if fieldValue.IsNil() {
-				return _struct.SetField(fieldValue, v)
+			if fieldValue.Kind() == reflect.Ptr {
+				if fieldValue.IsNil() {
+					return _struct.SetField(fieldValue, v)
+				}
+				return nil
+			} else {
+				return errors.New(fmt.Sprintf("The field of 'wire' must be defined as a pointer to an object. %s:%s, tag value: %s", structField.PkgPath, structField.Name, wireRule))
 			}
-			return nil
 		}
 
 		if WireValueAuto == lowRule {
-			if fieldValue.IsNil() {
-				return _struct.SetField(fieldValue, _context._get(structField.Type))
+			if fieldValue.Kind() == reflect.Ptr {
+				if fieldValue.IsNil() {
+					return _struct.SetField(fieldValue, _context._get(structField.Type))
+				}
+				return nil
+			} else {
+				return errors.New(fmt.Sprintf("The field of 'wire' must be defined as a pointer to an object. %s:%s, tag value: %s", structField.PkgPath, structField.Name, wireRule))
 			}
-			return nil
 		}
 
 		if strings.HasPrefix(lowRule, WireValueName) {
-			if fieldValue.IsNil() {
-				name := strings.TrimSpace(wireRule[len(WireValueName):])
+			if fieldValue.Kind() == reflect.Ptr {
+				if fieldValue.IsNil() {
+					name := strings.TrimSpace(wireRule[len(WireValueName):])
 
-				if len(name) == 0 || name == ":" {
-					name = structField.Name
-				} else if strings.HasPrefix(name, ":") {
-					name = strings.TrimSpace(name[1:])
-				} else {
-					name = ""
+					if len(name) == 0 || name == ":" {
+						name = structField.Name
+					} else if strings.HasPrefix(name, ":") {
+						name = strings.TrimSpace(name[1:])
+					} else {
+						name = ""
+					}
+
+					if len(name) > 0 {
+						return _struct.SetField(fieldValue, _context._getByName(strings.TrimSpace(name)))
+					}
+
+					return errors.New(fmt.Sprintf("wire format error, want 'name:NamedSingleton' or 'name:' or 'name', but got '%s'", wireRule))
 				}
-
-				if len(name) > 0 {
-					return _struct.SetField(fieldValue, _context._getByName(strings.TrimSpace(name)))
-				}
-
-				return errors.New(fmt.Sprintf("wire format error, want 'name:NamedSingleton' or 'name:' or 'name', but got '%s'", wireRule))
+				return nil
+			} else {
+				return errors.New(fmt.Sprintf("The field of 'wire' must be defined as a pointer to an object. %s:%s, tag value: %s", structField.PkgPath, structField.Name, wireRule))
 			}
 		}
 
