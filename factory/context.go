@@ -22,8 +22,7 @@ type contextCachedItem struct {
 }
 
 func Get[T any]() *T {
-	var t T
-	vt := reflect.TypeOf(&t)
+	vt := reflect.TypeOf((*T)(nil))
 
 	result := _context._get(vt)
 
@@ -37,8 +36,7 @@ func Get[T any]() *T {
 }
 
 func GetByName[T any](name string) *T {
-	var t T
-	vt := reflect.TypeOf(&t)
+	vt := reflect.TypeOf((*T)(nil))
 
 	result := _context._getByName(name)
 
@@ -49,6 +47,37 @@ func GetByName[T any](name string) *T {
 
 	// panic
 	panic(fmt.Sprintf("Invalid type: need %v, get %v", vt, resultType))
+}
+
+func Range[T any](interfaceFunc func(T) bool, structFunc func(*T) bool) {
+	vT := reflect.TypeOf((*T)(nil))
+
+	isInterface := false
+	if vT.Elem().Kind() == reflect.Interface {
+		vT = vT.Elem()
+		isInterface = true
+	}
+
+	if isInterface {
+		if interfaceFunc == nil {
+			panic("T is an interface, interfaceFunc must not be nil")
+		}
+	} else {
+		if structFunc == nil {
+			panic("T is a struct, structFunc must not be nil")
+		}
+	}
+
+	_context.defaultMustBuilderCache.Range(func(k reflect.Type, v *contextCachedItem) bool {
+		if k.ConvertibleTo(vT) {
+			if isInterface {
+				return interfaceFunc(v.build().(T))
+			} else {
+				return structFunc(v.build().(*T))
+			}
+		}
+		return true
+	})
 }
 
 func (c *context) _get(vt reflect.Type) any {
@@ -86,7 +115,7 @@ func (c *context) _get(vt reflect.Type) any {
 func (c *context) _set(vt reflect.Type, builder MustBuilder) {
 	_, getOk := c.defaultMustBuilderCache.GetOrStore(vt, &contextCachedItem{_type: vt, build: builder})
 	if getOk {
-		panic(fmt.Sprintf("Default builder allready exist: %v", vt))
+		panic(fmt.Sprintf("Default builder allready exist: %s", vt.String()))
 	}
 }
 

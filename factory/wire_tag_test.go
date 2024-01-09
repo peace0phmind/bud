@@ -9,10 +9,12 @@ type DoInf interface {
 	Hello() string
 }
 
+var _baseStruct = Singleton[BaseStruct]().MustBuilder()
+
 type BaseStruct struct {
 	self DoInf  `wire:"self"`
 	name string `wire:"value:cfg.Name"`
-	cfg  Cfg    `wire:"auto"`
+	cfg  *Cfg   `wire:"auto"`
 }
 
 func (b *BaseStruct) Greet() string {
@@ -22,6 +24,8 @@ func (b *BaseStruct) Greet() string {
 func (b *BaseStruct) Hello() string {
 	return fmt.Sprintf("Hello(%s): base struct", b.name)
 }
+
+var _extStruct = Singleton[ExtStruct]().MustBuilder()
 
 type ExtStruct struct {
 	BaseStruct

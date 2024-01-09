@@ -73,8 +73,7 @@ func _singleton[T any]() *singleton[T] {
 		setDefault: true,
 	}
 
-	var t T
-	result._type = reflect.TypeOf(&t)
+	result._type = reflect.TypeOf((*T)(nil))
 
 	result._mustBuilder = func() *T {
 		if instance, err := result.GetInstance(); err != nil {
