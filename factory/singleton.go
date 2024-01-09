@@ -39,6 +39,10 @@ import (
 // Call method:
 //
 //	Cat().Meow()
+/*
+  通过 initOnce func 和 mustInitOnce func进行初始化的类，不设置default和进行auto wire，如有需要可以手动调用
+  当使用接口或没有实现任何接口进行类的初始化时， 默认先调用set default, 再进行auto wire，最后调用这些实现额接口
+*/
 type singleton[T any] struct {
 	once         sync.Once
 	obj          *T
@@ -46,6 +50,8 @@ type singleton[T any] struct {
 	initOnce     func() (*T, error)
 	mustInitOnce func() *T
 	mustBuilder  func() *T
+	autoWire     bool
+	setDefault   bool
 }
 
 type ISingleton interface {
@@ -57,7 +63,10 @@ type IMustSingleton interface {
 }
 
 func _singleton[T any]() *singleton[T] {
-	result := &singleton[T]{}
+	result := &singleton[T]{
+		autoWire:   true,
+		setDefault: true,
+	}
 
 	result.mustBuilder = func() *T {
 		if instance, err := result.GetInstance(); err != nil {
@@ -73,16 +82,10 @@ func _singleton[T any]() *singleton[T] {
 func Singleton[T any]() *singleton[T] {
 	result := _singleton[T]()
 
-	var v T
-	vt := reflect.TypeOf(&v)
-	ck := getContextKeyFromType(vt)
-	_context().defaultMustBuilderCache.GetOrNew(ck, func() (*mustBuilder, error) {
-		ret := &mustBuilder{
-			build: func() any {
-				return result.mustBuilder()
-			},
-		}
-		return ret, nil
+	var t T
+	vt := reflect.TypeOf(&t)
+	_context._set(vt, func() any {
+		return result.mustBuilder()
 	})
 
 	return result
@@ -91,11 +94,27 @@ func Singleton[T any]() *singleton[T] {
 func NamedSingleton[T any](name string) *singleton[T] {
 	result := _singleton[T]()
 
-	_context()._setByName(name, func() any {
+	_context._setByName(name, func() any {
 		return result.mustBuilder()
 	})
 
 	return result
+}
+
+func (s *singleton[T]) AutoWire(autoWire bool) *singleton[T] {
+	s.autoWire = autoWire
+	return s
+}
+
+func (s *singleton[T]) SetDefault(setDefault bool) *singleton[T] {
+	s.setDefault = setDefault
+	return s
+}
+
+func (s *singleton[T]) CreateOnly() *singleton[T] {
+	s.autoWire = false
+	s.setDefault = false
+	return s
 }
 
 func (s *singleton[T]) GetInstance() (*T, error) {
@@ -105,7 +124,22 @@ func (s *singleton[T]) GetInstance() (*T, error) {
 		} else if s.mustInitOnce != nil {
 			s.obj = s.mustInitOnce()
 		} else {
-			s.obj = New[T]()
+			s.obj = new(T)
+
+			if s.setDefault {
+				s.err = SetDefault(s.obj)
+				if s.err != nil {
+					return
+				}
+			}
+
+			if s.autoWire {
+				s.err = AutoWire(s.obj)
+				if s.err != nil {
+					return
+				}
+			}
+
 			if initializer, ok := any(s.obj).(ISingleton); ok {
 				s.err = initializer.InitOnce()
 			} else if mustInitializer, mustOk := any(s.obj).(IMustSingleton); mustOk {

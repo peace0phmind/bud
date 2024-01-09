@@ -82,6 +82,19 @@ func (c *Cache[K, V]) Range(rangeFunc func(k K, v V) bool) {
 	})
 }
 
+func (c *Cache[K, V]) Filter(filterFunc func(k K, v V) bool) *Cache[K, V] {
+	filteredCache := &Cache[K, V]{cacheMap: sync.Map{}}
+	c.cacheMap.Range(func(key, value any) bool {
+		k := key.(K)
+		ci := value.(*cacheItem[V])
+		if ci.valueValid && filterFunc(k, ci.value) {
+			filteredCache.Set(k, ci.value)
+		}
+		return true
+	})
+	return filteredCache
+}
+
 func (c *Cache[K, V]) Size() int {
 	size := 0
 	c.cacheMap.Range(func(key, value any) bool {
