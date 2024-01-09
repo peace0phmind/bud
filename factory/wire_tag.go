@@ -24,6 +24,11 @@ const WireValueName = "name"
 // WireValueValue is a constant that defines the annotation string used for value injection in Go code.
 const WireValueValue = "value"
 
+func wireError(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type, wireRule string) error {
+	fieldPath := _struct.GetFieldPath(fieldValue, structField, rootTypes)
+	return errors.New(fmt.Sprintf("The field of 'wire' must be defined as a pointer to an object or an interface. %s, tag value: %s", fieldPath, wireRule))
+}
+
 func AutoWire(v any) error {
 	if v == nil {
 		return nil
@@ -33,33 +38,33 @@ func AutoWire(v any) error {
 	_context._addWire(vt)
 	defer _context._deleteWire(vt)
 
-	return _struct.WalkWithTagName(v, WireTag, func(fieldValue reflect.Value, structField reflect.StructField, rootFields []reflect.StructField, wireRule string) error {
+	return _struct.WalkWithTagName(v, WireTag, func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type, wireRule string) error {
 		lowRule := strings.ToLower(wireRule)
 
 		if WireValueSelf == lowRule {
-			if fieldValue.Kind() == reflect.Ptr {
+			if fieldValue.Kind() == reflect.Ptr || fieldValue.Kind() == reflect.Interface {
 				if fieldValue.IsNil() {
 					return _struct.SetField(fieldValue, v)
 				}
 				return nil
 			} else {
-				return errors.New(fmt.Sprintf("The field of 'wire' must be defined as a pointer to an object. %s:%s, tag value: %s", fieldValue.Type().PkgPath(), fieldValue.Type().Name(), wireRule))
+				return wireError(fieldValue, structField, rootTypes, wireRule)
 			}
 		}
 
 		if WireValueAuto == lowRule {
-			if fieldValue.Kind() == reflect.Ptr {
+			if fieldValue.Kind() == reflect.Ptr || fieldValue.Kind() == reflect.Interface {
 				if fieldValue.IsNil() {
 					return _struct.SetField(fieldValue, _context._get(structField.Type))
 				}
 				return nil
 			} else {
-				return errors.New(fmt.Sprintf("The field of 'wire' must be defined as a pointer to an object. %s:%s, tag value: %s", fieldValue.Type().PkgPath(), fieldValue.Type().Name(), wireRule))
+				return wireError(fieldValue, structField, rootTypes, wireRule)
 			}
 		}
 
 		if strings.HasPrefix(lowRule, WireValueName) {
-			if fieldValue.Kind() == reflect.Ptr {
+			if fieldValue.Kind() == reflect.Ptr || fieldValue.Kind() == reflect.Interface {
 				if fieldValue.IsNil() {
 					name := strings.TrimSpace(wireRule[len(WireValueName):])
 
@@ -79,7 +84,7 @@ func AutoWire(v any) error {
 				}
 				return nil
 			} else {
-				return errors.New(fmt.Sprintf("The field of 'wire' must be defined as a pointer to an object. %s:%s, tag value: %s", fieldValue.Type().PkgPath(), fieldValue.Type().Name(), wireRule))
+				return wireError(fieldValue, structField, rootTypes, wireRule)
 			}
 		}
 

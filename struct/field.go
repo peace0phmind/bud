@@ -2,16 +2,18 @@ package _struct
 
 import (
 	"errors"
+	"github.com/peace0phmind/bud/stream"
 	"reflect"
+	"strings"
 	"unsafe"
 )
 
-type WalkFunc func(fieldValue reflect.Value, structField reflect.StructField, rootFields []reflect.StructField) error
+type WalkFunc func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type) error
 
-type ParamsWalkFunc[T any] func(fieldValue reflect.Value, structField reflect.StructField, rootFields []reflect.StructField, params T) error
+type ParamsWalkFunc[T any] func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type, params T) error
 
 // 查找strut point的所有元素，包括子struct，将其中所有的field都调用WalkFunc进行处理
-func _walk(v any, walkFn WalkFunc, rootFields []reflect.StructField) error {
+func _walk(v any, walkFn WalkFunc, rootTypes []reflect.Type) error {
 	val := reflect.ValueOf(v)
 
 	if reflect.Ptr == val.Kind() {
@@ -19,6 +21,8 @@ func _walk(v any, walkFn WalkFunc, rootFields []reflect.StructField) error {
 	}
 
 	valType := val.Type()
+	rootTypes = append(rootTypes, valType)
+
 	for i := 0; i < valType.NumField(); i++ {
 		fieldValue := val.Field(i)
 		structField := valType.Field(i)
@@ -32,7 +36,7 @@ func _walk(v any, walkFn WalkFunc, rootFields []reflect.StructField) error {
 		// 尝试遍历内嵌型struct
 		// TODO 尝试遍历非导出结构体field
 		if reflect.Struct == ff.Kind() && ff.CanAddr() && ff.CanInterface() {
-			if err := _walk(ff.Addr().Interface(), walkFn, append(rootFields, structField)); err != nil {
+			if err := _walk(ff.Addr().Interface(), walkFn, rootTypes); err != nil {
 				return err
 			}
 		}
@@ -42,7 +46,7 @@ func _walk(v any, walkFn WalkFunc, rootFields []reflect.StructField) error {
 			if reflect.Ptr == ff.Type().Elem().Kind() && reflect.Struct == ff.Type().Elem().Elem().Kind() {
 				for i := 0; i < ff.Len(); i++ {
 					if ff.Index(i).CanAddr() && !ff.Index(i).IsNil() && ff.Index(i).CanInterface() {
-						if err := _walk(ff.Index(i).Interface(), walkFn, append(rootFields, structField)); err != nil {
+						if err := _walk(ff.Index(i).Interface(), walkFn, rootTypes); err != nil {
 							return err
 						}
 					}
@@ -53,7 +57,7 @@ func _walk(v any, walkFn WalkFunc, rootFields []reflect.StructField) error {
 			if reflect.Struct == ff.Type().Elem().Kind() {
 				for i := 0; i < ff.Len(); i++ {
 					if ff.Index(i).CanAddr() && ff.Index(i).CanInterface() {
-						if err := _walk(ff.Index(i).Addr().Interface(), walkFn, append(rootFields, structField)); err != nil {
+						if err := _walk(ff.Index(i).Addr().Interface(), walkFn, rootTypes); err != nil {
 							return err
 						}
 					}
@@ -61,7 +65,7 @@ func _walk(v any, walkFn WalkFunc, rootFields []reflect.StructField) error {
 			}
 		}
 
-		if err := walkFn(fieldValue, structField, rootFields); err != nil {
+		if err := walkFn(fieldValue, structField, rootTypes); err != nil {
 			return err
 		}
 	}
@@ -88,10 +92,10 @@ func WalkField(v any, walkFn WalkFunc) error {
 }
 
 func WalkWithTagName(v any, tagName string, walkFn ParamsWalkFunc[string]) error {
-	return WalkField(v, func(fieldValue reflect.Value, structField reflect.StructField, rootFields []reflect.StructField) error {
+	return WalkField(v, func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type) error {
 		tagValue, ok := structField.Tag.Lookup(tagName)
 		if ok {
-			if err := walkFn(fieldValue, structField, rootFields, tagValue); err != nil {
+			if err := walkFn(fieldValue, structField, rootTypes, tagValue); err != nil {
 				return err
 			}
 		}
@@ -119,4 +123,24 @@ func SetField(fieldValue reflect.Value, v any) error {
 	}
 
 	return nil
+}
+
+func GetFieldPath(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type) string {
+	var results []string
+	if len(rootTypes) > 0 {
+		results = append(results, rootTypes[0].PkgPath())
+		names := stream.Map(stream.Of(rootTypes), func(in reflect.Type) (string, error) {
+			return in.Name(), nil
+		}).MustToSlice()
+		results = append(results, names...)
+	}
+
+	result := ""
+	if len(results) > 0 {
+		result = strings.Join(results, "/") + "."
+	}
+
+	result += structField.Name
+
+	return result
 }

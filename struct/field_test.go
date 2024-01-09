@@ -1,10 +1,8 @@
 package _struct
 
 import (
-	"github.com/peace0phmind/bud/stream"
 	"net/url"
 	"reflect"
-	"strings"
 	"testing"
 	"time"
 )
@@ -172,12 +170,9 @@ func TestWalkSliceStruct(t *testing.T) {
 	wk.SlicePPointStructInit = append(wk.SlicePPointStructInit, &PointStruct{})
 
 	count := 0
-	err := WalkField(wk, func(ref reflect.Value, refStruct reflect.StructField, rootFields []reflect.StructField) error {
-		rootPaths := stream.Map(stream.Of(append(rootFields, refStruct)), func(in reflect.StructField) (string, error) {
-			return in.Name, nil
-		}).MustToSlice()
+	err := WalkField(wk, func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type) error {
 		count++
-		println(count, "/"+strings.Join(rootPaths, "/"))
+		println(count, GetFieldPath(fieldValue, structField, rootTypes), fieldValue.Kind().String())
 		return nil
 	})
 
@@ -194,13 +189,9 @@ func TestWalk(t *testing.T) {
 		StringPtrInited: &hello,
 		PPS:             &PointStruct{},
 	}
-	err := WalkField(wk, func(ref reflect.Value, refStruct reflect.StructField, rootFields []reflect.StructField) error {
+	err := WalkField(wk, func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type) error {
 		count++
-		rootPaths := stream.Map(stream.Of(append(rootFields, refStruct)), func(in reflect.StructField) (string, error) {
-			return in.Name, nil
-		}).MustToSlice()
-
-		println(count, "/"+strings.Join(rootPaths, "/"), ref.Kind().String())
+		println(count, GetFieldPath(fieldValue, structField, rootTypes), fieldValue.Kind().String())
 		return nil
 	})
 
@@ -218,13 +209,9 @@ func TestWalkWithTag(t *testing.T) {
 		PPS:             &PointStruct{},
 	}
 
-	err := WalkWithTagName(wk, "env", func(ref reflect.Value, refStruct reflect.StructField, rootFields []reflect.StructField, tagValue string) error {
+	err := WalkWithTagName(wk, "env", func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type, tagValue string) error {
 		count++
-		rootPaths := stream.Map(stream.Of(append(rootFields, refStruct)), func(in reflect.StructField) (string, error) {
-			return in.Name, nil
-		}).MustToSlice()
-
-		println(count, "/"+strings.Join(rootPaths, "/"), tagValue)
+		println(count, GetFieldPath(fieldValue, structField, rootTypes), fieldValue.Kind().String(), tagValue)
 		return nil
 	})
 
