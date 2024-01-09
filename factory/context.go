@@ -38,7 +38,7 @@ type context struct {
 
 func Get[T any]() *T {
 	var t T
-	vt := reflect.TypeOf(t)
+	vt := reflect.TypeOf(&t)
 
 	result := _context._get(vt)
 
