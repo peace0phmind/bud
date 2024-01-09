@@ -107,7 +107,17 @@ func WalkWithTagName(v any, tagName string, walkFn ParamsWalkFunc[string]) error
 	})
 }
 
-func SetField(fieldValue reflect.Value, v any) {
+func SetField(fieldValue reflect.Value, v any) error {
+
+	if !fieldValue.CanAddr() {
+		return errors.New("fieldValue is not addressable")
+	}
+
+	valueType := reflect.TypeOf(v)
+	if !valueType.ConvertibleTo(fieldValue.Type()) {
+		return errors.New("value is not assignable to the field type")
+	}
+
 	if fieldValue.CanSet() {
 		fieldValue.Set(reflect.ValueOf(v))
 	} else {
@@ -115,4 +125,6 @@ func SetField(fieldValue reflect.Value, v any) {
 		rf := reflect.NewAt(fieldValue.Type(), unsafe.Pointer(fieldValue.UnsafeAddr())).Elem()
 		rf.Set(reflect.ValueOf(v))
 	}
+
+	return nil
 }

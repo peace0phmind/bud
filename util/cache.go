@@ -92,9 +92,9 @@ func (c *Cache[K, V]) Size() int {
 	return size
 }
 
-func (c *Cache[K, V]) GetOrLoad(k K, loadFunc func() (V, error)) (v V, err error) {
-	if loadFunc == nil {
-		panic("load function must not be null")
+func (c *Cache[K, V]) GetOrNew(k K, newFunc func() (V, error)) (v V, err error) {
+	if newFunc == nil {
+		panic("new function must not be null")
 	}
 
 	actual, loaded := c.cacheMap.LoadOrStore(k, &cacheItem[V]{})
@@ -119,7 +119,7 @@ func (c *Cache[K, V]) GetOrLoad(k K, loadFunc func() (V, error)) (v V, err error
 		}
 	}()
 
-	return loadFunc()
+	return newFunc()
 }
 
 func (c *Cache[K, V]) ToMap() map[K]V {

@@ -1,6 +1,9 @@
 package factory
 
-import "sync"
+import (
+	"reflect"
+	"sync"
+)
 
 // singleton is a generic type that implements the singleton design pattern.
 // It ensures that only one instance of an object is created and provides a global point
@@ -42,6 +45,7 @@ type singleton[T any] struct {
 	err          error
 	initOnce     func() (*T, error)
 	mustInitOnce func() *T
+	mustBuilder  func() *T
 }
 
 type ISingleton interface {
@@ -52,8 +56,46 @@ type IMustSingleton interface {
 	MustInitOnce()
 }
 
+func _singleton[T any]() *singleton[T] {
+	result := &singleton[T]{}
+
+	result.mustBuilder = func() *T {
+		if instance, err := result.GetInstance(); err != nil {
+			panic(err)
+		} else {
+			return instance
+		}
+	}
+
+	return result
+}
+
 func Singleton[T any]() *singleton[T] {
-	return &singleton[T]{}
+	result := _singleton[T]()
+
+	var v T
+	vt := reflect.TypeOf(&v)
+	ck := getContextKeyFromType(vt)
+	_context().defaultMustBuilderCache.GetOrNew(ck, func() (*mustBuilder, error) {
+		ret := &mustBuilder{
+			build: func() any {
+				return result.mustBuilder()
+			},
+		}
+		return ret, nil
+	})
+
+	return result
+}
+
+func NamedSingleton[T any](name string) *singleton[T] {
+	result := _singleton[T]()
+
+	_context()._setByName(name, func() any {
+		return result.mustBuilder()
+	})
+
+	return result
 }
 
 func (s *singleton[T]) GetInstance() (*T, error) {
@@ -92,13 +134,7 @@ func (s *singleton[T]) Builder() func() (*T, error) {
 }
 
 func (s *singleton[T]) MustBuilder() func() *T {
-	return func() *T {
-		if instance, err := s.GetInstance(); err != nil {
-			panic(err)
-		} else {
-			return instance
-		}
-	}
+	return s.mustBuilder
 }
 
 func New[T any]() *T {
