@@ -248,6 +248,21 @@ func (s Stream[T]) Skip(n int) Stream[T] {
 	return Of(s.elems[n:])
 }
 
+func (s Stream[T]) Map(mapFn func(T) T) Stream[T] {
+	if s.err != nil {
+		return Stream[T]{err: s.err}
+	}
+
+	result := Stream[T]{}
+
+	s.Range(func(t T) error {
+		result = result.Append(mapFn(t))
+		return nil
+	})
+
+	return result
+}
+
 // ToSlice returns a slice containing all the elements of the stream.
 // The original stream is not modified.
 // The elements in the returned slice are in the same order as in the original stream.

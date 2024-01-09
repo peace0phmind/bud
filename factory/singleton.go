@@ -2,6 +2,7 @@ package factory
 
 import (
 	"reflect"
+	"strings"
 	"sync"
 )
 
@@ -49,9 +50,13 @@ type singleton[T any] struct {
 	err          error
 	initOnce     func() (*T, error)
 	mustInitOnce func() *T
-	mustBuilder  func() *T
 	autoWire     bool
 	setDefault   bool
+
+	_name        string
+	_type        reflect.Type
+	_mustBuilder func() *T
+	lock         sync.Mutex
 }
 
 type ISingleton interface {
@@ -68,7 +73,10 @@ func _singleton[T any]() *singleton[T] {
 		setDefault: true,
 	}
 
-	result.mustBuilder = func() *T {
+	var t T
+	result._type = reflect.TypeOf(&t)
+
+	result._mustBuilder = func() *T {
 		if instance, err := result.GetInstance(); err != nil {
 			panic(err)
 		} else {
@@ -82,10 +90,8 @@ func _singleton[T any]() *singleton[T] {
 func Singleton[T any]() *singleton[T] {
 	result := _singleton[T]()
 
-	var t T
-	vt := reflect.TypeOf(&t)
-	_context._set(vt, func() any {
-		return result.mustBuilder()
+	_context._set(result._type, func() any {
+		return result._mustBuilder()
 	})
 
 	return result
@@ -94,24 +100,48 @@ func Singleton[T any]() *singleton[T] {
 func NamedSingleton[T any](name string) *singleton[T] {
 	result := _singleton[T]()
 
-	_context._setByName(name, func() any {
-		return result.mustBuilder()
-	})
+	return result.Name(name)
+}
 
-	return result
+func (s *singleton[T]) Name(name string) *singleton[T] {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	name = strings.TrimSpace(name)
+	if len(name) == 0 {
+		panic("name must not be empty")
+	}
+
+	if len(s._name) == 0 {
+		_context._setByName(name, s._type, func() any {
+			return s._mustBuilder()
+		})
+		s._name = name
+	}
+
+	return s
 }
 
 func (s *singleton[T]) AutoWire(autoWire bool) *singleton[T] {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
 	s.autoWire = autoWire
 	return s
 }
 
 func (s *singleton[T]) SetDefault(setDefault bool) *singleton[T] {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
 	s.setDefault = setDefault
 	return s
 }
 
 func (s *singleton[T]) CreateOnly() *singleton[T] {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
 	s.autoWire = false
 	s.setDefault = false
 	return s
@@ -152,11 +182,17 @@ func (s *singleton[T]) GetInstance() (*T, error) {
 }
 
 func (s *singleton[T]) SetInitOnce(initOnce func() (*T, error)) *singleton[T] {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
 	s.initOnce = initOnce
 	return s
 }
 
 func (s *singleton[T]) SetMustInitOnce(mustInitOnce func() *T) *singleton[T] {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
 	s.mustInitOnce = mustInitOnce
 	return s
 }
@@ -168,7 +204,7 @@ func (s *singleton[T]) Builder() func() (*T, error) {
 }
 
 func (s *singleton[T]) MustBuilder() func() *T {
-	return s.mustBuilder
+	return s._mustBuilder
 }
 
 func New[T any]() *T {

@@ -87,15 +87,6 @@ func WalkField(v any, walkFn WalkFunc) error {
 	return _walk(v, walkFn, nil)
 }
 
-func WalkWithParams[T any](v any, params T, walkFn ParamsWalkFunc[T]) error {
-	return WalkField(v, func(fieldValue reflect.Value, structField reflect.StructField, rootFields []reflect.StructField) error {
-		if err := walkFn(fieldValue, structField, rootFields, params); err != nil {
-			return err
-		}
-		return nil
-	})
-}
-
 func WalkWithTagName(v any, tagName string, walkFn ParamsWalkFunc[string]) error {
 	return WalkField(v, func(fieldValue reflect.Value, structField reflect.StructField, rootFields []reflect.StructField) error {
 		tagValue, ok := structField.Tag.Lookup(tagName)

@@ -1,6 +1,7 @@
 package factory
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -9,7 +10,8 @@ type DoInf interface {
 }
 
 type BaseStruct struct {
-	self DoInf `wire:"self"`
+	self DoInf  `wire:"self"`
+	name string `wire:"value:cfg.Name"`
 }
 
 func (b *BaseStruct) Greet() string {
@@ -17,15 +19,25 @@ func (b *BaseStruct) Greet() string {
 }
 
 func (b *BaseStruct) Hello() string {
-	return "Hello: base struct"
+	return fmt.Sprintf("Hello(%s): base struct", b.name)
 }
 
 type ExtStruct struct {
 	BaseStruct
 }
 
+var _cfg = Singleton[Cfg]().Name("cfg").MustBuilder()
+
+type Cfg struct {
+	Name string
+}
+
+func (c *Cfg) MustInitOnce() {
+	c.Name = "py"
+}
+
 func (e *ExtStruct) Hello() string {
-	return "Hello: ext struct"
+	return fmt.Sprintf("Hello(%s): ext struct", e.name)
 }
 
 func TestUpdateSelf(t *testing.T) {
@@ -37,12 +49,12 @@ func TestUpdateSelf(t *testing.T) {
 		{
 			name: "base struct greet",
 			got:  New[BaseStruct]().Greet(),
-			want: "Hello: base struct",
+			want: "Hello(py): base struct",
 		},
 		{
 			name: "ext struct greet",
 			got:  New[ExtStruct]().Greet(),
-			want: "Hello: ext struct",
+			want: "Hello(py): ext struct",
 		},
 	}
 

@@ -10,30 +10,15 @@ var _context = &context{}
 
 type MustBuilder func() any
 
-type contextKey struct {
-	Package string
-	Name    string
-}
-
-func getContextKeyFromType(vt reflect.Type) contextKey {
-	if reflect.Ptr == vt.Kind() {
-		vt = vt.Elem()
-	}
-
-	return contextKey{
-		Package: vt.PkgPath(),
-		Name:    vt.Name(),
-	}
-}
-
-type mustBuilder struct {
-	build MustBuilder
-}
-
 type context struct {
-	defaultMustBuilderCache util.Cache[reflect.Type, *mustBuilder] // package:name -> must builder
-	namedMustBuilderCache   util.Cache[string, *mustBuilder]       // name -> must builder
+	defaultMustBuilderCache util.Cache[reflect.Type, *contextCachedItem] // package:name -> must builder
+	namedMustBuilderCache   util.Cache[string, *contextCachedItem]       // name -> must builder
 	wiringCache             util.Cache[reflect.Type, bool]
+}
+
+type contextCachedItem struct {
+	_type reflect.Type
+	build MustBuilder
 }
 
 func Get[T any]() *T {
@@ -73,7 +58,7 @@ func (c *context) _get(vt reflect.Type) any {
 		return mb.build()
 	}
 
-	convertibleList := c.defaultMustBuilderCache.Filter(func(k reflect.Type, v *mustBuilder) bool {
+	convertibleList := c.defaultMustBuilderCache.Filter(func(k reflect.Type, v *contextCachedItem) bool {
 		return k.ConvertibleTo(vt)
 	})
 
@@ -84,7 +69,7 @@ func (c *context) _get(vt reflect.Type) any {
 	}
 
 	if convertibleListSize == 1 {
-		convertibleList.Range(func(k reflect.Type, v *mustBuilder) bool {
+		convertibleList.Range(func(k reflect.Type, v *contextCachedItem) bool {
 			mb = v
 			ok = true
 			return false
@@ -99,7 +84,7 @@ func (c *context) _get(vt reflect.Type) any {
 }
 
 func (c *context) _set(vt reflect.Type, builder MustBuilder) {
-	_, getOk := c.defaultMustBuilderCache.GetOrStore(vt, &mustBuilder{build: builder})
+	_, getOk := c.defaultMustBuilderCache.GetOrStore(vt, &contextCachedItem{_type: vt, build: builder})
 	if getOk {
 		panic(fmt.Sprintf("Default builder allready exist: %v", vt))
 	}
@@ -115,8 +100,8 @@ func (c *context) _getByName(name string) any {
 	panic(fmt.Sprintf("Named builder %s not found.", name))
 }
 
-func (c *context) _setByName(name string, builder MustBuilder) {
-	_, getOk := c.namedMustBuilderCache.GetOrStore(name, &mustBuilder{build: builder})
+func (c *context) _setByName(name string, vt reflect.Type, builder MustBuilder) {
+	_, getOk := c.namedMustBuilderCache.GetOrStore(name, &contextCachedItem{_type: vt, build: builder})
 	if getOk {
 		panic(fmt.Sprintf("Named builder allready exist: %s", name))
 	}

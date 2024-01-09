@@ -1,11 +1,17 @@
 package util
 
 import (
+	"github.com/peace0phmind/bud/stream"
 	"sync"
 )
 
 type Cache[K comparable, V any] struct {
 	cacheMap sync.Map
+}
+
+type CachePair[K comparable, V any] struct {
+	K K
+	V V
 }
 
 type cacheItem[V any] struct {
@@ -93,6 +99,36 @@ func (c *Cache[K, V]) Filter(filterFunc func(k K, v V) bool) *Cache[K, V] {
 		return true
 	})
 	return filteredCache
+}
+
+func (c *Cache[K, V]) FilterToStream(filterFunc func(k K, v V) bool) stream.Stream[*CachePair[K, V]] {
+	result := stream.Stream[*CachePair[K, V]]{}
+
+	c.cacheMap.Range(func(key, value any) bool {
+		k := key.(K)
+		ci := value.(*cacheItem[V])
+		if ci.valueValid && filterFunc(k, ci.value) {
+			result = result.Append(&CachePair[K, V]{K: k, V: ci.value})
+		}
+		return true
+	})
+
+	return result
+}
+
+func (c *Cache[K, V]) ToStream() stream.Stream[*CachePair[K, V]] {
+	result := stream.Stream[*CachePair[K, V]]{}
+
+	c.cacheMap.Range(func(key, value any) bool {
+		k := key.(K)
+		ci := value.(*cacheItem[V])
+		if ci.valueValid {
+			result = result.Append(&CachePair[K, V]{K: k, V: ci.value})
+		}
+		return true
+	})
+
+	return result
 }
 
 func (c *Cache[K, V]) Size() int {
