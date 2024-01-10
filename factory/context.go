@@ -89,6 +89,20 @@ func Range[T any](interfaceFunc func(T) bool, structFunc func(*T) bool) {
 	})
 }
 
+func (c *context) _getByNameOrType(name string, vt reflect.Type) any {
+	mb, ok := c.namedMustBuilderCache.Get(name)
+
+	if ok {
+		result := mb.getter()
+		rt := reflect.TypeOf(result)
+		if vt.ConvertibleTo(rt) {
+			return result
+		}
+	}
+
+	return c._get(vt)
+}
+
 func (c *context) _get(vt reflect.Type) any {
 	mb, ok := c.defaultMustBuilderCache.Get(vt)
 

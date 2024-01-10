@@ -15,8 +15,11 @@ const WireTag = "wire"
 // WireValueSelf is a constant that defines the annotation string used for self injection in Go code.
 const WireValueSelf = "self"
 
-// WireValueAuto is a constant that defines the annotation string used for automatic wire injection in Go code. It is used in the AutoWire function.
+// WireValueAuto is a constant that defines the annotation string used for automatic wire injection in Go code.
 const WireValueAuto = "auto"
+
+// WireValueType is a constant that defines the annotation string used for declaring wire value types in Go code.
+const WireValueType = "type"
 
 // WireValueName is a constant that defines the annotation string used for name injection in Go code.
 const WireValueName = "name"
@@ -52,7 +55,7 @@ func AutoWire(v any) error {
 			}
 		}
 
-		if WireValueAuto == lowRule {
+		if WireValueType == lowRule {
 			if fieldValue.Kind() == reflect.Ptr || fieldValue.Kind() == reflect.Interface {
 				if fieldValue.IsNil() {
 					return _struct.SetField(fieldValue, _context._get(structField.Type))
