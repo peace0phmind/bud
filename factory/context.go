@@ -132,7 +132,12 @@ func (c *context) _get(vt reflect.Type) any {
 		}
 	}
 
-	panic(fmt.Sprintf("Default Getter %s:%s  not found.", vt.PkgPath(), vt.Name()))
+	svt := vt
+	if svt.Kind() == reflect.Ptr {
+		svt = svt.Elem()
+	}
+
+	panic(fmt.Sprintf("use type to get Getter, %s:%s not found.", svt.PkgPath(), svt.Name()))
 }
 
 func (c *context) _set(vt reflect.Type, builder Getter) {
