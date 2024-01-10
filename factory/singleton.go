@@ -68,6 +68,17 @@ func (s *singleton[T]) Name(name string) *singleton[T] {
 	return s
 }
 
+func (s *singleton[T]) WithOption(option *Option) *singleton[T] {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	if option != nil {
+		s.option = *option
+	}
+
+	return s
+}
+
 func (s *singleton[T]) SetInitFunc(initFunc func() *T) *singleton[T] {
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -101,10 +112,6 @@ func (s *singleton[T]) Get() *T {
 		if s.initFunc != nil {
 			s.obj = s.initFunc()
 		} else {
-			// 如果设置了全局参数，singleton未设置，则使用全局参数覆盖配置
-			if _context.option.useInitMethod() && !s.option.useInitMethod() {
-				s.option.customInitMethod = _context.option.customInitMethod
-			}
 			s.obj = NewWithOption[T](&s.option)
 		}
 	})

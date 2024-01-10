@@ -14,15 +14,7 @@ import (
 // The DefaultInitMethodName is used in reflection to find and invoke the initialization method.
 const DefaultInitMethodName = "Init"
 
-// customInitMethod represents a configuration for custom initialization method.
-type customInitMethod struct {
-	useConstructor bool
-	initMethodName string
-}
-
 // Option represents a configuration for an object initialization option.
-//
-// customInitMethod represents configuration for custom initialization method.
 //
 // The default values for `Option` are set as follows:
 // - `doSetDefault` is `true`
@@ -135,10 +127,11 @@ type customInitMethod struct {
 // func SetDefault(v any) error {...}
 // ```
 type Option struct {
-	customInitMethod
-	doSetDefault bool
-	doAutoWire   bool
-	lock         sync.Mutex
+	useConstructor bool
+	initMethodName string
+	doSetDefault   bool
+	doAutoWire     bool
+	lock           sync.Mutex
 }
 
 func NewOption() *Option {
@@ -193,10 +186,6 @@ func (o *Option) useInitMethod() bool {
 }
 
 var newDefaultOption = NewOption()
-
-func GetNewDefaultOption() *Option {
-	return newDefaultOption
-}
 
 func New[T any]() *T {
 	return NewWithOption[T](newDefaultOption)

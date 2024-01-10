@@ -68,19 +68,19 @@ func TestNewWithOption(t *testing.T) {
 		},
 		{
 			name:          "OptionWithInitWithReturn",
-			option:        &Option{customInitMethod: customInitMethod{useConstructor: false, initMethodName: "InitWithReturn"}},
+			option:        &Option{useConstructor: false, initMethodName: "InitWithReturn"},
 			expectedPanic: "Init method 'InitWithReturn' must not have return values",
 			expectError:   true,
 		},
 		{
 			name:          "OptionWithMyInitMethodWithWareObjParams",
-			option:        &Option{customInitMethod: customInitMethod{useConstructor: false, initMethodName: "MyInit"}},
+			option:        &Option{useConstructor: false, initMethodName: "MyInit"},
 			expectedPanic: "test repo hello called",
 			expectError:   true,
 		},
 		{
 			name:          "OptionWithMyInitMethodWithWareObjErrorParams",
-			option:        &Option{customInitMethod: customInitMethod{useConstructor: false, initMethodName: "MyErrorInit"}},
+			option:        &Option{useConstructor: false, initMethodName: "MyErrorInit"},
 			expectedPanic: "Create testStruct error, the method MyErrorInit's 1 argument must be a struct point or an interface",
 			expectError:   true,
 		},

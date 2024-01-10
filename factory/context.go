@@ -14,20 +14,11 @@ type context struct {
 	defaultMustBuilderCache util.Cache[reflect.Type, *contextCachedItem] // package:name -> must builder
 	namedMustBuilderCache   util.Cache[string, *contextCachedItem]       // name -> must builder
 	wiringCache             util.Cache[reflect.Type, bool]
-	option                  Option
 }
 
 type contextCachedItem struct {
 	_type  reflect.Type
 	getter Getter
-}
-
-func UseConstructor(useConstructor bool) {
-	_context.option.UseConstructor(useConstructor)
-}
-
-func InitMethodName(initMethodName string) {
-	_context.option.InitMethodName(initMethodName)
 }
 
 func Get[T any]() *T {
