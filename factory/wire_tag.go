@@ -35,8 +35,8 @@ func AutoWire(v any) error {
 	}
 
 	vt := reflect.TypeOf(v)
-	_context._addWire(vt)
-	defer _context._deleteWire(vt)
+	_context._addWiring(vt)
+	defer _context._deleteWiring(vt)
 
 	return _struct.WalkWithTagName(v, WireTag, func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type, wireRule string) error {
 		lowRule := strings.ToLower(wireRule)

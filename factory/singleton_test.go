@@ -39,13 +39,13 @@ func (c *cat) Meow() string {
 }
 
 func TestSingletonBuilder(t *testing.T) {
-	var c = Singleton[cat]().MustBuilder()
+	var c = Singleton[cat]().Getter()
 
 	assert.Equal(t, "meow", c().Meow())
 	assert.Equal(t, "cat", c().Name)
 	assert.Equal(t, "animal", c().animal.Name)
 
-	var d = Singleton[dog]().MustBuilder()
+	var d = Singleton[dog]().Getter()
 
 	assert.Equal(t, "dog", d().Name)
 	assert.Equal(t, "dog", d().animal.Name)

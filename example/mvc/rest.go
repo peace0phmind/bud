@@ -5,7 +5,7 @@ import (
 	"github.com/peace0phmind/bud/factory"
 )
 
-var _cameraRest = factory.Singleton[CameraRest]().MustBuilder()
+var _cameraRest = factory.Singleton[CameraRest]().Getter()
 
 type CameraRest struct {
 	base.BaseRest[Camera]

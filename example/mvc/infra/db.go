@@ -16,9 +16,9 @@ import (
 	"time"
 )
 
-var _db = factory.Singleton[gorm.DB]().SetInitOnce(initDB).MustBuilder()
+var _db = factory.Singleton[gorm.DB]().SetInitFunc(initDB).Getter()
 
-func initDB() (db *gorm.DB, err error) {
+func initDB() *gorm.DB {
 	var logLevel logger.LogLevel
 
 	conf := _config()
@@ -47,19 +47,19 @@ func initDB() (db *gorm.DB, err error) {
 		},
 	)
 
-	db, err = gorm.Open(mysql.Open(_config().DSN()), &gorm.Config{
+	db, err := gorm.Open(mysql.Open(_config().DSN()), &gorm.Config{
 		Logger:                                   newLogger,
 		DisableForeignKeyConstraintWhenMigrating: true,
 	})
 	if err != nil {
 		logrus.Fatalf("initOnce db fail: %v", err)
-		return nil, err
+		panic(err)
 	}
 	db.Logger.LogMode(logger.Info)
 
 	sqlDB, err := db.DB()
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	sqlDB.SetMaxIdleConns(10)
@@ -69,7 +69,7 @@ func initDB() (db *gorm.DB, err error) {
 	sqlDB.SetConnMaxLifetime(6 * time.Hour)
 
 	logrus.Info("create db success")
-	return
+	return db
 }
 
 func DoMigrate(migrationsFS embed.FS) {

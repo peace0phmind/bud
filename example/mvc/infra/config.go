@@ -13,7 +13,7 @@ import (
 	"path/filepath"
 )
 
-var _config = factory.Singleton[Config]().MustBuilder()
+var _config = factory.Singleton[Config]().Getter()
 
 type Config struct {
 	EnvType   string `default:"prod"`

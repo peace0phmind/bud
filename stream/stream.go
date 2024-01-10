@@ -255,7 +255,7 @@ func (s Stream[T]) Map(mapFn func(T) T) Stream[T] {
 
 	result := Stream[T]{}
 
-	s.Range(func(t T) error {
+	s.err = s.Range(func(t T) error {
 		result = result.Append(mapFn(t))
 		return nil
 	})
