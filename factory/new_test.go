@@ -37,6 +37,10 @@ func (ts *testStruct) MyErrorInit(tp testRepo) {
 	tp.Hello()
 }
 
+func (ts *testStruct) nonExistentMethodName() {
+
+}
+
 func TestNewWithOption(t *testing.T) {
 	test_cases := []struct {
 		name          string
