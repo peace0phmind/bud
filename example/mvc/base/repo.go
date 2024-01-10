@@ -33,7 +33,7 @@ type CrudRepoInf[T any] interface {
 	DeleteByIds(ids []any) error
 }
 
-func (br *BaseRepo[T]) MustInitOnce() {
+func (br *BaseRepo[T]) Init() {
 	var t T
 	br.DBStatement = &gorm.Statement{DB: br.DB}
 	if err := br.DBStatement.Parse(&t); err != nil {
@@ -72,7 +72,7 @@ func (br *BaseRepo[T]) Count(processDB func(*gorm.DB) *gorm.DB) (int, error) {
 func (br *BaseRepo[T]) CheckProcessDB(processDB func(*gorm.DB) *gorm.DB) func(*gorm.DB) *gorm.DB {
 	if processDB == nil {
 		if br.DefaultProcessDB == nil {
-			panic("BaseRepo's MustInitOnce must be call first.")
+			panic("BaseRepo's Init must be call first.")
 		}
 		return br.DefaultProcessDB
 	}

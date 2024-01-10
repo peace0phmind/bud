@@ -11,7 +11,7 @@ type CameraRest struct {
 	base.BaseRest[Camera]
 }
 
-func (cr *CameraRest) MustInitOnce() {
+func (cr *CameraRest) Init() {
 	cr.RestName = "camera"
 	cr.Repo = _cameraRepo()
 }

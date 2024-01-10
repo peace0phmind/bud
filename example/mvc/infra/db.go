@@ -52,7 +52,7 @@ func initDB() *gorm.DB {
 		DisableForeignKeyConstraintWhenMigrating: true,
 	})
 	if err != nil {
-		logrus.Fatalf("initOnce db fail: %v", err)
+		logrus.Fatalf("Init db fail: %v", err)
 		panic(err)
 	}
 	db.Logger.LogMode(logger.Info)

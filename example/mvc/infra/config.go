@@ -32,7 +32,7 @@ type Config struct {
 	_dsn string
 }
 
-func (cfg *Config) InitOnce() error {
+func (cfg *Config) Init() {
 
 	defaults.SetDefaults(cfg)
 
@@ -80,7 +80,7 @@ func (cfg *Config) InitOnce() error {
 		log.Fatalf("Unable to decode into struct, %v", err)
 	}
 
-	return cfg.initLog()
+	cfg.initLog()
 }
 
 func (cfg *Config) initLog() error {

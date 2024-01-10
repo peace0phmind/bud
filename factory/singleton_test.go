@@ -9,7 +9,7 @@ type animal struct {
 	Name string
 }
 
-func (a *animal) MustInitOnce() {
+func (a *animal) Init() {
 	a.Name = "animal"
 }
 
@@ -18,8 +18,8 @@ type cat struct {
 	Name   string
 }
 
-func (c *cat) MustInitOnce() {
-	c.animal.MustInitOnce()
+func (c *cat) Init() {
+	c.animal.Init()
 
 	c.Name = "cat"
 }
@@ -28,8 +28,8 @@ type dog struct {
 	animal // 嵌入 animal 结构体
 }
 
-func (d *dog) MustInitOnce() {
-	d.animal.MustInitOnce()
+func (d *dog) Init() {
+	d.animal.Init()
 
 	d.Name = "dog"
 }

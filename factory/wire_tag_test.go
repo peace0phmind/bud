@@ -37,7 +37,7 @@ type Cfg struct {
 	Name string
 }
 
-func (c *Cfg) MustInitOnce() {
+func (c *Cfg) Init() {
 	c.Name = "py"
 }
 
