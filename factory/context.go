@@ -49,35 +49,53 @@ func GetByName[T any](name string) *T {
 	panic(fmt.Sprintf("Invalid type: need %v, get %v", vt, resultType))
 }
 
-func Range[T any](interfaceFunc func(T) bool, structFunc func(*T) bool) {
-	vT := reflect.TypeOf((*T)(nil))
+func Range[T any](rangeFunc func(any) bool) {
+	vt := reflect.TypeOf((*T)(nil))
 
-	isInterface := false
-	if vT.Elem().Kind() == reflect.Interface {
-		vT = vT.Elem()
-		isInterface = true
-	}
-
-	if isInterface {
-		if interfaceFunc == nil {
-			panic("T is an interface, interfaceFunc must not be nil")
-		}
-	} else {
-		if structFunc == nil {
-			panic("T is a struct, structFunc must not be nil")
-		}
+	if vt.Elem().Kind() == reflect.Interface {
+		vt = vt.Elem()
+	} else if vt.Elem().Kind() != reflect.Struct {
+		panic("Range only range type and interface")
 	}
 
 	_context.defaultMustBuilderCache.Range(func(k reflect.Type, v *contextCachedItem) bool {
-		if k.ConvertibleTo(vT) {
-			if isInterface {
-				return interfaceFunc(v.getter().(T))
-			} else {
-				return structFunc(v.getter().(*T))
-			}
+		if k.ConvertibleTo(vt) {
+			return rangeFunc(v.getter())
 		}
 		return true
 	})
+}
+
+func RangeType[T any](typeFunc func(*T) bool) {
+	vt := reflect.TypeOf((*T)(nil))
+
+	if vt.Elem().Kind() == reflect.Struct {
+		_context.defaultMustBuilderCache.Range(func(k reflect.Type, v *contextCachedItem) bool {
+			if k.ConvertibleTo(vt) {
+				return typeFunc(v.getter().(*T))
+			}
+			return true
+		})
+	} else {
+		panic("Range type only range struct type")
+	}
+}
+
+func RangeInf[T any](infFunc func(T) bool) {
+	vt := reflect.TypeOf((*T)(nil))
+
+	if vt.Elem().Kind() == reflect.Interface {
+		vt = vt.Elem()
+
+		_context.defaultMustBuilderCache.Range(func(k reflect.Type, v *contextCachedItem) bool {
+			if k.ConvertibleTo(vt) {
+				return infFunc(v.getter().(T))
+			}
+			return true
+		})
+	} else {
+		panic("Range inf only range interface type")
+	}
 }
 
 func (c *context) _getByNameOrType(name string, vt reflect.Type) any {
