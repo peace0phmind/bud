@@ -70,11 +70,8 @@ func RangeStruct[T any](structFunc func(*T) bool) {
 	vt := reflect.TypeOf((*T)(nil))
 
 	if vt.Elem().Kind() == reflect.Struct {
-		_context.defaultMustBuilderCache.Range(func(k reflect.Type, v *contextCachedItem) bool {
-			if k.ConvertibleTo(vt) {
-				return structFunc(v.getter().(*T))
-			}
-			return true
+		Range[T](func(v any) bool {
+			return structFunc(v.(*T))
 		})
 	} else {
 		panic("Range type only range struct type")
@@ -85,13 +82,8 @@ func RangeInterface[T any](interfaceFunc func(T) bool) {
 	vt := reflect.TypeOf((*T)(nil))
 
 	if vt.Elem().Kind() == reflect.Interface {
-		vt = vt.Elem()
-
-		_context.defaultMustBuilderCache.Range(func(k reflect.Type, v *contextCachedItem) bool {
-			if k.ConvertibleTo(vt) {
-				return interfaceFunc(v.getter().(T))
-			}
-			return true
+		Range[T](func(v any) bool {
+			return interfaceFunc(v.(T))
 		})
 	} else {
 		panic("Range inf only range interface type")
