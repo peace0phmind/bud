@@ -13,12 +13,12 @@ func TestContextRange(t *testing.T) {
 		return true
 	})
 
-	RangeInf[DoInf](func(d DoInf) bool {
+	RangeInterface[DoInf](func(d DoInf) bool {
 		println(d.Hello())
 		return true
 	})
 
-	RangeType[ExtStruct](func(e *ExtStruct) bool {
+	RangeStruct[ExtStruct](func(e *ExtStruct) bool {
 		println(e.Hello())
 		return true
 	})

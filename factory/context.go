@@ -66,13 +66,13 @@ func Range[T any](rangeFunc func(any) bool) {
 	})
 }
 
-func RangeType[T any](typeFunc func(*T) bool) {
+func RangeStruct[T any](structFunc func(*T) bool) {
 	vt := reflect.TypeOf((*T)(nil))
 
 	if vt.Elem().Kind() == reflect.Struct {
 		_context.defaultMustBuilderCache.Range(func(k reflect.Type, v *contextCachedItem) bool {
 			if k.ConvertibleTo(vt) {
-				return typeFunc(v.getter().(*T))
+				return structFunc(v.getter().(*T))
 			}
 			return true
 		})
@@ -81,7 +81,7 @@ func RangeType[T any](typeFunc func(*T) bool) {
 	}
 }
 
-func RangeInf[T any](infFunc func(T) bool) {
+func RangeInterface[T any](interfaceFunc func(T) bool) {
 	vt := reflect.TypeOf((*T)(nil))
 
 	if vt.Elem().Kind() == reflect.Interface {
@@ -89,7 +89,7 @@ func RangeInf[T any](infFunc func(T) bool) {
 
 		_context.defaultMustBuilderCache.Range(func(k reflect.Type, v *contextCachedItem) bool {
 			if k.ConvertibleTo(vt) {
-				return infFunc(v.getter().(T))
+				return interfaceFunc(v.getter().(T))
 			}
 			return true
 		})
