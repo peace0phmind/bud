@@ -73,7 +73,14 @@ func (s *singleton[T]) WithOption(option *Option) *singleton[T] {
 	defer s.lock.Unlock()
 
 	if option != nil {
-		s.option = *option
+		s.option.lock.Lock()
+		defer s.option.lock.Unlock()
+
+		s.option.doSetDefault = option.doSetDefault
+		s.option.doAutoWire = option.doAutoWire
+		s.option.useConstructor = option.useConstructor
+		s.option.initMethodName = option.initMethodName
+		s.option.initParams = option.initParams
 	}
 
 	return s
@@ -104,6 +111,11 @@ func (s *singleton[T]) UseConstructor(useConstructor bool) *singleton[T] {
 
 func (s *singleton[T]) InitMethodName(initMethodName string) *singleton[T] {
 	s.option.InitMethodName(initMethodName)
+	return s
+}
+
+func (s *singleton[T]) InitParams(initParams ...string) *singleton[T] {
+	s.option.InitParams(initParams...)
 	return s
 }
 

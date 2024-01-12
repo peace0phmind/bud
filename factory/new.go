@@ -1,6 +1,7 @@
 package factory
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -129,6 +130,7 @@ const DefaultInitMethodName = "Init"
 type Option struct {
 	useConstructor bool
 	initMethodName string
+	initParams     []string
 	doSetDefault   bool
 	doAutoWire     bool
 	lock           sync.Mutex
@@ -181,14 +183,58 @@ func (o *Option) InitMethodName(initMethodName string) *Option {
 	return o
 }
 
-func (o *Option) useInitMethod() bool {
-	return o.useConstructor || len(o.initMethodName) > 0
+func (o *Option) InitParams(initParams ...string) *Option {
+	o.lock.Lock()
+	defer o.lock.Unlock()
+
+	if len(o.initParams) > 0 {
+		panic("params already set")
+	}
+
+	o.initParams = initParams
+
+	return o
 }
 
 var newDefaultOption = NewOption()
 
 func New[T any]() *T {
 	return NewWithOption[T](newDefaultOption)
+}
+
+func _getInitParams[T any](initMethod reflect.Method, t *T, option *Option) ([]reflect.Value, error) {
+	params := []reflect.Value{reflect.ValueOf(t)}
+
+	if len(option.initParams) == 0 {
+		for i := 1; i < initMethod.Type.NumIn(); i++ {
+			paramType := initMethod.Type.In(i)
+			if paramType.Kind() == reflect.Ptr || paramType.Kind() == reflect.Interface {
+				params = append(params, reflect.ValueOf(_context._get(paramType)))
+			} else {
+				return nil, errors.New(fmt.Sprintf("Method %s's %d argument must be a struct point or an interface", initMethod.Name, i-1))
+			}
+		}
+	} else if len(option.initParams)+1 == initMethod.Type.NumIn() {
+		for i := 0; i < initMethod.Type.NumIn()-1; i++ {
+			paramType := initMethod.Type.In(i + 1)
+
+			tagValue, err := ParseTagValue[WireValue](option.initParams[i], nil)
+			if err != nil {
+				return nil, errors.New(fmt.Sprintf("Method %s's %d argument tag is err: %v", initMethod.Name, i, err))
+			}
+
+			v, err := getByWireTag(tagValue, paramType)
+			if err != nil {
+				return nil, errors.New(fmt.Sprintf("Method %s's %d argument get value from tag err: %v", initMethod.Name, i, err))
+			}
+
+			params = append(params, reflect.ValueOf(v))
+		}
+	} else {
+		return nil, errors.New("init params count must equals with method params count")
+	}
+
+	return params, nil
 }
 
 func NewWithOption[T any](option *Option) *T {
@@ -218,17 +264,12 @@ func NewWithOption[T any](option *Option) *T {
 				panic(fmt.Sprintf("Init method '%s' must not have return values", initMethodName))
 			}
 
-			params := []reflect.Value{reflect.ValueOf(t)}
-			for i := 1; i < initMethod.Type.NumIn(); i++ {
-				paramType := initMethod.Type.In(i)
-				if paramType.Kind() == reflect.Ptr || paramType.Kind() == reflect.Interface {
-					params = append(params, reflect.ValueOf(_context._get(paramType)))
-				} else {
-					panic(fmt.Sprintf("Create %s error, the method %s's %d argument must be a struct point or an interface", vte.Name(), initMethodName, i))
-				}
+			params, err := _getInitParams(initMethod, t, option)
+			if err == nil {
+				defer initMethod.Func.Call(params)
+			} else {
+				panic(fmt.Sprintf("Create %s error: %v", vte.Name(), err))
 			}
-
-			defer initMethod.Func.Call(params)
 		}
 	} else {
 		panic("T must be a struct type")
@@ -244,7 +285,7 @@ func NewWithOption[T any](option *Option) *T {
 	// do auto wire
 	if option.doAutoWire {
 		if err := AutoWire(t); err != nil {
-			panic(err)
+			panic(fmt.Sprintf("Create %s error: %v", vt.Elem().Name(), err))
 		}
 	}
 

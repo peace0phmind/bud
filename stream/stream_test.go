@@ -413,7 +413,7 @@ func TestStream_AnyMatch(t *testing.T) {
 		{
 			name:           "Error In Match Function",
 			stream:         Stream[int]{elems: []int{1, 2, 3, 4, 5}},
-			matchFunc:      func(n int) (bool, error) { return false, errors.New("Unknown Error") },
+			matchFunc:      func(n int) (bool, error) { return false, errors.New("unknown error") },
 			expectedResult: false,
 			expectError:    true,
 		},
@@ -616,7 +616,7 @@ func TestMap(t *testing.T) {
 	}
 
 	errFunc := func(n int) (int, error) {
-		return 0, errors.New("Error")
+		return 0, errors.New("error")
 	}
 
 	testCases := []struct {
@@ -642,7 +642,7 @@ func TestMap(t *testing.T) {
 			name:    "errorFunction",
 			stream:  Of[int]([]int{1, 2, 3}),
 			funcMap: errFunc,
-			err:     errors.New("Error"),
+			err:     errors.New("error"),
 		},
 	}
 
