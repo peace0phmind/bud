@@ -12,7 +12,7 @@ import (
 // WireTag is a constant that defines the annotation string used for wire injection in Go code.
 const WireTag = "wire"
 
-// ENUM(self, auto, type, name, value)
+// ENUM(self, auto, type, name, value, option)
 type WireValue string
 
 func splitAndTrimValue(value, sep string) []string {
