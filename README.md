@@ -1,5 +1,6 @@
 bud: Make Golang code concise and elegant
 ---
+Make Golang code concise and elegant. Feature include: auto-wire
 
 Feature List
 
