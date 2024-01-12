@@ -1,15 +1,15 @@
-bud: Make Golang code concise and elegant
+bud: Simplify and Graceful Golang Code
 ---
-Make Golang code concise and elegant. Feature include: auto-wire
+Simplify and Graceful Golang Code. Features include: auto-wiring
 
 Feature List
 
-- wire: Runtime dynamic auto-wire using dependency injection
+- wire: Runtime Dynamic Auto-Wiring Using Dependency Injection
 
 wire
 ---
-Runtime dynamic auto-wire using dependency injection
+Runtime Dynamic Auto-Wiring Using Dependency Injection
 
-Wire is a tool for runtime automation of wiring components using dependency injection.
-The dependencies between components can be defined by the Tag marked on the field of the struct, or by the Init method
-parameters.
+Wire is a tool for automating the wiring of components at runtime using dependency injection.
+The dependencies between components can be defined by the tag marked on the field of the struct, or by the parameters of
+the Init method.
