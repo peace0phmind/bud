@@ -72,6 +72,7 @@ main.go
 package main
 
 import "github.com/peace0phmind/bud/factory"
+import "service"
 
 func main() {
 	serv := factory.Get[servcie.MyService]()
