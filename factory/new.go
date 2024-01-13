@@ -131,24 +131,14 @@ type Option struct {
 	useConstructor bool
 	initMethodName string
 	initParams     []string
-	doSetDefault   bool
 	doAutoWire     bool
 	lock           sync.Mutex
 }
 
 func NewOption() *Option {
 	return &Option{
-		doSetDefault: true,
-		doAutoWire:   true,
+		doAutoWire: true,
 	}
-}
-
-func (o *Option) SetDefault(setDefault bool) *Option {
-	o.lock.Lock()
-	defer o.lock.Unlock()
-
-	o.doSetDefault = setDefault
-	return o
 }
 
 func (o *Option) AutoWire(autoWire bool) *Option {
@@ -273,13 +263,6 @@ func NewWithOption[T any](option *Option) *T {
 		}
 	} else {
 		panic("T must be a struct type")
-	}
-
-	// do set default
-	if option.doSetDefault {
-		if err := SetDefault(t); err != nil {
-			panic(err)
-		}
 	}
 
 	// do auto wire

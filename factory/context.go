@@ -111,25 +111,28 @@ func (c *context) _get(vt reflect.Type) any {
 		return mb.getter()
 	}
 
-	convertibleList := c.defaultMustBuilderCache.Filter(func(k reflect.Type, v *contextCachedItem) bool {
-		return k.ConvertibleTo(vt)
-	})
-
-	convertibleListSize := convertibleList.Size()
-
-	if convertibleListSize > 1 {
-		panic(fmt.Sprintf("Multiple default builders found for type: %v, please use named singleton", vt))
-	}
-
-	if convertibleListSize == 1 {
-		convertibleList.Range(func(k reflect.Type, v *contextCachedItem) bool {
-			mb = v
-			ok = true
-			return false
+	if vt.Kind() == reflect.Interface {
+		// 需求是接口才使用下面方法找寻
+		convertibleList := c.defaultMustBuilderCache.Filter(func(k reflect.Type, v *contextCachedItem) bool {
+			return k.ConvertibleTo(vt)
 		})
 
-		if ok {
-			return mb.getter()
+		convertibleListSize := convertibleList.Size()
+
+		if convertibleListSize > 1 {
+			panic(fmt.Sprintf("Multiple default builders found for type: %v, please use named singleton", vt))
+		}
+
+		if convertibleListSize == 1 {
+			convertibleList.Range(func(k reflect.Type, v *contextCachedItem) bool {
+				mb = v
+				ok = true
+				return false
+			})
+
+			if ok {
+				return mb.getter()
+			}
 		}
 	}
 
@@ -139,6 +142,7 @@ func (c *context) _get(vt reflect.Type) any {
 	}
 
 	panic(fmt.Sprintf("use type to get Getter, %s:%s not found.", svt.PkgPath(), svt.Name()))
+
 }
 
 func (c *context) _set(vt reflect.Type, builder Getter) {

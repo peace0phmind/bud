@@ -50,7 +50,7 @@ func TestNewWithOption(t *testing.T) {
 	}{
 		{
 			name:          "OptionWithNoSettings",
-			option:        NewOption().SetDefault(true).AutoWire(true),
+			option:        NewOption().AutoWire(true),
 			expectedPanic: "init called",
 			expectError:   true,
 		},

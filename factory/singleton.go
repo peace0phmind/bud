@@ -21,8 +21,7 @@ type singleton[T any] struct {
 func _singleton[T any]() *singleton[T] {
 	result := &singleton[T]{
 		option: Option{
-			doSetDefault: true,
-			doAutoWire:   true,
+			doAutoWire: true,
 		},
 	}
 
@@ -76,7 +75,6 @@ func (s *singleton[T]) WithOption(option *Option) *singleton[T] {
 		s.option.lock.Lock()
 		defer s.option.lock.Unlock()
 
-		s.option.doSetDefault = option.doSetDefault
 		s.option.doAutoWire = option.doAutoWire
 		s.option.useConstructor = option.useConstructor
 		s.option.initMethodName = option.initMethodName
@@ -96,11 +94,6 @@ func (s *singleton[T]) SetInitFunc(initFunc func() *T) *singleton[T] {
 
 func (s *singleton[T]) AutoWire(autoWire bool) *singleton[T] {
 	s.option.AutoWire(autoWire)
-	return s
-}
-
-func (s *singleton[T]) SetDefault(setDefault bool) *singleton[T] {
-	s.option.SetDefault(setDefault)
 	return s
 }
 

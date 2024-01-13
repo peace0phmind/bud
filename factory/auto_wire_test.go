@@ -2,6 +2,8 @@ package factory
 
 import (
 	"fmt"
+	"github.com/expr-lang/expr"
+	"reflect"
 	"testing"
 )
 
@@ -69,5 +71,19 @@ func TestUpdateSelf(t *testing.T) {
 				t.Errorf("AutoWire = %v, want %v", tc.got, tc.want)
 			}
 		})
+	}
+}
+
+func TestExpr(t *testing.T) {
+	env := _context._getByName("env")
+
+	envMap := map[string]any{}
+	envMap["env"] = env
+
+	out, err := expr.Eval("env.PWD1 ?? 123", envMap)
+	if err != nil {
+		t.Errorf("eval err: %v", err)
+	} else {
+		t.Errorf("output: %v", reflect.ValueOf(out).Kind())
 	}
 }

@@ -7,6 +7,10 @@ import (
 	"time"
 )
 
+var (
+	ErrContinue = errors.New("continue")
+)
+
 // Stream is a generic type representing a stream of elems of type T.
 // It contains a slice of elems of type T.
 type Stream[T any] struct {
@@ -35,6 +39,9 @@ func (s Stream[T]) Filter(keep func(T) (bool, error)) Stream[T] {
 	for _, v := range s.elems {
 		ok, err := keep(v)
 		if err != nil {
+			if errors.Is(err, ErrContinue) {
+				continue
+			}
 			result.err = err
 			return result
 		}
@@ -80,6 +87,9 @@ func (s Stream[T]) FlatMap(flatFun func(T) Stream[T]) Stream[T] {
 	for _, elem := range s.elems {
 		stream := flatFun(elem)
 		if stream.err != nil {
+			if errors.Is(stream.err, ErrContinue) {
+				continue
+			}
 			result.err = stream.err
 			return result
 		}
@@ -138,6 +148,9 @@ func (s Stream[T]) Distinct(equalFunc func(preItem, nextItem T) (bool, error)) S
 		for _, existingItem := range result.elems {
 			ok, err := equalFunc(existingItem, newItem)
 			if err != nil {
+				if errors.Is(err, ErrContinue) {
+					continue
+				}
 				result.err = err
 				return result
 			}
@@ -353,6 +366,9 @@ func (s Stream[T]) AllMatch(matchFunc func(T) (bool, error)) (bool, error) {
 	for _, elem := range s.elems {
 		match, err := matchFunc(elem)
 		if err != nil {
+			if errors.Is(err, ErrContinue) {
+				continue
+			}
 			return false, err
 		}
 
@@ -424,6 +440,9 @@ func (s Stream[T]) AnyMatch(matchFunc func(T) (bool, error)) (bool, error) {
 	for _, elem := range s.elems {
 		match, err := matchFunc(elem)
 		if err != nil {
+			if errors.Is(err, ErrContinue) {
+				continue
+			}
 			return false, err
 		}
 
@@ -484,6 +503,9 @@ func (s Stream[T]) FindFirst(keep func(T) (bool, error)) (t T, err error) {
 	for _, elem := range s.elems {
 		ok, err = keep(elem)
 		if err != nil {
+			if errors.Is(err, ErrContinue) {
+				continue
+			}
 			return t, err
 		}
 		if ok {
@@ -508,6 +530,9 @@ func (s Stream[T]) Max(compareFunc func(x, y T) (int, error)) (t T, err error) {
 	for _, elem := range s.elems[1:] {
 		compared, err = compareFunc(elem, max)
 		if err != nil {
+			if errors.Is(err, ErrContinue) {
+				continue
+			}
 			return t, err
 		}
 
@@ -548,6 +573,9 @@ func (s Stream[T]) Min(compareFunc func(x, y T) (int, error)) (t T, err error) {
 	for _, elem := range s.elems[1:] {
 		compared, err = compareFunc(elem, min)
 		if err != nil {
+			if errors.Is(err, ErrContinue) {
+				continue
+			}
 			return t, err
 		}
 
@@ -604,7 +632,7 @@ func (s Stream[T]) _reduce(initItem T, beginItem int, accumulator func(preItem, 
 	result := initItem
 	for i := beginItem; i < len(s.elems); i++ {
 		result, err = accumulator(result, s.elems[i])
-		if err != nil {
+		if err != nil && !errors.Is(err, ErrContinue) {
 			return t, err
 		}
 	}
@@ -687,7 +715,7 @@ func (s Stream[T]) Range(forEach func(T) error) error {
 	}
 
 	for _, elem := range s.elems {
-		if err := forEach(elem); err != nil {
+		if err := forEach(elem); err != nil && !errors.Is(err, ErrContinue) {
 			return err
 		}
 	}
@@ -784,6 +812,9 @@ func ToMap[In any, Key comparable, Value any](in Stream[In], mapFunc func(In) (K
 	for _, v := range in.elems {
 		key, value, err := mapFunc(v)
 		if err != nil {
+			if errors.Is(err, ErrContinue) {
+				continue
+			}
 			return nil, err
 		}
 		result[key] = value
@@ -820,6 +851,9 @@ func Map[In any, Out any](s Stream[In], f func(In) (Out, error)) Stream[Out] {
 	for _, v := range s.elems {
 		elem, err := f(v)
 		if err != nil {
+			if errors.Is(err, ErrContinue) {
+				continue
+			}
 			result.err = err
 			return result
 		}
@@ -843,6 +877,9 @@ func FlatMap[In any, Out any](in Stream[In], flatMap func(In) Stream[Out]) Strea
 	for _, v := range in.elems {
 		stream := flatMap(v)
 		if stream.err != nil {
+			if errors.Is(stream.err, ErrContinue) {
+				continue
+			}
 			result.err = stream.err
 			return result
 		}
