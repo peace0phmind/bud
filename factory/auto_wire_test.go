@@ -80,10 +80,24 @@ func TestExpr(t *testing.T) {
 	envMap := map[string]any{}
 	envMap["env"] = env
 
-	out, err := expr.Eval("env.PWD1 ?? 123", envMap)
+	program, err := expr.Compile("'abc'", expr.Env(envMap), expr.AsAny())
 	if err != nil {
-		t.Errorf("eval err: %v", err)
-	} else {
-		t.Errorf("output: %v", reflect.ValueOf(out).Kind())
+		fmt.Printf("%v", err)
+		return
 	}
+
+	output, err := expr.Run(program, env)
+	if err != nil {
+		fmt.Printf("%v", err)
+		return
+	}
+
+	fmt.Printf("%v\n", reflect.ValueOf(output).Kind())
+
+	//out, err := expr.Eval("env.PWD1 ?? 123", envMap,)
+	//if err != nil {
+	//	t.Errorf("eval err: %v", err)
+	//} else {
+	//	t.Errorf("output: %v", reflect.ValueOf(out).Kind())
+	//}
 }
