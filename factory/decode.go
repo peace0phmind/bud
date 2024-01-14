@@ -11,7 +11,7 @@ import (
 
 // copied from github.com/mitchellh/mapstructure
 type Decoder struct {
-	config *DecoderConfig
+	config *DecoderOption
 }
 
 // Metadata contains information about decoding a structure that
@@ -31,7 +31,7 @@ type Metadata struct {
 }
 
 // DecodeHookFunc is the callback function that can be used for
-// data transformations. See "DecodeHook" in the DecoderConfig
+// data transformations. See "DecodeHook" in the DecoderOption
 // struct.
 //
 // The type must be one of DecodeHookFuncType, DecodeHookFuncKind, or
@@ -58,7 +58,7 @@ type DecodeHookFuncKind func(reflect.Kind, reflect.Kind, interface{}) (interface
 // values.
 type DecodeHookFuncValue func(from reflect.Value, to reflect.Value) (interface{}, error)
 
-type DecoderConfig struct {
+type DecoderOption struct {
 	// DecodeHook, if set, will be called before any decoding and any
 	// type conversion (if WeaklyTypedInput is on). This lets you modify
 	// the values before they're set down onto the resulting struct. The
@@ -131,42 +131,35 @@ type DecoderConfig struct {
 	MatchName func(mapKey, fieldName string) bool
 }
 
-// NewDecoder returns a new decoder for the given configuration. Once
-// a decoder has been returned, the same configuration must not be used
-// again.
-func NewDecoder() *Decoder {
-	config := &DecoderConfig{
+func NewDecoderOption() *DecoderOption {
+	option := &DecoderOption{
 		Metadata:         nil,
 		WeaklyTypedInput: true,
 	}
 
-	if config.Metadata != nil {
-		if config.Metadata.Keys == nil {
-			config.Metadata.Keys = make([]string, 0)
+	if option.Metadata != nil {
+		if option.Metadata.Keys == nil {
+			option.Metadata.Keys = make([]string, 0)
 		}
 
-		if config.Metadata.Unused == nil {
-			config.Metadata.Unused = make([]string, 0)
+		if option.Metadata.Unused == nil {
+			option.Metadata.Unused = make([]string, 0)
 		}
 
-		if config.Metadata.Unset == nil {
-			config.Metadata.Unset = make([]string, 0)
+		if option.Metadata.Unset == nil {
+			option.Metadata.Unset = make([]string, 0)
 		}
 	}
 
-	if config.TagName == "" {
-		config.TagName = "mapstructure"
+	if option.TagName == "" {
+		option.TagName = "mapstructure"
 	}
 
-	if config.MatchName == nil {
-		config.MatchName = strings.EqualFold
+	if option.MatchName == nil {
+		option.MatchName = strings.EqualFold
 	}
 
-	result := &Decoder{
-		config: config,
-	}
-
-	return result
+	return option
 }
 
 func (d *Decoder) Decode(name string, input interface{}, outVal reflect.Value) error {
