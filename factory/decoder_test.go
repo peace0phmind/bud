@@ -148,6 +148,120 @@ type WireValueExprStruct struct {
 	PSlicePointStruct  *[]PointStruct
 	PSlicePPointStruct *[]PointStruct
 }
+type WireValueExprStructTest struct {
+	String          string    `wire:"value:${env.STRING}"`
+	StringPtr       *string   `wire:"value:${env.STRING}"`
+	Strings         []string  `wire1:"value:${env.STRINGS}"`
+	StringPtrs      []*string `wire1:"value:${env.STRINGS}"`
+	StringPtrInited *string   `wire1:"value:${env.STRINGInited}"`
+
+	Bool     bool    `wire1:"value:${env.BOOL}"`
+	BoolPtr  *bool   `wire1:"value:${env.BOOL}"`
+	Bools    []bool  `wire1:"value:${env.BOOLS}"`
+	BoolPtrs []*bool `wire1:"value:${env.BOOLS}"`
+
+	Int     int    `wire1:"value:${env.INT}"`
+	IntPtr  *int   `wire1:"value:${env.INT}"`
+	Ints    []int  `wire1:"value:${env.INTS}"`
+	IntPtrs []*int `wire1:"value:${env.INTS}"`
+
+	Int8     int8    `wire1:"value:${env.INT8}"`
+	Int8Ptr  *int8   `wire1:"value:${env.INT8}"`
+	Int8s    []int8  `wire1:"value:${env.INT8S}"`
+	Int8Ptrs []*int8 `wire1:"value:${env.INT8S}"`
+
+	Int16     int16    `wire1:"value:${env.INT16}"`
+	Int16Ptr  *int16   `wire1:"value:${env.INT16}"`
+	Int16s    []int16  `wire1:"value:${env.INT16S}"`
+	Int16Ptrs []*int16 `wire1:"value:${env.INT16S}"`
+
+	Int32     int32    `wire1:"value:${env.INT32}"`
+	Int32Ptr  *int32   `wire1:"value:${env.INT32}"`
+	Int32s    []int32  `wire1:"value:${env.INT32S}"`
+	Int32Ptrs []*int32 `wire1:"value:${env.INT32S}"`
+
+	Int64     int64    `wire1:"value:${env.INT64}"`
+	Int64Ptr  *int64   `wire1:"value:${env.INT64}"`
+	Int64s    []int64  `wire1:"value:${env.INT64S}"`
+	Int64Ptrs []*int64 `wire1:"value:${env.INT64S}"`
+
+	Uint     uint    `wire1:"value:${env.UINT}"`
+	UintPtr  *uint   `wire1:"value:${env.UINT}"`
+	Uints    []uint  `wire1:"value:${env.UINTS}"`
+	UintPtrs []*uint `wire1:"value:${env.UINTS}"`
+
+	Uint8     uint8    `wire1:"value:${env.UINT8}"`
+	Uint8Ptr  *uint8   `wire1:"value:${env.UINT8}"`
+	Uint8s    []uint8  `wire1:"value:${env.UINT8S}"`
+	Uint8Ptrs []*uint8 `wire1:"value:${env.UINT8S}"`
+
+	Uint16     uint16    `wire1:"value:${env.UINT16}"`
+	Uint16Ptr  *uint16   `wire1:"value:${env.UINT16}"`
+	Uint16s    []uint16  `wire1:"value:${env.UINT16S}"`
+	Uint16Ptrs []*uint16 `wire1:"value:${env.UINT16S}"`
+
+	Uint32     uint32    `wire1:"value:${env.UINT32}"`
+	Uint32Ptr  *uint32   `wire1:"value:${env.UINT32}"`
+	Uint32s    []uint32  `wire1:"value:${env.UINT32S}"`
+	Uint32Ptrs []*uint32 `wire1:"value:${env.UINT32S}"`
+
+	Uint64     uint64    `wire1:"value:${env.UINT64}"`
+	Uint64Ptr  *uint64   `wire1:"value:${env.UINT64}"`
+	Uint64s    []uint64  `wire1:"value:${env.UINT64S}"`
+	Uint64Ptrs []*uint64 `wire1:"value:${env.UINT64S}"`
+
+	Float32     float32    `wire1:"value:${env.FLOAT32}"`
+	Float32Ptr  *float32   `wire1:"value:${env.FLOAT32}"`
+	Float32s    []float32  `wire1:"value:${env.FLOAT32S}"`
+	Float32Ptrs []*float32 `wire1:"value:${env.FLOAT32S}"`
+
+	Float64     float64    `wire1:"value:${env.FLOAT64}"`
+	Float64Ptr  *float64   `wire1:"value:${env.FLOAT64}"`
+	Float64s    []float64  `wire1:"value:${env.FLOAT64S}"`
+	Float64Ptrs []*float64 `wire1:"value:${env.FLOAT64S}"`
+
+	Duration     time.Duration    `wire1:"value:${env.DURATION}"`
+	Durations    []time.Duration  `wire1:"value:${env.DURATIONS}"`
+	DurationPtr  *time.Duration   `wire1:"value:${env.DURATION}"`
+	DurationPtrs []*time.Duration `wire1:"value:${env.DURATIONS}"`
+
+	Unmarshaler     unmarshaler    `wire1:"value:${env.UNMARSHALER}"`
+	UnmarshalerPtr  *unmarshaler   `wire1:"value:${env.UNMARSHALER}"`
+	Unmarshalers    []unmarshaler  `wire1:"value:${env.UNMARSHALERS}"`
+	UnmarshalerPtrs []*unmarshaler `wire1:"value:${env.UNMARSHALERS}"`
+
+	URL     url.URL    `wire1:"value:${env.URL}"`
+	URLPtr  *url.URL   `wire1:"value:${env.URL}"`
+	URLs    []url.URL  `wire1:"value:${env.URLS}"`
+	URLPtrs []*url.URL `wire1:"value:${env.URLS}"`
+
+	StringWithdefault string `wire1:"value:${env.DATABASE_URL}" envDefault:"postgres://localhost:5432/db"`
+
+	CustomSeparator []string `wire1:"value:${env.SEPSTRINGS}" envSeparator:":"`
+
+	NonDefined struct {
+		String string `wire1:"value:${env.NONDEFINED_STR}"`
+	}
+
+	NestedNonDefined struct {
+		NonDefined struct {
+			String string `wire1:"value:${env.STR}"`
+		} `envPrefix:"NONDEFINED_"`
+	} `envPrefix:"PRF_"`
+
+	NotAnEnv   string
+	unexported string `wire1:"value:${env.FOO}"`
+
+	PointStruct
+	PS         PointStruct
+	PPS        *PointStruct
+	PPSNotInit *PointStruct
+
+	SlicePointStruct   []PointStruct
+	SlicePPointStruct  []*PointStruct
+	PSlicePointStruct  *[]PointStruct
+	PSlicePPointStruct *[]PointStruct
+}
 
 type WalkSliceStruct struct {
 	PointStruct
@@ -329,7 +443,7 @@ func TestAutoWireEnv(t *testing.T) {
 	t.Setenv("NONDEFINED_STR", nonDefinedStr)
 	t.Setenv("PRF_NONDEFINED_STR", nonDefinedStr)
 
-	sample := WireValueExprStruct{}
+	sample := WireValueExprStructTest{}
 	isNoErr(t, AutoWire(&sample))
 
 	isEqual(t, str1, sample.String)

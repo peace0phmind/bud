@@ -73,6 +73,9 @@ func getExpr(value string) (exprCode string, isExpr bool) {
 	return value, false
 }
 
+var decoder = &Decoder{}
+var decoderOption = NewDecoderOption()
+
 func getByWireTag(tagValue *TagValue[WireValue], t reflect.Type) (any, error) {
 	switch tagValue.Tag {
 	case WireValueAuto:
@@ -91,15 +94,26 @@ func getByWireTag(tagValue *TagValue[WireValue], t reflect.Type) (any, error) {
 		if len(tagValue.Value) > 0 {
 
 			exprCode, isExpr := getExpr(tagValue.Value)
+
+			// 根据t创建一个t的reflect.Value类型的变量，如果t是point，需要保证point下面的type也一致
+			var tv reflect.Value
+			if t.Kind() == reflect.Ptr {
+				tv = reflect.New(t.Elem())
+			} else {
+				tv = reflect.New(t).Elem()
+			}
+
 			if isExpr {
 				value, err := _context.evalExpr(exprCode)
 				if err != nil {
 					return nil, errors.New(fmt.Sprintf("Tag value %s expr eval err: %v", tagValue, err))
 				}
 
-				return value, nil
+				err = decoder.Decode("", value, tv, decoderOption)
+				return tv.Interface(), err
 			} else {
-				return exprCode, nil
+				err := decoder.Decode("", exprCode, tv, decoderOption)
+				return tv.Interface(), err
 			}
 		}
 	}
