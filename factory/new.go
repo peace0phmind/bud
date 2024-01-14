@@ -199,7 +199,7 @@ func _getInitParams[T any](initMethod reflect.Method, t *T, option *Option) ([]r
 		for i := 1; i < initMethod.Type.NumIn(); i++ {
 			paramType := initMethod.Type.In(i)
 			if paramType.Kind() == reflect.Ptr || paramType.Kind() == reflect.Interface {
-				params = append(params, reflect.ValueOf(_context._get(paramType)))
+				params = append(params, reflect.ValueOf(_context.getByType(paramType)))
 			} else {
 				return nil, errors.New(fmt.Sprintf("Method %s's %d argument must be a struct point or an interface", initMethod.Name, i-1))
 			}

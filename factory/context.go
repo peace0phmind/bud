@@ -2,8 +2,12 @@ package factory
 
 import (
 	"fmt"
+	"github.com/expr-lang/expr"
+	"github.com/expr-lang/expr/ast"
+	"github.com/expr-lang/expr/parser"
 	"github.com/peace0phmind/bud/util"
 	"reflect"
+	"sync"
 )
 
 var _context = &context{}
@@ -14,6 +18,8 @@ type context struct {
 	defaultMustBuilderCache util.Cache[reflect.Type, *contextCachedItem] // package:name -> must builder
 	namedMustBuilderCache   util.Cache[string, *contextCachedItem]       // name -> must builder
 	wiringCache             util.Cache[reflect.Type, bool]
+	exprEnv                 *exprEnv
+	exprEnvInitOnce         sync.Once
 }
 
 type contextCachedItem struct {
@@ -21,10 +27,40 @@ type contextCachedItem struct {
 	getter Getter
 }
 
+type exprEnv struct {
+	env  map[string]any
+	lock sync.RWMutex
+}
+
+func (c *exprEnv) Visit(node *ast.Node) {
+	if s, ok := (*node).(*ast.IdentifierNode); ok {
+		_, ok = c.getValue(s.String())
+		if !ok {
+			value := _context.getByName(s.String())
+			c.setValue(s.String(), value)
+		}
+	}
+}
+
+func (c *exprEnv) getValue(name string) (any, bool) {
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+
+	value, ok := c.env[name]
+	return value, ok
+}
+
+func (c *exprEnv) setValue(name string, value any) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	c.env[name] = value
+}
+
 func Get[T any]() *T {
 	vt := reflect.TypeOf((*T)(nil))
 
-	result := _context._get(vt)
+	result := _context.getByType(vt)
 
 	resultType := reflect.TypeOf(result)
 	if resultType.Kind() == reflect.Ptr && resultType.ConvertibleTo(vt) {
@@ -38,7 +74,7 @@ func Get[T any]() *T {
 func GetByName[T any](name string) *T {
 	vt := reflect.TypeOf((*T)(nil))
 
-	result := _context._getByName(name)
+	result := _context.getByName(name)
 
 	resultType := reflect.TypeOf(result)
 	if resultType.Kind() == reflect.Ptr && resultType.ConvertibleTo(vt) {
@@ -90,7 +126,7 @@ func RangeInterface[T any](interfaceFunc func(T) bool) {
 	}
 }
 
-func (c *context) _getByNameOrType(name string, vt reflect.Type) any {
+func (c *context) getByNameOrType(name string, vt reflect.Type) any {
 	mb, ok := c.namedMustBuilderCache.Get(name)
 
 	if ok {
@@ -101,10 +137,10 @@ func (c *context) _getByNameOrType(name string, vt reflect.Type) any {
 		}
 	}
 
-	return c._get(vt)
+	return c.getByType(vt)
 }
 
-func (c *context) _get(vt reflect.Type) any {
+func (c *context) getByType(vt reflect.Type) any {
 	mb, ok := c.defaultMustBuilderCache.Get(vt)
 
 	if ok {
@@ -145,14 +181,14 @@ func (c *context) _get(vt reflect.Type) any {
 
 }
 
-func (c *context) _set(vt reflect.Type, builder Getter) {
+func (c *context) setByType(vt reflect.Type, builder Getter) {
 	_, getOk := c.defaultMustBuilderCache.GetOrStore(vt, &contextCachedItem{_type: vt, getter: builder})
 	if getOk {
 		panic(fmt.Sprintf("Default builder allready exist: %s", vt.String()))
 	}
 }
 
-func (c *context) _getByName(name string) any {
+func (c *context) getByName(name string) any {
 	mb, ok := c.namedMustBuilderCache.Get(name)
 
 	if ok {
@@ -162,14 +198,14 @@ func (c *context) _getByName(name string) any {
 	panic(fmt.Sprintf("Named builder %s not found.", name))
 }
 
-func (c *context) _setByName(name string, vt reflect.Type, builder Getter) {
+func (c *context) setByName(name string, vt reflect.Type, builder Getter) {
 	_, getOk := c.namedMustBuilderCache.GetOrStore(name, &contextCachedItem{_type: vt, getter: builder})
 	if getOk {
 		panic(fmt.Sprintf("Named builder allready exist: %s", name))
 	}
 }
 
-func (c *context) _addWiring(vt reflect.Type) {
+func (c *context) wiring(vt reflect.Type) {
 	if vt.Kind() == reflect.Ptr {
 		vt = vt.Elem()
 	}
@@ -180,10 +216,26 @@ func (c *context) _addWiring(vt reflect.Type) {
 	}
 }
 
-func (c *context) _deleteWiring(vt reflect.Type) {
+func (c *context) wired(vt reflect.Type) {
 	if vt.Kind() == reflect.Ptr {
 		vt = vt.Elem()
 	}
 
 	c.wiringCache.Delete(vt)
+}
+
+func (c *context) getValueFromExpr(code string) (any, error) {
+	c.exprEnvInitOnce.Do(func() {
+		c.exprEnv = &exprEnv{
+			env: make(map[string]any),
+		}
+	})
+
+	tree, _ := parser.Parse(code)
+	ast.Walk(&tree.Node, c.exprEnv)
+
+	c.exprEnv.lock.RLock()
+	defer c.exprEnv.lock.RUnlock()
+
+	return expr.Eval(code, c.exprEnv.env)
 }

@@ -75,7 +75,7 @@ func TestUpdateSelf(t *testing.T) {
 }
 
 func TestExpr(t *testing.T) {
-	env := _context._getByName("env")
+	env := _context.getByName("env")
 
 	envMap := map[string]any{}
 	envMap["env"] = env

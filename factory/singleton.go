@@ -37,7 +37,7 @@ func _singleton[T any]() *singleton[T] {
 func Singleton[T any]() *singleton[T] {
 	result := _singleton[T]()
 
-	_context._set(result._type, result._getter)
+	_context.setByType(result._type, result._getter)
 
 	return result
 }
@@ -58,7 +58,7 @@ func (s *singleton[T]) Name(name string) *singleton[T] {
 	}
 
 	if len(s._name) == 0 {
-		_context._setByName(name, s._type, s._getter)
+		_context.setByName(name, s._type, s._getter)
 		s._name = name
 	} else {
 		panic("name already set")
