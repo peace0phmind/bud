@@ -92,7 +92,7 @@ func getByWireTag(tagValue *TagValue[WireValue], t reflect.Type) (any, error) {
 
 			exprCode, isExpr := getExpr(tagValue.Value)
 			if isExpr {
-				value, err := _context.getValueFromExpr(exprCode)
+				value, err := _context.evalExpr(exprCode)
 				if err != nil {
 					return nil, errors.New(fmt.Sprintf("Tag value %s expr eval err: %v", tagValue, err))
 				}

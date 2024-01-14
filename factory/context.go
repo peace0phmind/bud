@@ -224,7 +224,7 @@ func (c *context) wired(vt reflect.Type) {
 	c.wiringCache.Delete(vt)
 }
 
-func (c *context) getValueFromExpr(code string) (any, error) {
+func (c *context) evalExpr(code string) (any, error) {
 	c.exprEnvInitOnce.Do(func() {
 		c.exprEnv = &exprEnv{
 			env: make(map[string]any),
