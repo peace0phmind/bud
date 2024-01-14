@@ -10,9 +10,7 @@ import (
 )
 
 // copied from github.com/mitchellh/mapstructure
-type Decoder struct {
-	config *DecoderOption
-}
+type Decoder struct{}
 
 // Metadata contains information about decoding a structure that
 // is tedious or difficult to get otherwise.
@@ -162,7 +160,7 @@ func NewDecoderOption() *DecoderOption {
 	return option
 }
 
-func (d *Decoder) Decode(name string, input interface{}, outVal reflect.Value) error {
+func (d *Decoder) Decode(name string, input interface{}, outVal reflect.Value, option *DecoderOption) error {
 	var inputVal reflect.Value
 	if input != nil {
 		inputVal = reflect.ValueOf(input)
@@ -177,11 +175,11 @@ func (d *Decoder) Decode(name string, input interface{}, outVal reflect.Value) e
 	if input == nil {
 		// If the data is nil, then we don't set anything, unless ZeroFields is set
 		// to true.
-		if d.config.ZeroFields {
+		if option.ZeroFields {
 			outVal.Set(reflect.Zero(outVal.Type()))
 
-			if d.config.Metadata != nil && name != "" {
-				d.config.Metadata.Keys = append(d.config.Metadata.Keys, name)
+			if option.Metadata != nil && name != "" {
+				option.Metadata.Keys = append(option.Metadata.Keys, name)
 			}
 		}
 		return nil
@@ -191,16 +189,16 @@ func (d *Decoder) Decode(name string, input interface{}, outVal reflect.Value) e
 		// If the input value is invalid, then we just set the value
 		// to be the zero value.
 		outVal.Set(reflect.Zero(outVal.Type()))
-		if d.config.Metadata != nil && name != "" {
-			d.config.Metadata.Keys = append(d.config.Metadata.Keys, name)
+		if option.Metadata != nil && name != "" {
+			option.Metadata.Keys = append(option.Metadata.Keys, name)
 		}
 		return nil
 	}
 
-	//if d.config.DecodeHook != nil {
+	//if option.DecodeHook != nil {
 	//	// We have a DecodeHook, so let's pre-process the input.
 	//	var err error
-	//	input, err = DecodeHookExec(d.config.DecodeHook, inputVal, outVal)
+	//	input, err = DecodeHookExec(option.DecodeHook, inputVal, outVal)
 	//	if err != nil {
 	//		return fmt.Errorf("error decoding '%s': %w", name, err)
 	//	}
@@ -211,29 +209,29 @@ func (d *Decoder) Decode(name string, input interface{}, outVal reflect.Value) e
 	addMetaKey := true
 	switch outputKind {
 	case reflect.Bool:
-		err = d.AsBool(name, input, outVal)
+		err = d.AsBool(name, input, outVal, option)
 	case reflect.Interface:
-		err = d.decodeBasic(name, input, outVal)
+		err = d.decodeBasic(name, input, outVal, option)
 	case reflect.String:
-		err = d.AsString(name, input, outVal)
+		err = d.AsString(name, input, outVal, option)
 	case reflect.Int:
-		err = d.AsInt(name, input, outVal)
+		err = d.AsInt(name, input, outVal, option)
 	case reflect.Uint:
-		err = d.AsUint(name, input, outVal)
+		err = d.AsUint(name, input, outVal, option)
 	case reflect.Float32:
-		err = d.AsFloat(name, input, outVal)
+		err = d.AsFloat(name, input, outVal, option)
 	case reflect.Struct:
-		err = d.AsStruct(name, input, outVal)
+		err = d.AsStruct(name, input, outVal, option)
 	case reflect.Map:
-		err = d.AsMap(name, input, outVal)
+		err = d.AsMap(name, input, outVal, option)
 	case reflect.Ptr:
-		addMetaKey, err = d.decodePtr(name, input, outVal)
+		addMetaKey, err = d.decodePtr(name, input, outVal, option)
 	case reflect.Slice:
-		err = d.AsSlice(name, input, outVal)
+		err = d.AsSlice(name, input, outVal, option)
 	case reflect.Array:
-		err = d.AsArray(name, input, outVal)
+		err = d.AsArray(name, input, outVal, option)
 	case reflect.Func:
-		err = d.AsFunc(name, input, outVal)
+		err = d.AsFunc(name, input, outVal, option)
 	default:
 		// If we reached this point then we weren't able to Decode it
 		return fmt.Errorf("%s: unsupported type: %s", name, outputKind)
@@ -241,8 +239,8 @@ func (d *Decoder) Decode(name string, input interface{}, outVal reflect.Value) e
 
 	// If we reached here, then we successfully decoded SOMETHING, so
 	// mark the key as used if we're tracking metainput.
-	if addMetaKey && d.config.Metadata != nil && name != "" {
-		d.config.Metadata.Keys = append(d.config.Metadata.Keys, name)
+	if addMetaKey && option.Metadata != nil && name != "" {
+		option.Metadata.Keys = append(option.Metadata.Keys, name)
 	}
 
 	return err
@@ -250,7 +248,7 @@ func (d *Decoder) Decode(name string, input interface{}, outVal reflect.Value) e
 
 // This decodes a basic type (bool, int, string, etc.) and sets the
 // value to "data" of that type.
-func (d *Decoder) decodeBasic(name string, data interface{}, val reflect.Value) error {
+func (d *Decoder) decodeBasic(name string, data interface{}, val reflect.Value, option *DecoderOption) error {
 	if val.IsValid() && val.Elem().IsValid() {
 		elem := val.Elem()
 
@@ -273,7 +271,7 @@ func (d *Decoder) decodeBasic(name string, data interface{}, val reflect.Value) 
 
 		// Decode. If we have an error then return. We also return right
 		// away if we're not a copy because that means we decoded directly.
-		if err := d.Decode(name, data, elem); err != nil || !copied {
+		if err := d.Decode(name, data, elem, option); err != nil || !copied {
 			return err
 		}
 
@@ -306,7 +304,7 @@ func (d *Decoder) decodeBasic(name string, data interface{}, val reflect.Value) 
 	return nil
 }
 
-func (d *Decoder) AsString(name string, data interface{}, val reflect.Value) error {
+func (d *Decoder) AsString(name string, data interface{}, val reflect.Value, option *DecoderOption) error {
 	dataVal := reflect.Indirect(reflect.ValueOf(data))
 	dataKind := getKind(dataVal)
 
@@ -314,20 +312,20 @@ func (d *Decoder) AsString(name string, data interface{}, val reflect.Value) err
 	switch {
 	case dataKind == reflect.String:
 		val.SetString(dataVal.String())
-	case dataKind == reflect.Bool && d.config.WeaklyTypedInput:
+	case dataKind == reflect.Bool && option.WeaklyTypedInput:
 		if dataVal.Bool() {
 			val.SetString("1")
 		} else {
 			val.SetString("0")
 		}
-	case dataKind == reflect.Int && d.config.WeaklyTypedInput:
+	case dataKind == reflect.Int && option.WeaklyTypedInput:
 		val.SetString(strconv.FormatInt(dataVal.Int(), 10))
-	case dataKind == reflect.Uint && d.config.WeaklyTypedInput:
+	case dataKind == reflect.Uint && option.WeaklyTypedInput:
 		val.SetString(strconv.FormatUint(dataVal.Uint(), 10))
-	case dataKind == reflect.Float32 && d.config.WeaklyTypedInput:
+	case dataKind == reflect.Float32 && option.WeaklyTypedInput:
 		val.SetString(strconv.FormatFloat(dataVal.Float(), 'f', -1, 64))
-	case dataKind == reflect.Slice && d.config.WeaklyTypedInput,
-		dataKind == reflect.Array && d.config.WeaklyTypedInput:
+	case dataKind == reflect.Slice && option.WeaklyTypedInput,
+		dataKind == reflect.Array && option.WeaklyTypedInput:
 		dataType := dataVal.Type()
 		elemKind := dataType.Elem().Kind()
 		switch elemKind {
@@ -358,7 +356,7 @@ func (d *Decoder) AsString(name string, data interface{}, val reflect.Value) err
 	return nil
 }
 
-func (d *Decoder) AsInt(name string, data interface{}, val reflect.Value) error {
+func (d *Decoder) AsInt(name string, data interface{}, val reflect.Value, option *DecoderOption) error {
 	dataVal := reflect.Indirect(reflect.ValueOf(data))
 	dataKind := getKind(dataVal)
 	dataType := dataVal.Type()
@@ -370,13 +368,13 @@ func (d *Decoder) AsInt(name string, data interface{}, val reflect.Value) error 
 		val.SetInt(int64(dataVal.Uint()))
 	case dataKind == reflect.Float32:
 		val.SetInt(int64(dataVal.Float()))
-	case dataKind == reflect.Bool && d.config.WeaklyTypedInput:
+	case dataKind == reflect.Bool && option.WeaklyTypedInput:
 		if dataVal.Bool() {
 			val.SetInt(1)
 		} else {
 			val.SetInt(0)
 		}
-	case dataKind == reflect.String && d.config.WeaklyTypedInput:
+	case dataKind == reflect.String && option.WeaklyTypedInput:
 		str := dataVal.String()
 		if str == "" {
 			str = "0"
@@ -405,7 +403,7 @@ func (d *Decoder) AsInt(name string, data interface{}, val reflect.Value) error 
 	return nil
 }
 
-func (d *Decoder) AsUint(name string, data interface{}, val reflect.Value) error {
+func (d *Decoder) AsUint(name string, data interface{}, val reflect.Value, option *DecoderOption) error {
 	dataVal := reflect.Indirect(reflect.ValueOf(data))
 	dataKind := getKind(dataVal)
 	dataType := dataVal.Type()
@@ -413,7 +411,7 @@ func (d *Decoder) AsUint(name string, data interface{}, val reflect.Value) error
 	switch {
 	case dataKind == reflect.Int:
 		i := dataVal.Int()
-		if i < 0 && !d.config.WeaklyTypedInput {
+		if i < 0 && !option.WeaklyTypedInput {
 			return fmt.Errorf("cannot parse '%s', %d overflows uint",
 				name, i)
 		}
@@ -422,18 +420,18 @@ func (d *Decoder) AsUint(name string, data interface{}, val reflect.Value) error
 		val.SetUint(dataVal.Uint())
 	case dataKind == reflect.Float32:
 		f := dataVal.Float()
-		if f < 0 && !d.config.WeaklyTypedInput {
+		if f < 0 && !option.WeaklyTypedInput {
 			return fmt.Errorf("cannot parse '%s', %f overflows uint",
 				name, f)
 		}
 		val.SetUint(uint64(f))
-	case dataKind == reflect.Bool && d.config.WeaklyTypedInput:
+	case dataKind == reflect.Bool && option.WeaklyTypedInput:
 		if dataVal.Bool() {
 			val.SetUint(1)
 		} else {
 			val.SetUint(0)
 		}
-	case dataKind == reflect.String && d.config.WeaklyTypedInput:
+	case dataKind == reflect.String && option.WeaklyTypedInput:
 		str := dataVal.String()
 		if str == "" {
 			str = "0"
@@ -462,20 +460,20 @@ func (d *Decoder) AsUint(name string, data interface{}, val reflect.Value) error
 	return nil
 }
 
-func (d *Decoder) AsBool(name string, data interface{}, val reflect.Value) error {
+func (d *Decoder) AsBool(name string, data interface{}, val reflect.Value, option *DecoderOption) error {
 	dataVal := reflect.Indirect(reflect.ValueOf(data))
 	dataKind := getKind(dataVal)
 
 	switch {
 	case dataKind == reflect.Bool:
 		val.SetBool(dataVal.Bool())
-	case dataKind == reflect.Int && d.config.WeaklyTypedInput:
+	case dataKind == reflect.Int && option.WeaklyTypedInput:
 		val.SetBool(dataVal.Int() != 0)
-	case dataKind == reflect.Uint && d.config.WeaklyTypedInput:
+	case dataKind == reflect.Uint && option.WeaklyTypedInput:
 		val.SetBool(dataVal.Uint() != 0)
-	case dataKind == reflect.Float32 && d.config.WeaklyTypedInput:
+	case dataKind == reflect.Float32 && option.WeaklyTypedInput:
 		val.SetBool(dataVal.Float() != 0)
-	case dataKind == reflect.String && d.config.WeaklyTypedInput:
+	case dataKind == reflect.String && option.WeaklyTypedInput:
 		b, err := strconv.ParseBool(dataVal.String())
 		if err == nil {
 			val.SetBool(b)
@@ -493,7 +491,7 @@ func (d *Decoder) AsBool(name string, data interface{}, val reflect.Value) error
 	return nil
 }
 
-func (d *Decoder) AsFloat(name string, data interface{}, val reflect.Value) error {
+func (d *Decoder) AsFloat(name string, data interface{}, val reflect.Value, option *DecoderOption) error {
 	dataVal := reflect.Indirect(reflect.ValueOf(data))
 	dataKind := getKind(dataVal)
 	dataType := dataVal.Type()
@@ -505,13 +503,13 @@ func (d *Decoder) AsFloat(name string, data interface{}, val reflect.Value) erro
 		val.SetFloat(float64(dataVal.Uint()))
 	case dataKind == reflect.Float32:
 		val.SetFloat(dataVal.Float())
-	case dataKind == reflect.Bool && d.config.WeaklyTypedInput:
+	case dataKind == reflect.Bool && option.WeaklyTypedInput:
 		if dataVal.Bool() {
 			val.SetFloat(1)
 		} else {
 			val.SetFloat(0)
 		}
-	case dataKind == reflect.String && d.config.WeaklyTypedInput:
+	case dataKind == reflect.String && option.WeaklyTypedInput:
 		str := dataVal.String()
 		if str == "" {
 			str = "0"
@@ -540,7 +538,7 @@ func (d *Decoder) AsFloat(name string, data interface{}, val reflect.Value) erro
 	return nil
 }
 
-func (d *Decoder) AsMap(name string, data interface{}, val reflect.Value) error {
+func (d *Decoder) AsMap(name string, data interface{}, val reflect.Value, option *DecoderOption) error {
 	valType := val.Type()
 	valKeyType := valType.Key()
 	valElemType := valType.Elem()
@@ -549,7 +547,7 @@ func (d *Decoder) AsMap(name string, data interface{}, val reflect.Value) error 
 	valMap := val
 
 	// If the map is nil or we're purposely zeroing fields, make a new map
-	if valMap.IsNil() || d.config.ZeroFields {
+	if valMap.IsNil() || option.ZeroFields {
 		// Make a new map to hold our result
 		mapType := reflect.MapOf(valKeyType, valElemType)
 		valMap = reflect.MakeMap(mapType)
@@ -559,14 +557,14 @@ func (d *Decoder) AsMap(name string, data interface{}, val reflect.Value) error 
 	dataVal := reflect.Indirect(reflect.ValueOf(data))
 	switch dataVal.Kind() {
 	case reflect.Map:
-		return d.decodeMapFromMap(name, dataVal, val, valMap)
+		return d.decodeMapFromMap(name, dataVal, val, valMap, option)
 
 	case reflect.Struct:
-		return d.decodeMapFromStruct(name, dataVal, val, valMap)
+		return d.decodeMapFromStruct(name, dataVal, val, valMap, option)
 
 	case reflect.Array, reflect.Slice:
-		if d.config.WeaklyTypedInput {
-			return d.decodeMapFromSlice(name, dataVal, val, valMap)
+		if option.WeaklyTypedInput {
+			return d.decodeMapFromSlice(name, dataVal, val, valMap, option)
 		}
 
 		fallthrough
@@ -576,7 +574,7 @@ func (d *Decoder) AsMap(name string, data interface{}, val reflect.Value) error 
 	}
 }
 
-func (d *Decoder) decodeMapFromSlice(name string, dataVal reflect.Value, val reflect.Value, valMap reflect.Value) error {
+func (d *Decoder) decodeMapFromSlice(name string, dataVal reflect.Value, val reflect.Value, valMap reflect.Value, option *DecoderOption) error {
 	// Special case for BC reasons (covered by tests)
 	if dataVal.Len() == 0 {
 		val.Set(valMap)
@@ -586,7 +584,7 @@ func (d *Decoder) decodeMapFromSlice(name string, dataVal reflect.Value, val ref
 	for i := 0; i < dataVal.Len(); i++ {
 		err := d.Decode(
 			name+"["+strconv.Itoa(i)+"]",
-			dataVal.Index(i).Interface(), val)
+			dataVal.Index(i).Interface(), val, option)
 		if err != nil {
 			return err
 		}
@@ -595,7 +593,7 @@ func (d *Decoder) decodeMapFromSlice(name string, dataVal reflect.Value, val ref
 	return nil
 }
 
-func (d *Decoder) decodeMapFromMap(name string, dataVal reflect.Value, val reflect.Value, valMap reflect.Value) error {
+func (d *Decoder) decodeMapFromMap(name string, dataVal reflect.Value, val reflect.Value, valMap reflect.Value, option *DecoderOption) error {
 	valType := val.Type()
 	valKeyType := valType.Key()
 	valElemType := valType.Elem()
@@ -622,7 +620,7 @@ func (d *Decoder) decodeMapFromMap(name string, dataVal reflect.Value, val refle
 
 		// First Decode the key into the proper type
 		currentKey := reflect.Indirect(reflect.New(valKeyType))
-		if err := d.Decode(fieldName, k.Interface(), currentKey); err != nil {
+		if err := d.Decode(fieldName, k.Interface(), currentKey, option); err != nil {
 			errors = appendErrors(errors, err)
 			continue
 		}
@@ -630,7 +628,7 @@ func (d *Decoder) decodeMapFromMap(name string, dataVal reflect.Value, val refle
 		// Next Decode the data into the proper type
 		v := dataVal.MapIndex(k).Interface()
 		currentVal := reflect.Indirect(reflect.New(valElemType))
-		if err := d.Decode(fieldName, v, currentVal); err != nil {
+		if err := d.Decode(fieldName, v, currentVal, option); err != nil {
 			errors = appendErrors(errors, err)
 			continue
 		}
@@ -649,7 +647,7 @@ func (d *Decoder) decodeMapFromMap(name string, dataVal reflect.Value, val refle
 	return nil
 }
 
-func (d *Decoder) decodeMapFromStruct(name string, dataVal reflect.Value, val reflect.Value, valMap reflect.Value) error {
+func (d *Decoder) decodeMapFromStruct(name string, dataVal reflect.Value, val reflect.Value, valMap reflect.Value, option *DecoderOption) error {
 	typ := dataVal.Type()
 	for i := 0; i < typ.NumField(); i++ {
 		// Get the StructField first since this is a cheap operation. If the
@@ -666,17 +664,17 @@ func (d *Decoder) decodeMapFromStruct(name string, dataVal reflect.Value, val re
 			return fmt.Errorf("cannot assign type '%s' to map value field of type '%s'", v.Type(), valMap.Type().Elem())
 		}
 
-		tagValue := f.Tag.Get(d.config.TagName)
+		tagValue := f.Tag.Get(option.TagName)
 		keyName := f.Name
 
-		if tagValue == "" && d.config.IgnoreUntaggedFields {
+		if tagValue == "" && option.IgnoreUntaggedFields {
 			continue
 		}
 
 		// If Squash is set in the config, we squash the field down.
-		squash := d.config.Squash && v.Kind() == reflect.Struct && f.Anonymous
+		squash := option.Squash && v.Kind() == reflect.Struct && f.Anonymous
 
-		v = dereferencePtrToStructIfNeeded(v, d.config.TagName)
+		v = dereferencePtrToStructIfNeeded(v, option.TagName)
 
 		// Determine the name of the key in the map
 		if index := strings.Index(tagValue, ","); index != -1 {
@@ -730,7 +728,7 @@ func (d *Decoder) decodeMapFromStruct(name string, dataVal reflect.Value, val re
 			addrVal := reflect.New(vMap.Type())
 			reflect.Indirect(addrVal).Set(vMap)
 
-			err := d.Decode(keyName, x.Interface(), reflect.Indirect(addrVal))
+			err := d.Decode(keyName, x.Interface(), reflect.Indirect(addrVal), option)
 			if err != nil {
 				return err
 			}
@@ -759,7 +757,7 @@ func (d *Decoder) decodeMapFromStruct(name string, dataVal reflect.Value, val re
 	return nil
 }
 
-func (d *Decoder) decodePtr(name string, data interface{}, val reflect.Value) (bool, error) {
+func (d *Decoder) decodePtr(name string, data interface{}, val reflect.Value, option *DecoderOption) (bool, error) {
 	// If the input data is nil, then we want to just set the output
 	// pointer to be nil as well.
 	isNil := data == nil
@@ -789,24 +787,24 @@ func (d *Decoder) decodePtr(name string, data interface{}, val reflect.Value) (b
 	valElemType := valType.Elem()
 	if val.CanSet() {
 		realVal := val
-		if realVal.IsNil() || d.config.ZeroFields {
+		if realVal.IsNil() || option.ZeroFields {
 			realVal = reflect.New(valElemType)
 		}
 
-		if err := d.Decode(name, data, reflect.Indirect(realVal)); err != nil {
+		if err := d.Decode(name, data, reflect.Indirect(realVal), option); err != nil {
 			return false, err
 		}
 
 		val.Set(realVal)
 	} else {
-		if err := d.Decode(name, data, reflect.Indirect(val)); err != nil {
+		if err := d.Decode(name, data, reflect.Indirect(val), option); err != nil {
 			return false, err
 		}
 	}
 	return false, nil
 }
 
-func (d *Decoder) AsFunc(name string, data interface{}, val reflect.Value) error {
+func (d *Decoder) AsFunc(name string, data interface{}, val reflect.Value, option *DecoderOption) error {
 	// Create an element of the concrete (non pointer) type and Decode
 	// into that. Then set the value of the pointer to this type.
 	dataVal := reflect.Indirect(reflect.ValueOf(data))
@@ -819,7 +817,7 @@ func (d *Decoder) AsFunc(name string, data interface{}, val reflect.Value) error
 	return nil
 }
 
-func (d *Decoder) AsSlice(name string, data interface{}, val reflect.Value) error {
+func (d *Decoder) AsSlice(name string, data interface{}, val reflect.Value, option *DecoderOption) error {
 	dataVal := reflect.Indirect(reflect.ValueOf(data))
 	dataValKind := dataVal.Kind()
 	valType := val.Type()
@@ -828,7 +826,7 @@ func (d *Decoder) AsSlice(name string, data interface{}, val reflect.Value) erro
 
 	// If we have a non array/slice type then we first attempt to convert.
 	if dataValKind != reflect.Array && dataValKind != reflect.Slice {
-		if d.config.WeaklyTypedInput {
+		if option.WeaklyTypedInput {
 			switch {
 			// Slice and array we use the normal logic
 			case dataValKind == reflect.Slice, dataValKind == reflect.Array:
@@ -841,16 +839,16 @@ func (d *Decoder) AsSlice(name string, data interface{}, val reflect.Value) erro
 					return nil
 				}
 				// Create slice of maps of other sizes
-				return d.AsSlice(name, []interface{}{data}, val)
+				return d.AsSlice(name, []interface{}{data}, val, option)
 
 			case dataValKind == reflect.String && valElemType.Kind() == reflect.Uint8:
-				return d.AsSlice(name, []byte(dataVal.String()), val)
+				return d.AsSlice(name, []byte(dataVal.String()), val, option)
 
 			// All other types we try to convert to the slice type
 			// and "lift" it into it. i.e. a string becomes a string slice.
 			default:
 				// Just re-try this function with data as a slice.
-				return d.AsSlice(name, []interface{}{data}, val)
+				return d.AsSlice(name, []interface{}{data}, val, option)
 			}
 		}
 
@@ -864,7 +862,7 @@ func (d *Decoder) AsSlice(name string, data interface{}, val reflect.Value) erro
 	}
 
 	valSlice := val
-	if valSlice.IsNil() || d.config.ZeroFields {
+	if valSlice.IsNil() || option.ZeroFields {
 		// Make a new slice to hold our result, same size as the original data.
 		valSlice = reflect.MakeSlice(sliceType, dataVal.Len(), dataVal.Len())
 	} else if valSlice.Len() > dataVal.Len() {
@@ -882,7 +880,7 @@ func (d *Decoder) AsSlice(name string, data interface{}, val reflect.Value) erro
 		currentField := valSlice.Index(i)
 
 		fieldName := name + "[" + strconv.Itoa(i) + "]"
-		if err := d.Decode(fieldName, currentData, currentField); err != nil {
+		if err := d.Decode(fieldName, currentData, currentField, option); err != nil {
 			errors = appendErrors(errors, err)
 		}
 	}
@@ -898,7 +896,7 @@ func (d *Decoder) AsSlice(name string, data interface{}, val reflect.Value) erro
 	return nil
 }
 
-func (d *Decoder) AsArray(name string, data interface{}, val reflect.Value) error {
+func (d *Decoder) AsArray(name string, data interface{}, val reflect.Value, option *DecoderOption) error {
 	dataVal := reflect.Indirect(reflect.ValueOf(data))
 	dataValKind := dataVal.Kind()
 	valType := val.Type()
@@ -907,10 +905,10 @@ func (d *Decoder) AsArray(name string, data interface{}, val reflect.Value) erro
 
 	valArray := val
 
-	if valArray.Interface() == reflect.Zero(valArray.Type()).Interface() || d.config.ZeroFields {
+	if valArray.Interface() == reflect.Zero(valArray.Type()).Interface() || option.ZeroFields {
 		// Check input type
 		if dataValKind != reflect.Array && dataValKind != reflect.Slice {
-			if d.config.WeaklyTypedInput {
+			if option.WeaklyTypedInput {
 				switch {
 				// Empty maps turn into empty arrays
 				case dataValKind == reflect.Map:
@@ -923,7 +921,7 @@ func (d *Decoder) AsArray(name string, data interface{}, val reflect.Value) erro
 				// and "lift" it into it. i.e. a string becomes a string array.
 				default:
 					// Just re-try this function with data as a slice.
-					return d.AsArray(name, []interface{}{data}, val)
+					return d.AsArray(name, []interface{}{data}, val, option)
 				}
 			}
 
@@ -949,7 +947,7 @@ func (d *Decoder) AsArray(name string, data interface{}, val reflect.Value) erro
 		currentField := valArray.Index(i)
 
 		fieldName := name + "[" + strconv.Itoa(i) + "]"
-		if err := d.Decode(fieldName, currentData, currentField); err != nil {
+		if err := d.Decode(fieldName, currentData, currentField, option); err != nil {
 			errors = appendErrors(errors, err)
 		}
 	}
@@ -965,7 +963,7 @@ func (d *Decoder) AsArray(name string, data interface{}, val reflect.Value) erro
 	return nil
 }
 
-func (d *Decoder) AsStruct(name string, data interface{}, val reflect.Value) error {
+func (d *Decoder) AsStruct(name string, data interface{}, val reflect.Value, option *DecoderOption) error {
 	dataVal := reflect.Indirect(reflect.ValueOf(data))
 
 	// If the type of the value to write to and the data match directly,
@@ -978,7 +976,7 @@ func (d *Decoder) AsStruct(name string, data interface{}, val reflect.Value) err
 	dataValKind := dataVal.Kind()
 	switch dataValKind {
 	case reflect.Map:
-		return d.decodeStructFromMap(name, dataVal, val)
+		return d.decodeStructFromMap(name, dataVal, val, option)
 
 	case reflect.Struct:
 		// Not the most efficient way to do this but we can optimize later if
@@ -996,11 +994,11 @@ func (d *Decoder) AsStruct(name string, data interface{}, val reflect.Value) err
 		addrVal := reflect.New(mval.Type())
 
 		reflect.Indirect(addrVal).Set(mval)
-		if err := d.decodeMapFromStruct(name, dataVal, reflect.Indirect(addrVal), mval); err != nil {
+		if err := d.decodeMapFromStruct(name, dataVal, reflect.Indirect(addrVal), mval, option); err != nil {
 			return err
 		}
 
-		result := d.decodeStructFromMap(name, reflect.Indirect(addrVal), val)
+		result := d.decodeStructFromMap(name, reflect.Indirect(addrVal), val, option)
 		return result
 
 	default:
@@ -1008,7 +1006,7 @@ func (d *Decoder) AsStruct(name string, data interface{}, val reflect.Value) err
 	}
 }
 
-func (d *Decoder) decodeStructFromMap(name string, dataVal, val reflect.Value) error {
+func (d *Decoder) decodeStructFromMap(name string, dataVal, val reflect.Value, option *DecoderOption) error {
 	dataValType := dataVal.Type()
 	if kind := dataValType.Key().Kind(); kind != reflect.String && kind != reflect.Interface {
 		return fmt.Errorf(
@@ -1059,11 +1057,11 @@ func (d *Decoder) decodeStructFromMap(name string, dataVal, val reflect.Value) e
 			}
 
 			// If "squash" is specified in the tag, we squash the field down.
-			squash := d.config.Squash && fieldVal.Kind() == reflect.Struct && fieldType.Anonymous
+			squash := option.Squash && fieldVal.Kind() == reflect.Struct && fieldType.Anonymous
 			remain := false
 
 			// We always parse the tags cause we're looking for other tags too
-			tagParts := strings.Split(fieldType.Tag.Get(d.config.TagName), ",")
+			tagParts := strings.Split(fieldType.Tag.Get(option.TagName), ",")
 			for _, tag := range tagParts[1:] {
 				if tag == "squash" {
 					squash = true
@@ -1101,7 +1099,7 @@ func (d *Decoder) decodeStructFromMap(name string, dataVal, val reflect.Value) e
 		field, fieldValue := f.field, f.val
 		fieldName := field.Name
 
-		tagValue := field.Tag.Get(d.config.TagName)
+		tagValue := field.Tag.Get(option.TagName)
 		tagValue = strings.SplitN(tagValue, ",", 2)[0]
 		if tagValue != "" {
 			fieldName = tagValue
@@ -1119,7 +1117,7 @@ func (d *Decoder) decodeStructFromMap(name string, dataVal, val reflect.Value) e
 					continue
 				}
 
-				if d.config.MatchName(mK, fieldName) {
+				if option.MatchName(mK, fieldName) {
 					rawMapKey = dataValKey
 					rawMapVal = dataVal.MapIndex(dataValKey)
 					break
@@ -1154,7 +1152,7 @@ func (d *Decoder) decodeStructFromMap(name string, dataVal, val reflect.Value) e
 			fieldName = name + "." + fieldName
 		}
 
-		if err := d.Decode(fieldName, rawMapVal.Interface(), fieldValue); err != nil {
+		if err := d.Decode(fieldName, rawMapVal.Interface(), fieldValue, option); err != nil {
 			errors = appendErrors(errors, err)
 		}
 	}
@@ -1169,7 +1167,7 @@ func (d *Decoder) decodeStructFromMap(name string, dataVal, val reflect.Value) e
 		}
 
 		// Decode it as-if we were just decoding this map onto our map.
-		if err := d.AsMap(name, remain, remainField.val); err != nil {
+		if err := d.AsMap(name, remain, remainField.val, option); err != nil {
 			errors = appendErrors(errors, err)
 		}
 
@@ -1178,7 +1176,7 @@ func (d *Decoder) decodeStructFromMap(name string, dataVal, val reflect.Value) e
 		dataValKeysUnused = nil
 	}
 
-	if d.config.ErrorUnused && len(dataValKeysUnused) > 0 {
+	if option.ErrorUnused && len(dataValKeysUnused) > 0 {
 		keys := make([]string, 0, len(dataValKeysUnused))
 		for rawKey := range dataValKeysUnused {
 			keys = append(keys, rawKey.(string))
@@ -1189,7 +1187,7 @@ func (d *Decoder) decodeStructFromMap(name string, dataVal, val reflect.Value) e
 		errors = appendErrors(errors, err)
 	}
 
-	if d.config.ErrorUnset && len(targetValKeysUnused) > 0 {
+	if option.ErrorUnset && len(targetValKeysUnused) > 0 {
 		keys := make([]string, 0, len(targetValKeysUnused))
 		for rawKey := range targetValKeysUnused {
 			keys = append(keys, rawKey.(string))
@@ -1205,14 +1203,14 @@ func (d *Decoder) decodeStructFromMap(name string, dataVal, val reflect.Value) e
 	}
 
 	// Add the unused keys to the list of unused keys if we're tracking metadata
-	if d.config.Metadata != nil {
+	if option.Metadata != nil {
 		for rawKey := range dataValKeysUnused {
 			key := rawKey.(string)
 			if name != "" {
 				key = name + "." + key
 			}
 
-			d.config.Metadata.Unused = append(d.config.Metadata.Unused, key)
+			option.Metadata.Unused = append(option.Metadata.Unused, key)
 		}
 		for rawKey := range targetValKeysUnused {
 			key := rawKey.(string)
@@ -1220,7 +1218,7 @@ func (d *Decoder) decodeStructFromMap(name string, dataVal, val reflect.Value) e
 				key = name + "." + key
 			}
 
-			d.config.Metadata.Unset = append(d.config.Metadata.Unset, key)
+			option.Metadata.Unset = append(option.Metadata.Unset, key)
 		}
 	}
 
