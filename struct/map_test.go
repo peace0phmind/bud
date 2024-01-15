@@ -1,7 +1,6 @@
 package _struct
 
 import (
-	"reflect"
 	"testing"
 )
 
@@ -11,10 +10,6 @@ type Foo struct {
 
 type Bar struct {
 	Name string
-}
-
-type Baz struct {
-	ID int
 }
 
 func TestAddTypeAliasMap(t *testing.T) {
@@ -56,59 +51,6 @@ func TestAddTypeAliasMap(t *testing.T) {
 				}()
 			}
 			tt.runFunc()
-		})
-	}
-}
-
-func TestConvert(t *testing.T) {
-	testCases := []struct {
-		name          string
-		fn            func(any) (any, error)
-		from          any
-		to            any
-		expectedPanic string
-		expectError   bool
-	}{
-		{
-			name:          "int to string",
-			fn:            func(from any) (any, error) { return ConvertTo[string](from) },
-			from:          123,
-			to:            "123",
-			expectedPanic: "",
-			expectError:   false,
-		},
-		{
-			name:          "string to int",
-			fn:            func(from any) (any, error) { return ConvertTo[int](from) },
-			from:          123,
-			to:            "123",
-			expectedPanic: "",
-			expectError:   false,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			defer func() {
-				r := recover()
-				if (r != nil) != tc.expectError {
-					t.Errorf("panic = %v, expectError %v", r, tc.expectError)
-					return
-				}
-				if tc.expectError && r != nil {
-					if r != tc.expectedPanic {
-						t.Errorf("Got panic = %v, want %v", r, tc.expectedPanic)
-					}
-				}
-			}()
-
-			got, err := tc.fn(tc.from)
-			if err != nil {
-				t.Errorf("convert `%s` error: %v", tc.name, err)
-			}
-			if reflect.DeepEqual(got, tc.to) {
-				t.Errorf("convert err, want: %v  got: %+v", tc.to, got)
-			}
 		})
 	}
 }

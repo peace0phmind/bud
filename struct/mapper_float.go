@@ -6,15 +6,15 @@ import (
 )
 
 func init() {
-	RegisterMapper[float64, float64](float2floatMapper)
+	RegisterMapper[float64, bool](float2boolMapper)
 	RegisterMapper[float64, int](float2intMapper)
 	RegisterMapper[float64, uint](float2uintMapper)
-	RegisterMapper[float64, bool](float2boolMapper)
+	RegisterMapper[float64, float64](float2floatMapper)
 	RegisterMapper[float64, string](float2stringMapper)
 }
 
-func float2floatMapper(from reflect.Value, to reflect.Value) error {
-	to.SetFloat(from.Float())
+func float2boolMapper(from reflect.Value, to reflect.Value) error {
+	to.SetBool(from.Float() != 0)
 	return nil
 }
 
@@ -28,12 +28,12 @@ func float2uintMapper(from reflect.Value, to reflect.Value) error {
 	return nil
 }
 
-func float2boolMapper(from reflect.Value, to reflect.Value) error {
-	to.SetBool(from.Float() != 0)
+func float2floatMapper(from reflect.Value, to reflect.Value) error {
+	to.SetFloat(from.Float())
 	return nil
 }
 
 func float2stringMapper(from reflect.Value, to reflect.Value) error {
-	to.SetString(strconv.FormatFloat(from.Float(), 'f', -1, 64))
+	to.SetString(strconv.FormatFloat(from.Float(), 'g', -1, 64))
 	return nil
 }
