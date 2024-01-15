@@ -40,12 +40,12 @@ func (c *Cache[K, V]) Get(k K) (v V, ok bool) {
 	}
 }
 
-func (c *Cache[K, V]) GetOrStore(k K, v V) (ov V, ok bool) {
-	ci, ok := c.cacheMap.LoadOrStore(k, &cacheItem[V]{value: v, valueValid: true})
-	if ok {
+func (c *Cache[K, V]) GetOrStore(k K, v V) (ov V, got bool) {
+	ci, got := c.cacheMap.LoadOrStore(k, &cacheItem[V]{value: v, valueValid: true})
+	if got {
 		return ci.(*cacheItem[V]).getValue()
 	} else {
-		ok = false
+		got = false
 		return
 	}
 }

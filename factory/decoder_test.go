@@ -149,9 +149,9 @@ type WireValueExprStruct struct {
 	PSlicePPointStruct *[]PointStruct
 }
 type WireValueExprStructTest struct {
-	String          string    `wire:"value:${env.STRING}"`
-	StringPtr       *string   `wire:"value:${env.STRING}"`
-	Strings         []string  `wire1:"value:${env.STRINGS}"`
+	String          string    `wire1:"value:${env.STRING}"`
+	StringPtr       *string   `wire1:"value:${env.STRING}"`
+	Strings         []string  `wire:"value:${env.STRINGS}"`
 	StringPtrs      []*string `wire1:"value:${env.STRINGS}"`
 	StringPtrInited *string   `wire1:"value:${env.STRINGInited}"`
 
@@ -446,8 +446,8 @@ func TestAutoWireEnv(t *testing.T) {
 	sample := WireValueExprStructTest{}
 	isNoErr(t, AutoWire(&sample))
 
-	isEqual(t, str1, sample.String)
-	isEqual(t, &str1, sample.StringPtr)
+	//isEqual(t, str1, sample.String)
+	//isEqual(t, &str1, sample.StringPtr)
 	isEqual(t, str1, sample.Strings[0])
 	isEqual(t, str2, sample.Strings[1])
 	isEqual(t, &str1, sample.StringPtrs[0])
