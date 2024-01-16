@@ -77,19 +77,23 @@ func MapToValueWithOption(from any, to reflect.Value, option *MapOption) error {
 		// If the data is nil, then we don't set anything, unless ZeroFields is set
 		// to true.
 		if option.ZeroFields {
-			to.Set(reflect.Zero(fromVal.Type()))
+			to.Set(reflect.Zero(to.Type()))
 		}
 		return nil
 	}
 
-	if !fromVal.IsValid() {
+	return FromValueToValueWithOption(fromVal, to, option)
+}
+
+func FromValueToValueWithOption(from reflect.Value, to reflect.Value, option *MapOption) error {
+	if !from.IsValid() {
 		// If the input value is invalid, then we just set the value
 		// to be the zero value.
-		to.Set(reflect.Zero(fromVal.Type()))
+		to.Set(reflect.Zero(to.Type()))
 		return nil
 	}
 
-	fromType := reflect.TypeOf(from)
+	fromType := from.Type()
 	toType := to.Type()
 
 	mapper, ok := mapperCache.Get(mapperKey{from: fromType, to: toType})
@@ -103,8 +107,7 @@ func MapToValueWithOption(from any, to reflect.Value, option *MapOption) error {
 		}
 	}
 
-	err := mapper(fromVal, to)
-	if err != nil {
+	if err := mapper(from, to); err != nil {
 		return err
 	}
 

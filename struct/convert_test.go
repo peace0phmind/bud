@@ -93,7 +93,7 @@ func TestMustConvertTo(t *testing.T) {
 			defer func() {
 				if r := recover(); r != nil {
 					if !tc.panic {
-						t.Errorf("The code panicked")
+						t.Errorf("The code panicked: %+v", r)
 					}
 				} else {
 					if tc.panic {
@@ -114,4 +114,8 @@ func TestMustConvertTo(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestTest(t *testing.T) {
+	println(ConvertTo[*string]("123"))
 }
