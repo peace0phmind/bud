@@ -82,15 +82,41 @@ func MapToValueWithOption(from any, to reflect.Value, option *MapOption) error {
 		return nil
 	}
 
-	return FromValueToValueWithOption(fromVal, to, option)
+	return Value2ValueWithOption(fromVal, to, option)
 }
 
-func FromValueToValueWithOption(from reflect.Value, to reflect.Value, option *MapOption) error {
+func value2PtrValueWithOption(from reflect.Value, to reflect.Value, option *MapOption) error {
+	toElemType := to.Type().Elem()
+
+	if to.CanSet() {
+		realTo := to
+		if realTo.IsNil() || option.ZeroFields {
+			realTo = reflect.New(toElemType)
+		}
+
+		if err := Value2ValueWithOption(reflect.Indirect(from), reflect.Indirect(realTo), option); err != nil {
+			return err
+		}
+
+		to.Set(realTo)
+	} else {
+		if err := Value2ValueWithOption(reflect.Indirect(from), reflect.Indirect(to), option); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func Value2ValueWithOption(from reflect.Value, to reflect.Value, option *MapOption) error {
 	if !from.IsValid() {
 		// If the input value is invalid, then we just set the value
 		// to be the zero value.
 		to.Set(reflect.Zero(to.Type()))
 		return nil
+	}
+
+	if to.Kind() == reflect.Ptr {
+		return value2PtrValueWithOption(from, to, option)
 	}
 
 	fromType := from.Type()

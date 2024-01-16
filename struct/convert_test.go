@@ -6,13 +6,44 @@ import (
 )
 
 func TestMustConvertTo(t *testing.T) {
+	bTrue := true
+	bFalse := false
+	int1 := 1
+	int0 := 0
+	uint1 := uint(1)
+	uint0 := uint(0)
+	float32_1 := float32(1.0)
+	float64_0 := 0.0
+	strTrue := "true"
+	strFalse := "false"
+	int_123 := -123
+	uint456 := uint(456)
+	float456 := 456.0
+	str123 := "123"
+
 	tests := []struct {
 		name  string
 		fn    func() any
 		want  any
 		panic bool
 	}{
-		// test bool convert to int, uint, float, string
+		// nil to bool, int, uint, float, string
+		{"nil to bool", func() any { return MustConvertTo[bool](nil) }, false, false},
+		{"nil to int", func() any { return MustConvertTo[int](nil) }, 0, false},
+		{"nil to uint", func() any { return MustConvertTo[uint](nil) }, uint(0), false},
+		{"Nil to float", func() any { return MustConvertTo[float64](nil) }, 0.0, false},
+		{"Nil to string", func() any { return MustConvertTo[string](nil) }, "", false},
+
+		// nil to *bool, *int, *uint, *float, *string
+		{"nil to *bool", func() any { return MustConvertTo[*bool](nil) }, (*bool)(nil), false},
+		{"nil to *int", func() any { return MustConvertTo[*int](nil) }, (*int)(nil), false},
+		{"nil to *uint", func() any { return MustConvertTo[*uint](nil) }, (*uint)(nil), false},
+		{"Nil to *float", func() any { return MustConvertTo[*float64](nil) }, (*float64)(nil), false},
+		{"Nil to *string", func() any { return MustConvertTo[*string](nil) }, (*string)(nil), false},
+
+		// test bool convert to bool, int, uint, float, string
+		{"Bool true to bool true", func() any { return MustConvertTo[bool](true) }, true, false},
+		{"Bool false to bool false", func() any { return MustConvertTo[bool](false) }, false, false},
 		{"Bool true to int", func() any { return MustConvertTo[int](true) }, 1, false},
 		{"Bool false to int", func() any { return MustConvertTo[int](false) }, 0, false},
 		{"Bool true to uint", func() any { return MustConvertTo[uint](true) }, uint(1), false},
@@ -22,12 +53,33 @@ func TestMustConvertTo(t *testing.T) {
 		{"Bool true String", func() any { return MustConvertTo[string](true) }, "true", false},
 		{"Bool false String", func() any { return MustConvertTo[string](false) }, "false", false},
 
-		// test int convert to bool, uint, float, string
+		// test bool convert to *bool, *int, *uint, *float, *string
+		{"Bool true to *bool true", func() any { return MustConvertTo[*bool](true) }, &bTrue, false},
+		{"Bool false to *bool false", func() any { return MustConvertTo[*bool](false) }, &bFalse, false},
+		{"Bool true to *int", func() any { return MustConvertTo[*int](true) }, &int1, false},
+		{"Bool false to *int", func() any { return MustConvertTo[*int](false) }, &int0, false},
+		{"Bool true to *uint", func() any { return MustConvertTo[*uint](true) }, &uint1, false},
+		{"Bool false to *uint", func() any { return MustConvertTo[*uint](false) }, &uint0, false},
+		{"Bool true *float", func() any { return MustConvertTo[*float32](true) }, &float32_1, false},
+		{"Bool false *float", func() any { return MustConvertTo[*float64](false) }, &float64_0, false},
+		{"Bool true *String", func() any { return MustConvertTo[*string](true) }, &strTrue, false},
+		{"Bool false *String", func() any { return MustConvertTo[*string](false) }, &strFalse, false},
+
+		// test int convert to bool, int, uint, float, string
 		{"Int to Bool true", func() any { return MustConvertTo[bool](-1) }, true, false},
 		{"Int to Bool false", func() any { return MustConvertTo[bool](0) }, false, false},
+		{"Int to int", func() any { return MustConvertTo[int](-123) }, -123, false},
 		{"Int to uint", func() any { return MustConvertTo[uint](456) }, uint(456), false},
 		{"Int to float", func() any { return MustConvertTo[float64](456) }, 456.0, false},
 		{"Int to String", func() any { return MustConvertTo[string](123) }, "123", false},
+
+		// test int convert to *bool, *int, *uint, *float, *string
+		{"Int to *Bool true", func() any { return MustConvertTo[*bool](-1) }, &bTrue, false},
+		{"Int to *Bool false", func() any { return MustConvertTo[*bool](0) }, &bFalse, false},
+		{"Int to *int", func() any { return MustConvertTo[*int](-123) }, &int_123, false},
+		{"Int to *uint", func() any { return MustConvertTo[*uint](456) }, &uint456, false},
+		{"Int to *float", func() any { return MustConvertTo[*float64](456) }, &float456, false},
+		{"Int to *String", func() any { return MustConvertTo[*string](123) }, &str123, false},
 
 		// test uint convert to bool, int, float, string
 		{"Uint to Bool true", func() any { return MustConvertTo[bool](uint(1)) }, true, false},
