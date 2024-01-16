@@ -2,7 +2,7 @@ package factory
 
 import (
 	"fmt"
-	"github.com/peace0phmind/bud/struct"
+	"github.com/peace0phmind/bud/structure"
 	"net/url"
 	"reflect"
 	"strings"
@@ -289,9 +289,9 @@ func TestWalkSliceStruct(t *testing.T) {
 	wk.SlicePPointStructInit = append(wk.SlicePPointStructInit, &PointStruct{})
 
 	count := 0
-	err := _struct.WalkField(wk, func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type) error {
+	err := structure.WalkField(wk, func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type) error {
 		count++
-		println(count, _struct.GetFieldPath(structField, rootTypes), fieldValue.Kind().String())
+		println(count, structure.GetFieldPath(structField, rootTypes), fieldValue.Kind().String())
 		return nil
 	})
 
@@ -308,9 +308,9 @@ func TestWalk(t *testing.T) {
 		StringPtrInited: &hello,
 		PPS:             &PointStruct{},
 	}
-	err := _struct.WalkField(wk, func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type) error {
+	err := structure.WalkField(wk, func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type) error {
 		count++
-		println(count, _struct.GetFieldPath(structField, rootTypes), fieldValue.Kind().String())
+		println(count, structure.GetFieldPath(structField, rootTypes), fieldValue.Kind().String())
 		return nil
 	})
 
@@ -328,9 +328,9 @@ func TestWalkWithTag(t *testing.T) {
 		PPS:             &PointStruct{},
 	}
 
-	err := _struct.WalkWithTagName(wk, "env", func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type, tagValue string) error {
+	err := structure.WalkWithTagName(wk, "env", func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type, tagValue string) error {
 		count++
-		println(count, _struct.GetFieldPath(structField, rootTypes), fieldValue.Kind().String(), tagValue)
+		println(count, structure.GetFieldPath(structField, rootTypes), fieldValue.Kind().String(), tagValue)
 		return nil
 	})
 

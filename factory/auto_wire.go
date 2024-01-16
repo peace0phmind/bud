@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/peace0phmind/bud/stream"
-	_struct "github.com/peace0phmind/bud/struct"
+	"github.com/peace0phmind/bud/structure"
 	"reflect"
 	"strings"
 )
@@ -61,7 +61,7 @@ func ParseTagValue[T any](tagValue string, checkAndSet func(tv *TagValue[T])) (t
 }
 
 func wireError(structField reflect.StructField, rootTypes []reflect.Type, wireRule string) error {
-	fieldPath := _struct.GetFieldPath(structField, rootTypes)
+	fieldPath := structure.GetFieldPath(structField, rootTypes)
 	return errors.New(fmt.Sprintf("The field of 'wire' must be defined as a pointer to an object or an interface. %s, tag value: %s", fieldPath, wireRule))
 }
 
@@ -130,7 +130,7 @@ func AutoWire(self any) error {
 	_context.wiring(vt)
 	defer _context.wired(vt)
 
-	return _struct.WalkWithTagName(self, WireTag, func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type, wireValue string) error {
+	return structure.WalkWithTagName(self, WireTag, func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type, wireValue string) error {
 		tv, err := ParseTagValue[WireValue](wireValue, func(tv *TagValue[WireValue]) {
 			if (tv.Tag == WireValueName && len(tv.Value) == 0) ||
 				(tv.Tag == WireValueAuto) {
@@ -148,10 +148,10 @@ func AutoWire(self any) error {
 				if fieldValue.IsNil() {
 					switch tv.Tag {
 					case WireValueSelf:
-						return _struct.SetField(fieldValue, self)
+						return structure.SetField(fieldValue, self)
 					default:
 						if wiredValue, err1 := getByWireTag(tv, structField.Type); err1 == nil {
-							return _struct.SetField(fieldValue, wiredValue)
+							return structure.SetField(fieldValue, wiredValue)
 						} else {
 							return errors.New(fmt.Sprintf("%v on field: %s", err1, structField.Name))
 						}
@@ -162,7 +162,7 @@ func AutoWire(self any) error {
 			}
 		case WireValueValue:
 			if wiredValue, err1 := getByWireTag(tv, structField.Type); err1 == nil {
-				return _struct.SetField(fieldValue, wiredValue)
+				return structure.SetField(fieldValue, wiredValue)
 			} else {
 				return errors.New(fmt.Sprintf("%v on field: %s. 'name:objName.objFieldName'", err1, structField.Name))
 			}

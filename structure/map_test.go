@@ -1,4 +1,4 @@
-package _struct
+package structure
 
 import (
 	"testing"

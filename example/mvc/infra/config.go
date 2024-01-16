@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/mcuadros/go-defaults"
 	"github.com/peace0phmind/bud/factory"
-	_struct "github.com/peace0phmind/bud/struct"
+	"github.com/peace0phmind/bud/structure"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"log"
@@ -37,7 +37,7 @@ func (cfg *Config) Init() {
 	defaults.SetDefaults(cfg)
 
 	// 下面默认值可以写入配置文件
-	fh := _struct.FieldHelper(cfg)
+	fh := structure.FieldHelper(cfg)
 	for _, fieldName := range []string{"MySQLHost", "MySQLPort", "UseGPU"} {
 		fh.GetValue2Do(fieldName, func(fn string, value any) bool {
 			viper.SetDefault(fn, value)
