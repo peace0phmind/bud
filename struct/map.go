@@ -1,42 +1,17 @@
 package _struct
 
 import (
+	"errors"
 	"fmt"
 	"github.com/peace0phmind/bud/util"
 	"reflect"
 )
-
-var typeAliasMap = util.Cache[reflect.Type, reflect.Type]{}
-
-func init() {
-	AddTypeAliasMap[int8, int]()
-	AddTypeAliasMap[int16, int]()
-	AddTypeAliasMap[int32, int]()
-	AddTypeAliasMap[int64, int]()
-
-	AddTypeAliasMap[uint8, uint]()
-	AddTypeAliasMap[uint16, uint]()
-	AddTypeAliasMap[uint32, uint]()
-	AddTypeAliasMap[uint64, uint]()
-
-	AddTypeAliasMap[float32, float64]()
-}
 
 type MapOption struct {
 	ZeroFields bool
 }
 
 type Mapper func(from reflect.Value, to reflect.Value) error
-type Converter func(input any, to reflect.Type) (output any, err error)
-
-func AddTypeAliasMap[Name any, Alias any]() {
-	nameType := reflect.TypeOf((*Name)(nil)).Elem()
-	aliasType := reflect.TypeOf((*Alias)(nil)).Elem()
-
-	if v, got := typeAliasMap.GetOrStore(nameType, aliasType); got {
-		panic(fmt.Sprintf("type '%v' already set alias to '%v'", nameType, v))
-	}
-}
 
 type mapperKey struct {
 	from reflect.Type
@@ -83,6 +58,10 @@ func MapToValue(from any, to reflect.Value) error {
 }
 
 func MapToValueWithOption(from any, to reflect.Value, option *MapOption) error {
+	if option == nil {
+		option = defaultMapOption
+	}
+
 	var fromVal reflect.Value
 	if from != nil {
 		fromVal = reflect.ValueOf(from)
@@ -110,26 +89,24 @@ func MapToValueWithOption(from any, to reflect.Value, option *MapOption) error {
 		return nil
 	}
 
-	return nil
-}
+	fromType := reflect.TypeOf(from)
+	toType := to.Type()
 
-func ConvertToType(from any, toType reflect.Type) (any, error) {
-	return ConvertToTypeWithOption(from, toType, defaultMapOption)
-}
+	mapper, ok := mapperCache.Get(mapperKey{from: fromType, to: toType})
+	if !ok {
+		fromType, _ = typeAliasMap.GetOrDefault(fromType, fromType)
+		toType, _ = typeAliasMap.GetOrDefault(toType, toType)
 
-func ConvertToTypeWithOption(from any, toType reflect.Type, option *MapOption) (any, error) {
-	return nil, nil
-}
-
-func ConvertTo[T any](from any) (T, error) {
-	return ConvertToWithOption[T](from, defaultMapOption)
-}
-
-func ConvertToWithOption[T any](from any, option *MapOption) (t T, err error) {
-	result, err := ConvertToTypeWithOption(from, reflect.TypeOf((*T)(nil)).Elem(), option)
-	if err != nil {
-		return t, err
-	} else {
-		return result.(T), nil
+		mapper, ok = mapperCache.Get(mapperKey{from: fromType, to: toType})
+		if !ok {
+			return errors.New(fmt.Sprintf("no mapper found for type %+v to %+v", fromType, toType))
+		}
 	}
+
+	err := mapper(fromVal, to)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

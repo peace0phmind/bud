@@ -20,23 +20,33 @@ type cacheItem[V any] struct {
 	lock       sync.Mutex
 }
 
-func (ci *cacheItem[V]) getValue() (v V, ok bool) {
+func (ci *cacheItem[V]) getValue() (v V, got bool) {
 	if !ci.valueValid {
-		ok = false
+		got = false
 		return
 	}
 
 	return ci.value, true
 }
 
-func (c *Cache[K, V]) Get(k K) (v V, ok bool) {
+func (c *Cache[K, V]) Get(k K) (v V, got bool) {
 	value, loaded := c.cacheMap.Load(k)
 	if !loaded {
-		ok = false
+		got = false
 		return
 	} else {
 		ci := value.(*cacheItem[V])
 		return ci.getValue()
+	}
+}
+
+func (c *Cache[K, V]) GetOrDefault(k K, def V) (v V, got bool) {
+	value, got := c.cacheMap.Load(k)
+	if got {
+		ci := value.(*cacheItem[V])
+		return ci.getValue()
+	} else {
+		return def, false
 	}
 }
 
