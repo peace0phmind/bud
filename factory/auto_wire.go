@@ -22,12 +22,6 @@ const ValueTag = "value"
 // ENUM(self, auto, type, name, value, option)
 type WireValue string
 
-func splitAndTrimValue(value, sep string) []string {
-	return stream.Of(strings.Split(strings.TrimSpace(value), sep)).
-		Map(func(s string) string { return strings.TrimSpace(s) }).
-		Filter(func(s string) (bool, error) { return len(s) > 0, nil }).MustToSlice()
-}
-
 type TagValue[T any] struct {
 	Tag   T
 	Value string
@@ -39,13 +33,12 @@ func (tv *TagValue[T]) String() string {
 
 func ParseTagValue[T any](tagValue string, checkAndSet func(tv *TagValue[T])) (tv *TagValue[T], err error) {
 	result := &TagValue[T]{}
-	values := splitAndTrimValue(tagValue, ":")
+	values := stream.Of(strings.SplitN(strings.TrimSpace(tagValue), ":", 2)).
+		Map(func(s string) string { return strings.TrimSpace(s) }).
+		Filter(func(s string) (bool, error) { return len(s) > 0, nil }).MustToSlice()
+
 	if len(values) == 0 {
 		return nil, errors.New("tag value is empty")
-	}
-
-	if len(values) > 2 {
-		return nil, errors.New("tag value contains multiple `:`")
 	}
 
 	if unmarshaler, ok := any(&result.Tag).(encoding.TextUnmarshaler); ok {
