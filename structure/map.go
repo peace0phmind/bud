@@ -120,23 +120,39 @@ func Value2ValueWithOption(from reflect.Value, to reflect.Value, option *MapOpti
 		return nil
 	}
 
-	switch to.Kind() {
-	case reflect.Ptr:
+	if to.Kind() == reflect.Ptr {
 		return value2valuePtrWithOption(from, to, option)
-	case reflect.Slice:
-		return value2valueSliceWithOption(from, to, option)
-	default:
-		// skip
 	}
 
 	fromType := from.Type()
 	toType := to.Type()
 
+	// get all implements interface, is not err, return direct
+	cachePairs := mapperCache.FilterToStream(func(k mapperKey, v Mapper) bool {
+		if k.to.Kind() == reflect.Interface {
+			return toType.Implements(k.to) || reflect.PtrTo(toType).Implements(k.to)
+		}
+		return false
+	}).MustToSlice()
+
+	for _, cachePair := range cachePairs {
+		if err := cachePair.V(from, to); err == nil {
+			return nil
+		}
+	}
+
+	// detect
+	if to.Kind() == reflect.Slice {
+		return value2valueSliceWithOption(from, to, option)
+	}
+
+	// if the from and to type is same, set and return direct
 	if fromType == toType {
 		to.Set(from)
 		return nil
 	}
 
+	// if to kind is a interface, and from type can convert to , convert and return
 	if toType.Kind() == reflect.Interface && fromType.ConvertibleTo(toType) {
 		to.Set(from.Convert(toType))
 		return nil
@@ -144,6 +160,7 @@ func Value2ValueWithOption(from reflect.Value, to reflect.Value, option *MapOpti
 
 	mapper, ok := mapperCache.Get(mapperKey{from: fromType, to: toType})
 	if !ok {
+		// do type alias
 		fromType, _ = typeAliasMap.GetOrDefault(fromType, fromType)
 		toType, _ = typeAliasMap.GetOrDefault(toType, toType)
 

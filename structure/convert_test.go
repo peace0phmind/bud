@@ -144,8 +144,9 @@ func TestMustConvertTo(t *testing.T) {
 		{"Uint to Uint32 boundary", func() any { return MustConvertTo[uint32](uint(4294967297)) }, uint32(1), false},
 		{"Uint to Uint64 boundary", func() any { return MustConvertTo[uint64](uint(18446744073709551615)) }, uint64(18446744073709551615), false},
 
-		// test string convert to url, duration
+		// test string convert to TextUnmarshaler, url, duration
 		{"String to url", func() any { return MustConvertTo[*url.URL]("https://www.example.com") }, urlAddress, false},
+		{"String to *url", func() any { return MustConvertTo[url.URL]("https://www.example.com") }, *urlAddress, false},
 		{"String to panicking url", func() any { return MustConvertTo[*url.URL](" https://www.example.com") }, nil, true},
 		{"String to duration", func() any { return MustConvertTo[time.Duration]("1h30m") }, durationPeriod, false},
 		{"String to panicking duration", func() any { return MustConvertTo[time.Duration]("xyz") }, nil, true},
