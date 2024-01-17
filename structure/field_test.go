@@ -1,8 +1,8 @@
-package factory
+package structure
 
 import (
 	"fmt"
-	"github.com/peace0phmind/bud/structure"
+	"github.com/peace0phmind/bud/factory"
 	"net/url"
 	"reflect"
 	"strings"
@@ -289,9 +289,9 @@ func TestWalkSliceStruct(t *testing.T) {
 	wk.SlicePPointStructInit = append(wk.SlicePPointStructInit, &PointStruct{})
 
 	count := 0
-	err := structure.WalkField(wk, func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type) error {
+	err := WalkField(wk, func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type) error {
 		count++
-		println(count, structure.GetFieldPath(structField, rootTypes), fieldValue.Kind().String())
+		println(count, GetFieldPath(structField, rootTypes), fieldValue.Kind().String())
 		return nil
 	})
 
@@ -308,9 +308,9 @@ func TestWalk(t *testing.T) {
 		StringPtrInited: &hello,
 		PPS:             &PointStruct{},
 	}
-	err := structure.WalkField(wk, func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type) error {
+	err := WalkField(wk, func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type) error {
 		count++
-		println(count, structure.GetFieldPath(structField, rootTypes), fieldValue.Kind().String())
+		println(count, GetFieldPath(structField, rootTypes), fieldValue.Kind().String())
 		return nil
 	})
 
@@ -328,9 +328,9 @@ func TestWalkWithTag(t *testing.T) {
 		PPS:             &PointStruct{},
 	}
 
-	err := structure.WalkWithTagName(wk, "env", func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type, tagValue string) error {
+	err := WalkWithTagName(wk, "env", func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type, tagValue string) error {
 		count++
-		println(count, structure.GetFieldPath(structField, rootTypes), fieldValue.Kind().String(), tagValue)
+		println(count, GetFieldPath(structField, rootTypes), fieldValue.Kind().String(), tagValue)
 		return nil
 	})
 
@@ -444,7 +444,7 @@ func TestAutoWireEnv(t *testing.T) {
 	t.Setenv("PRF_NONDEFINED_STR", nonDefinedStr)
 
 	sample := WireValueExprStructTest{}
-	isNoErr(t, AutoWire(&sample))
+	isNoErr(t, factory.AutoWire(&sample))
 
 	//isEqual(t, str1, sample.String)
 	//isEqual(t, &str1, sample.StringPtr)
