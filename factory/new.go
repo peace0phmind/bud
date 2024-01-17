@@ -228,6 +228,10 @@ func _getInitParams[T any](initMethod reflect.Method, t *T, option *Option) ([]r
 }
 
 func NewWithOption[T any](option *Option) *T {
+	if option == nil {
+		option = newDefaultOption
+	}
+
 	t := new(T)
 
 	vt := reflect.TypeOf(t)
