@@ -154,6 +154,16 @@ func TestMustConvertTo(t *testing.T) {
 		{"String to panicking url", func() any { return MustConvertTo[*url.URL](" https://www.example.com") }, nil, true},
 		{"String to duration", func() any { return MustConvertTo[time.Duration]("1h30m") }, durationPeriod, false},
 		{"String to panicking duration", func() any { return MustConvertTo[time.Duration]("xyz") }, nil, true},
+
+		// test string to slice bool, slice int, slice uint, slice float, slice string
+		{"String to slice bool", func() any { return MustConvertTo[[]bool]("t,f,true,false,T,F") }, []bool{true, false, true, false, true, false}, false},
+		{"slice bool to slice bool", func() any { return MustConvertTo[[]bool]([]bool{true, false, true, false, true, false}) }, []bool{true, false, true, false, true, false}, false},
+		{"slice bool to *slice bool", func() any { return MustConvertTo[*[]bool]([]bool{true, false, true, false, true, false}) }, &[]bool{true, false, true, false, true, false}, false},
+		{"slice bool to slice *bool", func() any { return MustConvertTo[[]*bool]([]bool{true, false, true, false, true, false}) }, []*bool{&bTrue, &bFalse, &bTrue, &bFalse, &bTrue, &bFalse}, false},
+		{"string to slice int", func() any { return MustConvertTo[[]int]("12,34,56,78,90") }, []int{12, 34, 56, 78, 90}, false},
+		{"string to slice uint", func() any { return MustConvertTo[[]uint]("12,34,56,78,90") }, []uint{12, 34, 56, 78, 90}, false},
+		{"string to slice float32", func() any { return MustConvertTo[[]float32]("12,34,56,78,90") }, []float32{12, 34, 56, 78, 90}, false},
+		{"string to slice string", func() any { return MustConvertTo[[]string]("12,34,56,78,90") }, []string{"12", "34", "56", "78", "90"}, false},
 	}
 
 	for _, tc := range tests {

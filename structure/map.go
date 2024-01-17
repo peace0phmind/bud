@@ -5,10 +5,13 @@ import (
 	"fmt"
 	"github.com/peace0phmind/bud/util"
 	"reflect"
+	"strings"
 )
 
 type MapOption struct {
-	ZeroFields bool
+	ZeroFields           bool
+	WeaklyTypedInput     bool
+	StringSplitSeparator string
 }
 
 type Mapper func(from reflect.Value, to reflect.Value) error
@@ -39,7 +42,9 @@ func ReplaceMapper[From any, To any](mapper Mapper) {
 
 func NewMapOption() *MapOption {
 	return &MapOption{
-		ZeroFields: true,
+		ZeroFields:           true,
+		WeaklyTypedInput:     true,
+		StringSplitSeparator: ",",
 	}
 }
 
@@ -112,6 +117,79 @@ func value2valuePtrWithOption(from reflect.Value, to reflect.Value, option *MapO
 }
 
 func value2valueSliceWithOption(from reflect.Value, to reflect.Value, option *MapOption) error {
+	dataVal := from
+	fromKind := dataVal.Kind()
+	valType := to.Type()
+	valElemType := valType.Elem()
+	sliceType := reflect.SliceOf(valElemType)
+
+	// If we have a non array/slice type then we first attempt to convert.
+	if fromKind != reflect.Array && fromKind != reflect.Slice {
+		if option.WeaklyTypedInput {
+			switch {
+			// Slice and array we use the normal logic
+			case fromKind == reflect.Slice, fromKind == reflect.Array:
+				break
+
+			// Empty maps turn into empty slices
+			case fromKind == reflect.Map:
+			//if dataVal.Len() == 0 {
+			//	to.Set(reflect.MakeSlice(sliceType, 0, 0))
+			//	return nil
+			//}
+			//// Create slice of maps of other sizes
+			//return d.decodeSlice(name, []interface{}{data}, val)
+
+			//case fromKind == reflect.String && valElemType.Kind() == reflect.Uint8:
+			//return d.decodeSlice(name, []byte(dataVal.String()), val)
+			case fromKind == reflect.String:
+				return Value2ValueWithOption(reflect.ValueOf(strings.Split(from.String(), option.StringSplitSeparator)), to, option)
+			// All other types we try to convert to the slice type
+			// and "lift" it into it. i.e. a string becomes a string slice.
+			default:
+				// Just re-try this function with data as a slice.
+				//return d.decodeSlice(name, []interface{}{data}, val)
+			}
+		}
+
+		return fmt.Errorf("source data must be an array or slice, got %s", fromKind)
+	}
+
+	// If the input value is nil, then don't allocate since empty != nil
+	if fromKind != reflect.Array && dataVal.IsNil() {
+		return nil
+	}
+
+	valSlice := to
+	if valSlice.IsNil() || option.ZeroFields {
+		// Make a new slice to hold our result, same size as the original data.
+		valSlice = reflect.MakeSlice(sliceType, dataVal.Len(), dataVal.Len())
+	} else if valSlice.Len() > dataVal.Len() {
+		valSlice = valSlice.Slice(0, dataVal.Len())
+	}
+
+	// Accumulate any errors
+	errors := make([]error, 0)
+
+	for i := 0; i < dataVal.Len(); i++ {
+		currentData := dataVal.Index(i)
+		for valSlice.Len() <= i {
+			valSlice = reflect.Append(valSlice, reflect.Zero(valElemType))
+		}
+		currentField := valSlice.Index(i)
+
+		if err := Value2ValueWithOption(currentData, currentField, option); err != nil {
+			errors = appendErrors(errors, err)
+		}
+	}
+
+	// Finally, set the value to the slice we built up
+	to.Set(valSlice)
+
+	// If there were errors, we return those
+	if len(errors) > 0 {
+		return &Error{errors}
+	}
 
 	return nil
 }
@@ -176,6 +254,10 @@ func Value2ValueWithOption(from reflect.Value, to reflect.Value, option *MapOpti
 		if err := cachePair.V(from, to); err == nil {
 			return nil
 		}
+	}
+
+	if to.Kind() == reflect.Struct {
+
 	}
 
 	return errors.New(fmt.Sprintf("no mapper found for type %+v to %+v", fromType, toType))
