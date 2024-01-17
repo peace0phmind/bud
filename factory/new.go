@@ -18,7 +18,6 @@ const DefaultInitMethodName = "Init"
 // Option represents a configuration for an object initialization option.
 //
 // The default values for `Option` are set as follows:
-// - `doSetDefault` is `true`
 // - `doAutoWire` is `true`
 //
 // NewOption returns a new `Option` instance with the default values set:
@@ -26,18 +25,11 @@ const DefaultInitMethodName = "Init"
 //
 //	func NewOption() *Option {
 //	    return &Option{
-//	        doSetDefault: true,
 //	        doAutoWire:   true,
 //	    }
 //	}
 //
 // ```
-//
-// SetDefault sets the `doSetDefault` value of `Option` and returns the modified `Option` instance.
-// ```go
-// func (o *Option) SetDefault(setDefault bool) *Option {...}
-// ```
-//
 // AutoWire sets the `doAutoWire` value of `Option` and returns the modified `Option` instance.
 // ```go
 // func (o *Option) AutoWire(autoWire bool) *Option {...}
@@ -121,11 +113,6 @@ const DefaultInitMethodName = "Init"
 // `DefaultInitMethodName` represents the default initialization method name "Init".
 // ```go
 // const DefaultInitMethodName = "Init"
-// ```
-//
-// SetDefault sets default values for the given structure using reflection and a specified tag name.
-// ```go
-// func SetDefault(v any) error {...}
 // ```
 type Option struct {
 	useConstructor bool
