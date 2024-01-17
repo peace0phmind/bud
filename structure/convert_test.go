@@ -1,8 +1,10 @@
 package structure
 
 import (
+	"net/url"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestMustConvertTo(t *testing.T) {
@@ -20,6 +22,8 @@ func TestMustConvertTo(t *testing.T) {
 	uint456 := uint(456)
 	float456 := 456.0
 	str123 := "123"
+	urlAddress, _ := url.Parse("https://www.example.com")
+	durationPeriod, _ := time.ParseDuration("1h30m")
 
 	tests := []struct {
 		name  string
@@ -42,6 +46,7 @@ func TestMustConvertTo(t *testing.T) {
 		{"Nil to *string", func() any { return MustConvertTo[*string](nil) }, (*string)(nil), false},
 
 		// test bool convert to bool, int, uint, float, string
+		{"Bool true to any", func() any { return MustConvertTo[any](true) }, true, false},
 		{"Bool true to bool true", func() any { return MustConvertTo[bool](true) }, true, false},
 		{"Bool false to bool false", func() any { return MustConvertTo[bool](false) }, false, false},
 		{"Bool true to int", func() any { return MustConvertTo[int](true) }, 1, false},
@@ -138,6 +143,12 @@ func TestMustConvertTo(t *testing.T) {
 		{"Uint to Uint32 boundary", func() any { return MustConvertTo[uint32](uint(4294967296)) }, uint32(0), false},
 		{"Uint to Uint32 boundary", func() any { return MustConvertTo[uint32](uint(4294967297)) }, uint32(1), false},
 		{"Uint to Uint64 boundary", func() any { return MustConvertTo[uint64](uint(18446744073709551615)) }, uint64(18446744073709551615), false},
+
+		// test string convert to url, duration
+		{"String to url", func() any { return MustConvertTo[*url.URL]("https://www.example.com") }, urlAddress, false},
+		{"String to panicking url", func() any { return MustConvertTo[*url.URL](" https://www.example.com") }, nil, true},
+		{"String to duration", func() any { return MustConvertTo[time.Duration]("1h30m") }, durationPeriod, false},
+		{"String to panicking duration", func() any { return MustConvertTo[time.Duration]("xyz") }, nil, true},
 	}
 
 	for _, tc := range tests {

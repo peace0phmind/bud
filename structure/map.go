@@ -85,7 +85,7 @@ func MapToValueWithOption(from any, to reflect.Value, option *MapOption) error {
 	return Value2ValueWithOption(fromVal, to, option)
 }
 
-func value2PtrValueWithOption(from reflect.Value, to reflect.Value, option *MapOption) error {
+func value2valuePtrWithOption(from reflect.Value, to reflect.Value, option *MapOption) error {
 	toElemType := to.Type().Elem()
 
 	if to.CanSet() {
@@ -107,6 +107,11 @@ func value2PtrValueWithOption(from reflect.Value, to reflect.Value, option *MapO
 	return nil
 }
 
+func value2valueSliceWithOption(from reflect.Value, to reflect.Value, option *MapOption) error {
+
+	return nil
+}
+
 func Value2ValueWithOption(from reflect.Value, to reflect.Value, option *MapOption) error {
 	if !from.IsValid() {
 		// If the input value is invalid, then we just set the value
@@ -115,12 +120,27 @@ func Value2ValueWithOption(from reflect.Value, to reflect.Value, option *MapOpti
 		return nil
 	}
 
-	if to.Kind() == reflect.Ptr {
-		return value2PtrValueWithOption(from, to, option)
+	switch to.Kind() {
+	case reflect.Ptr:
+		return value2valuePtrWithOption(from, to, option)
+	case reflect.Slice:
+		return value2valueSliceWithOption(from, to, option)
+	default:
+		// skip
 	}
 
 	fromType := from.Type()
 	toType := to.Type()
+
+	if fromType == toType {
+		to.Set(from)
+		return nil
+	}
+
+	if toType.Kind() == reflect.Interface && fromType.ConvertibleTo(toType) {
+		to.Set(from.Convert(toType))
+		return nil
+	}
 
 	mapper, ok := mapperCache.Get(mapperKey{from: fromType, to: toType})
 	if !ok {
