@@ -54,3 +54,14 @@ func TestAddTypeAliasMap(t *testing.T) {
 		})
 	}
 }
+
+func TestMap(t *testing.T) {
+	var vint int
+	err := Map("123", &vint)
+	if err != nil {
+		t.Error(err)
+	}
+	if vint != 123 {
+		t.Error("map err")
+	}
+}

@@ -50,7 +50,7 @@ func Map(from, to any) error {
 }
 
 func MapWithOption(from, to any, option *MapOption) error {
-	return MapToValueWithOption(from, reflect.ValueOf(to).Elem(), option)
+	return MapToValueWithOption(from, reflect.Indirect(reflect.ValueOf(to)), option)
 }
 
 func MapToValue(from any, to reflect.Value) error {
@@ -60,6 +60,10 @@ func MapToValue(from any, to reflect.Value) error {
 func MapToValueWithOption(from any, to reflect.Value, option *MapOption) error {
 	if option == nil {
 		option = defaultMapOption
+	}
+
+	if !to.CanSet() {
+		return errors.New("to value can't be set")
 	}
 
 	var fromVal reflect.Value
