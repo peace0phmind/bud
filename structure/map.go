@@ -128,8 +128,41 @@ func Value2ValueWithOption(from reflect.Value, to reflect.Value, option *MapOpti
 		return value2valuePtrWithOption(from, to, option)
 	}
 
+	if to.Kind() == reflect.Slice {
+		return value2valueSliceWithOption(from, to, option)
+	}
+
 	fromType := from.Type()
 	toType := to.Type()
+
+	// if the from and to type is same, set and return direct
+	if fromType == toType {
+		to.Set(from)
+		return nil
+	}
+
+	// if to kind is a interface, and from type can convert to , convert and return
+	if toType.Kind() == reflect.Interface && fromType.ConvertibleTo(toType) {
+		to.Set(from.Convert(toType))
+		return nil
+	}
+
+	// use type and to, get mapper
+	mapper, ok := mapperCache.Get(mapperKey{from: fromType, to: toType})
+	if !ok {
+		// do type alias
+		fromType, _ = typeAliasMap.GetOrDefault(fromType, fromType)
+		toType, _ = typeAliasMap.GetOrDefault(toType, toType)
+
+		mapper, ok = mapperCache.Get(mapperKey{from: fromType, to: toType})
+	}
+
+	if ok {
+		if err := mapper(from, to); err != nil {
+			return err
+		}
+		return nil
+	}
 
 	// get all implements interface, is not err, return direct
 	cachePairs := mapperCache.FilterToStream(func(k mapperKey, v Mapper) bool {
@@ -145,38 +178,5 @@ func Value2ValueWithOption(from reflect.Value, to reflect.Value, option *MapOpti
 		}
 	}
 
-	// detect
-	if to.Kind() == reflect.Slice {
-		return value2valueSliceWithOption(from, to, option)
-	}
-
-	// if the from and to type is same, set and return direct
-	if fromType == toType {
-		to.Set(from)
-		return nil
-	}
-
-	// if to kind is a interface, and from type can convert to , convert and return
-	if toType.Kind() == reflect.Interface && fromType.ConvertibleTo(toType) {
-		to.Set(from.Convert(toType))
-		return nil
-	}
-
-	mapper, ok := mapperCache.Get(mapperKey{from: fromType, to: toType})
-	if !ok {
-		// do type alias
-		fromType, _ = typeAliasMap.GetOrDefault(fromType, fromType)
-		toType, _ = typeAliasMap.GetOrDefault(toType, toType)
-
-		mapper, ok = mapperCache.Get(mapperKey{from: fromType, to: toType})
-		if !ok {
-			return errors.New(fmt.Sprintf("no mapper found for type %+v to %+v", fromType, toType))
-		}
-	}
-
-	if err := mapper(from, to); err != nil {
-		return err
-	}
-
-	return nil
+	return errors.New(fmt.Sprintf("no mapper found for type %+v to %+v", fromType, toType))
 }
