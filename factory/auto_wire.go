@@ -15,6 +15,9 @@ import (
 // WireTag is a constant that defines the annotation string used for wire injection in Go code.
 const WireTag = "wire"
 
+// ValueTag is a shortcut of wire:"value:"
+const ValueTag = "value"
+
 // WireValue is a enum
 // ENUM(self, auto, type, name, value, option)
 type WireValue string
@@ -28,6 +31,10 @@ func splitAndTrimValue(value, sep string) []string {
 type TagValue[T any] struct {
 	Tag   T
 	Value string
+}
+
+func (tv *TagValue[T]) String() string {
+	return fmt.Sprintf("%v:%s", tv.Tag, tv.Value)
 }
 
 func ParseTagValue[T any](tagValue string, checkAndSet func(tv *TagValue[T])) (tv *TagValue[T], err error) {
@@ -116,13 +123,23 @@ func AutoWire(self any) error {
 	_context.wiring(vt)
 	defer _context.wired(vt)
 
-	return structure.WalkWithTagName(self, WireTag, func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type, wireValue string) error {
-		tv, err := ParseTagValue[WireValue](wireValue, func(tv *TagValue[WireValue]) {
-			if (tv.Tag == WireValueName && len(tv.Value) == 0) ||
-				(tv.Tag == WireValueAuto) {
-				tv.Value = structField.Name
-			}
-		})
+	return structure.WalkWithTagNames(self, []string{WireTag, ValueTag}, func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type, tags map[string]string) (err error) {
+		if len(tags) > 1 {
+			panic("Only one can exist at a time, either 'wire' or 'value'.")
+		}
+
+		var tv *TagValue[WireValue]
+		if wireValue, ok := tags[WireTag]; ok {
+			tv, err = ParseTagValue[WireValue](wireValue, func(tv *TagValue[WireValue]) {
+				if (tv.Tag == WireValueName && len(tv.Value) == 0) ||
+					(tv.Tag == WireValueAuto) {
+					tv.Value = structField.Name
+				}
+			})
+		}
+		if wireValue, ok := tags[ValueTag]; ok {
+			tv = &TagValue[WireValue]{Tag: WireValueValue, Value: wireValue}
+		}
 
 		if err != nil {
 			panic(err)
@@ -144,7 +161,7 @@ func AutoWire(self any) error {
 					}
 				}
 			} else {
-				return wireError(structField, rootTypes, wireValue)
+				return wireError(structField, rootTypes, tv.String())
 			}
 		case WireValueValue:
 			if wiredValue, err1 := getByWireTag(tv, structField.Type); err1 == nil {

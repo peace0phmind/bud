@@ -92,14 +92,21 @@ func WalkField(v any, walkFn WalkFunc) error {
 	return _walk(v, walkFn, nil)
 }
 
-func WalkWithTagName(v any, tagName string, walkFn ParamsWalkFunc[string]) error {
+func WalkWithTagNames(v any, tagNames []string, walkFn ParamsWalkFunc[map[string]string]) error {
 	return WalkField(v, func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type) error {
-		tagValue, ok := structField.Tag.Lookup(tagName)
-		if ok {
-			if err := walkFn(fieldValue, structField, rootTypes, tagValue); err != nil {
+		tags := map[string]string{}
+		for _, tagName := range tagNames {
+			if tagValue, ok := structField.Tag.Lookup(tagName); ok {
+				tags[tagName] = tagValue
+			}
+		}
+
+		if len(tags) > 0 {
+			if err := walkFn(fieldValue, structField, rootTypes, tags); err != nil {
 				return err
 			}
 		}
+
 		return nil
 	})
 }
