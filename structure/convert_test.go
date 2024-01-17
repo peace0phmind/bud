@@ -24,6 +24,7 @@ func TestMustConvertTo(t *testing.T) {
 	str123 := "123"
 	urlAddress, _ := url.Parse("https://www.example.com")
 	durationPeriod, _ := time.ParseDuration("1h30m")
+	time0128, _ := time.Parse("2006-01-02T15:04:05Z07:00", "2024-01-18T09:12:34+08:00")
 
 	tests := []struct {
 		name  string
@@ -144,7 +145,10 @@ func TestMustConvertTo(t *testing.T) {
 		{"Uint to Uint32 boundary", func() any { return MustConvertTo[uint32](uint(4294967297)) }, uint32(1), false},
 		{"Uint to Uint64 boundary", func() any { return MustConvertTo[uint64](uint(18446744073709551615)) }, uint64(18446744073709551615), false},
 
-		// test string convert to TextUnmarshaler, url, duration
+		// test string convert to time, url, duration
+		{"String to time", func() any { return MustConvertTo[time.Time]("2024-01-18T09:12:34+08:00") }, time0128, false},
+		{"String to *time", func() any { return MustConvertTo[*time.Time]("2024-01-18T09:12:34+08:00") }, &time0128, false},
+		{"String to err time", func() any { return MustConvertTo[time.Time]("2024-01-18T09:12:34") }, time0128, true},
 		{"String to url", func() any { return MustConvertTo[*url.URL]("https://www.example.com") }, urlAddress, false},
 		{"String to *url", func() any { return MustConvertTo[url.URL]("https://www.example.com") }, *urlAddress, false},
 		{"String to panicking url", func() any { return MustConvertTo[*url.URL](" https://www.example.com") }, nil, true},

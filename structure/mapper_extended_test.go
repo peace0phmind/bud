@@ -2,6 +2,7 @@ package structure
 
 import (
 	"bytes"
+	"net/url"
 	"reflect"
 	"testing"
 	"time"
@@ -12,9 +13,7 @@ type DummyTextUnmarshaler struct {
 }
 
 func (dtu *DummyTextUnmarshaler) UnmarshalText(text []byte) error {
-	if len(text) > 0 {
-		dtu.value = "Hello: " + string(text)
-	}
+	dtu.value = string(text)
 	return nil
 }
 
@@ -22,27 +21,34 @@ func TestString2TextUnmarshalerMapper(t *testing.T) {
 	cases := []struct {
 		name     string
 		from     string
-		expected string
+		expected any
 		isError  bool
 	}{
-		{name: "Unmarshal successful", from: "test", expected: "Hello: test", isError: false},
-		{name: "Unmarshal empty string", from: "", expected: "", isError: false},
+		{name: "Unmarshal successful", from: "test", expected: &DummyTextUnmarshaler{value: "test"}, isError: false},
+		{name: "Unmarshal empty string", from: "", expected: &DummyTextUnmarshaler{}, isError: false},
+		{
+			name:     "invalid type without binary unmarshaler",
+			from:     "testdata",
+			expected: &url.URL{},
+			isError:  true,
+		},
 	}
 
 	for _, testCase := range cases {
 		t.Run(testCase.name, func(t *testing.T) {
-			dtu := &DummyTextUnmarshaler{}
 			from := reflect.ValueOf(testCase.from)
-			to := reflect.ValueOf(dtu)
+			to := reflect.ValueOf(testCase.expected)
 
 			err := string2TextUnmarshalerMapper(from, to)
 
-			if (err != nil) != testCase.isError {
-				t.Errorf("Unexpected error state: got %v, but expected error to be %v", err != nil, testCase.isError)
-			}
-
-			if err == nil && dtu.value != testCase.expected {
-				t.Errorf("Unmarshalled value mismatch: got %v, but expected %v", dtu.value, testCase.expected)
+			if err != nil {
+				if !testCase.isError {
+					t.Errorf("Unexpected error state: got %v, but expected error to be %v", err != nil, testCase.isError)
+				}
+			} else {
+				if err == nil && testCase.from != testCase.expected.(*DummyTextUnmarshaler).value {
+					t.Errorf("Unmarshalled value mismatch: got %v, but expected %v", testCase.from, testCase.expected)
+				}
 			}
 		})
 	}
