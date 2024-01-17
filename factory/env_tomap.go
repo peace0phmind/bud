@@ -2,9 +2,7 @@
 
 package factory
 
-import (
-	"strings"
-)
+import "strings"
 
 // copied from github.com/caarlos0/env
 func envToMap(envs []string) *map[string]string {

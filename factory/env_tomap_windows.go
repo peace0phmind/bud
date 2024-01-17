@@ -1,6 +1,6 @@
 //go:build windows
 
-package env
+package factory
 
 import "strings"
 
