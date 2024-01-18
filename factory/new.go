@@ -195,7 +195,7 @@ func _getInitParams[T any](self any, initMethod reflect.Method, t *T, option *Op
 		for i := 0; i < initMethod.Type.NumIn()-1; i++ {
 			paramType := initMethod.Type.In(i + 1)
 
-			tagValue, err := ParseTagValue[WireValue](option.initParams[i], nil)
+			tagValue, err := ParseTagValue(option.initParams[i], nil)
 			if err != nil {
 				return nil, errors.New(fmt.Sprintf("Method %s's %d argument tag is err: %v", initMethod.Name, i, err))
 			}
