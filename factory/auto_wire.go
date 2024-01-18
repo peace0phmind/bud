@@ -81,21 +81,32 @@ func getExpr(value string) (exprCode string, isExpr bool) {
 
 func getValueByWireTag(self any, tagValue *TagValue[WireValue], t reflect.Type) (any, error) {
 	switch tagValue.Tag {
-	case WireValueSelf:
-		return self, nil
-	case WireValueAuto:
-		if len(tagValue.Value) > 0 {
-			return _context.getByNameOrType(tagValue.Value, t), nil
+	case WireValueSelf, WireValueAuto, WireValueType, WireValueName:
+		if (t.Kind() == reflect.Ptr && t.Elem().Kind() == reflect.Struct) || t.Kind() == reflect.Interface {
+			switch tagValue.Tag {
+			case WireValueSelf:
+				return self, nil
+			case WireValueAuto:
+				if len(tagValue.Value) > 0 {
+					return _context.getByNameOrType(tagValue.Value, t), nil
+				} else {
+					return _context.getByType(t), nil
+				}
+			case WireValueType:
+				return _context.getByType(t), nil
+			case WireValueName:
+				if len(tagValue.Value) > 0 {
+					return _context.getByName(tagValue.Value), nil
+				}
+			}
 		} else {
-			return _context.getByType(t), nil
-		}
-	case WireValueType:
-		return _context.getByType(t), nil
-	case WireValueName:
-		if len(tagValue.Value) > 0 {
-			return _context.getByName(tagValue.Value), nil
+			return nil, errors.New("‘self’, ’auto’, ’type’ and ’name’ tag only used on *struct or interface")
 		}
 	case WireValueValue:
+		if (t.Kind() == reflect.Ptr && t.Elem().Kind() == reflect.Struct) || t.Kind() == reflect.Struct {
+			return nil, errors.New("'value' tag can't used on *struct or struct")
+		}
+
 		if len(tagValue.Value) > 0 {
 
 			exprCode, isExpr := getExpr(tagValue.Value)
@@ -148,13 +159,9 @@ func AutoWire(self any) error {
 
 		switch tv.Tag {
 		case WireValueSelf, WireValueAuto, WireValueType, WireValueName:
-			if fieldValue.Kind() == reflect.Ptr || fieldValue.Kind() == reflect.Interface {
-				if !fieldValue.IsNil() {
-					// field is not nil， skip it
-					return nil
-				}
-			} else {
-				return wireError(structField, rootTypes, tv.String())
+			if !fieldValue.IsNil() {
+				// field is not nil， skip it
+				return nil
 			}
 		default:
 		}
