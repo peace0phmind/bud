@@ -179,7 +179,7 @@ func New[T any]() *T {
 	return NewWithOption[T](newDefaultOption)
 }
 
-func _getInitParams[T any](initMethod reflect.Method, t *T, option *Option) ([]reflect.Value, error) {
+func _getInitParams[T any](self any, initMethod reflect.Method, t *T, option *Option) ([]reflect.Value, error) {
 	params := []reflect.Value{reflect.ValueOf(t)}
 
 	if len(option.initParams) == 0 {
@@ -200,7 +200,7 @@ func _getInitParams[T any](initMethod reflect.Method, t *T, option *Option) ([]r
 				return nil, errors.New(fmt.Sprintf("Method %s's %d argument tag is err: %v", initMethod.Name, i, err))
 			}
 
-			v, err := getByWireTag(tagValue, paramType)
+			v, err := getValueByWireTag(self, tagValue, paramType)
 			if err != nil {
 				return nil, errors.New(fmt.Sprintf("Method %s's %d argument get value from tag err: %v", initMethod.Name, i, err))
 			}
@@ -245,7 +245,7 @@ func NewWithOption[T any](option *Option) *T {
 				panic(fmt.Sprintf("Init method '%s' must not have return values", initMethodName))
 			}
 
-			params, err := _getInitParams(initMethod, t, option)
+			params, err := _getInitParams(t, initMethod, t, option)
 			if err == nil {
 				defer initMethod.Func.Call(params)
 			} else {

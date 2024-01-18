@@ -13,12 +13,11 @@ import (
 )
 
 const (
-	WireValueSelf   WireValue = "self"
-	WireValueAuto   WireValue = "auto"
-	WireValueType   WireValue = "type"
-	WireValueName   WireValue = "name"
-	WireValueValue  WireValue = "value"
-	WireValueOption WireValue = "option"
+	WireValueSelf  WireValue = "self"
+	WireValueAuto  WireValue = "auto"
+	WireValueType  WireValue = "type"
+	WireValueName  WireValue = "name"
+	WireValueValue WireValue = "value"
 )
 
 var ErrInvalidWireValue = errors.New("not a valid WireValue")
@@ -31,7 +30,6 @@ func WireValueValues() []WireValue {
 		WireValueType,
 		WireValueName,
 		WireValueValue,
-		WireValueOption,
 	}
 }
 
@@ -48,12 +46,11 @@ func (x WireValue) IsValid() bool {
 }
 
 var _WireValueValue = map[string]WireValue{
-	"self":   WireValueSelf,
-	"auto":   WireValueAuto,
-	"type":   WireValueType,
-	"name":   WireValueName,
-	"value":  WireValueValue,
-	"option": WireValueOption,
+	"self":  WireValueSelf,
+	"auto":  WireValueAuto,
+	"type":  WireValueType,
+	"name":  WireValueName,
+	"value": WireValueValue,
 }
 
 // ParseWireValue attempts to convert a string to a WireValue.

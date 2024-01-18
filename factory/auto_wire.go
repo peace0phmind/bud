@@ -19,7 +19,7 @@ const WireTag = "wire"
 const ValueTag = "value"
 
 // WireValue is a enum
-// ENUM(self, auto, type, name, value, option)
+// ENUM(self, auto, type, name, value)
 type WireValue string
 
 type TagValue[T any] struct {
@@ -31,8 +31,8 @@ func (tv *TagValue[T]) String() string {
 	return fmt.Sprintf("%v:%s", tv.Tag, tv.Value)
 }
 
-func ParseTagValue[T any](tagValue string, checkAndSet func(tv *TagValue[T])) (tv *TagValue[T], err error) {
-	result := &TagValue[T]{}
+func ParseTagValue(tagValue string, checkAndSet func(tv *TagValue[WireValue])) (tv *TagValue[WireValue], err error) {
+	result := &TagValue[WireValue]{}
 	values := stream.Of(strings.SplitN(strings.TrimSpace(tagValue), ":", 2)).
 		Map(func(s string) string { return strings.TrimSpace(s) }).
 		Filter(func(s string) (bool, error) { return len(s) > 0, nil }).MustToSlice()
@@ -43,7 +43,13 @@ func ParseTagValue[T any](tagValue string, checkAndSet func(tv *TagValue[T])) (t
 
 	if unmarshaler, ok := any(&result.Tag).(encoding.TextUnmarshaler); ok {
 		if err = unmarshaler.UnmarshalText([]byte(values[0])); err != nil {
-			return nil, err
+			if len(values) == 1 {
+				result.Tag = WireValueValue
+				result.Value = values[0]
+				return result, nil
+			} else {
+				return nil, err
+			}
 		} else {
 			if len(values) == 2 {
 				result.Value = values[1]
@@ -73,8 +79,10 @@ func getExpr(value string) (exprCode string, isExpr bool) {
 	return value, false
 }
 
-func getByWireTag(tagValue *TagValue[WireValue], t reflect.Type) (any, error) {
+func getValueByWireTag(self any, tagValue *TagValue[WireValue], t reflect.Type) (any, error) {
 	switch tagValue.Tag {
+	case WireValueSelf:
+		return self, nil
 	case WireValueAuto:
 		if len(tagValue.Value) > 0 {
 			return _context.getByNameOrType(tagValue.Value, t), nil
@@ -123,7 +131,7 @@ func AutoWire(self any) error {
 
 		var tv *TagValue[WireValue]
 		if wireValue, ok := tags[WireTag]; ok {
-			tv, err = ParseTagValue[WireValue](wireValue, func(tv *TagValue[WireValue]) {
+			tv, err = ParseTagValue(wireValue, func(tv *TagValue[WireValue]) {
 				if (tv.Tag == WireValueName && len(tv.Value) == 0) ||
 					(tv.Tag == WireValueAuto) {
 					tv.Value = structField.Name
@@ -141,29 +149,20 @@ func AutoWire(self any) error {
 		switch tv.Tag {
 		case WireValueSelf, WireValueAuto, WireValueType, WireValueName:
 			if fieldValue.Kind() == reflect.Ptr || fieldValue.Kind() == reflect.Interface {
-				if fieldValue.IsNil() {
-					switch tv.Tag {
-					case WireValueSelf:
-						return structure.SetField(fieldValue, self)
-					default:
-						if wiredValue, err1 := getByWireTag(tv, structField.Type); err1 == nil {
-							return structure.SetField(fieldValue, wiredValue)
-						} else {
-							return errors.New(fmt.Sprintf("%v on field: %s", err1, structField.Name))
-						}
-					}
+				if !fieldValue.IsNil() {
+					// field is not nil， skip it
+					return nil
 				}
 			} else {
 				return wireError(structField, rootTypes, tv.String())
 			}
-		case WireValueValue:
-			if wiredValue, err1 := getByWireTag(tv, structField.Type); err1 == nil {
-				return structure.SetField(fieldValue, wiredValue)
-			} else {
-				return errors.New(fmt.Sprintf("%v on field: %s. 'name:objName.objFieldName'", err1, structField.Name))
-			}
+		default:
 		}
 
-		return nil
+		if wiredValue, err1 := getValueByWireTag(self, tv, structField.Type); err1 == nil {
+			return structure.SetField(fieldValue, wiredValue)
+		} else {
+			return errors.New(fmt.Sprintf("%v on %s", err1, structure.GetFieldPath(structField, rootTypes)))
+		}
 	})
 }
