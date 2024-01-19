@@ -11,7 +11,6 @@ func init() {
 	RegisterMapper[int, uint](int2uintMapper)
 	RegisterMapper[int, float64](int2floatMapper)
 	RegisterMapper[int, string](int2stringMapper)
-
 }
 
 func int2boolMapper(from reflect.Value, to reflect.Value) error {

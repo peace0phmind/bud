@@ -95,11 +95,14 @@ func MapToValueWithOption(from any, to reflect.Value, option *MapOption) error {
 }
 
 func value2valuePtrWithOption(from reflect.Value, to reflect.Value, option *MapOption) error {
-	toElemType := to.Type().Elem()
+	toElemType := to.Type()
+	if toElemType.Kind() == reflect.Ptr {
+		toElemType = toElemType.Elem()
+	}
 
 	if to.CanSet() {
 		realTo := to
-		if realTo.IsNil() || option.ZeroFields {
+		if to.Type().Kind() == reflect.Ptr && realTo.IsNil() {
 			realTo = reflect.New(toElemType)
 		}
 
@@ -202,7 +205,7 @@ func Value2ValueWithOption(from reflect.Value, to reflect.Value, option *MapOpti
 		return nil
 	}
 
-	if to.Kind() == reflect.Ptr {
+	if to.Kind() == reflect.Ptr || from.Kind() == reflect.Ptr {
 		return value2valuePtrWithOption(from, to, option)
 	}
 

@@ -1,16 +1,16 @@
 # bud: Simplify and Graceful Golang Code
 
-Simplify and Graceful Golang Code. Features include: auto-wiring
+Simplify and Graceful Golang Code. Features include: auto-wiring, stream api, ... more TODO
 
 Feature List
 
-- wire: Runtime Dynamic Auto-Wiring Using Dependency Injection
-- stream: stream api like java to deal with slice
-- default: TODO
-- trace-log: TODO
-- enum: TODO
-- config: TODO
-- util: TODO
+- [x] wire: Runtime Dynamic Auto-Wiring Using Dependency Injection
+- [x] stream: stream api like java to deal with slice
+- [ ] trace-log: TODO
+- [ ] enum: TODO
+- [ ] config: TODO
+- [ ] util: TODO
+- [ ] remote: TODO:
 
 ## wire
 

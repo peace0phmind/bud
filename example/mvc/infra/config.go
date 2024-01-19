@@ -3,7 +3,6 @@ package infra
 import (
 	"errors"
 	"fmt"
-	"github.com/mcuadros/go-defaults"
 	"github.com/peace0phmind/bud/factory"
 	"github.com/peace0phmind/bud/structure"
 	"github.com/sirupsen/logrus"
@@ -16,26 +15,23 @@ import (
 var _config = factory.Singleton[Config]().Getter()
 
 type Config struct {
-	EnvType   string `default:"prod"`
-	MySQLHost string `default:"127.0.0.1"`
-	MySQLPort string `default:"3306"`
-	MySQLUser string `default:"vm"`
-	MySQLPass string `default:"vm123456"`
-	MySQLDb   string `default:"vm"`
+	EnvType   string `value:"prod"`
+	MySQLHost string `value:"127.0.0.1"`
+	MySQLPort string `value:"3306"`
+	MySQLUser string `value:"vm"`
+	MySQLPass string `value:"vm123456"`
+	MySQLDb   string `value:"vm"`
 
-	LogFileDir    string `default:"."`
-	LogFileName   string `default:"mix.log"`
-	LogLevel      string `default:"info"`
-	DBLogLevel    string `default:"info"`
-	JwtSigningKey string `default:"2C9+UxzL7yasmuirhYeZ0WMm093QNwK9gjjrEIyjnSvJ2AwkrDze3Wp0qjzbQJJNJHhc6DppvSMNYd+t6svTcAk9vlHyVh3ccB6z7mYGq+k4yEOxzrz1xBUCX2mCrg3UzhzoFIPXLoA7CaajOIY0gs7k+GcPAABaXe2K5BeFSXw="` // command: openssl rand -base64 128
+	LogFileDir    string `value:"."`
+	LogFileName   string `value:"mix.log"`
+	LogLevel      string `value:"info"`
+	DBLogLevel    string `value:"info"`
+	JwtSigningKey string `value:"2C9+UxzL7yasmuirhYeZ0WMm093QNwK9gjjrEIyjnSvJ2AwkrDze3Wp0qjzbQJJNJHhc6DppvSMNYd+t6svTcAk9vlHyVh3ccB6z7mYGq+k4yEOxzrz1xBUCX2mCrg3UzhzoFIPXLoA7CaajOIY0gs7k+GcPAABaXe2K5BeFSXw="` // command: openssl rand -base64 128
 
 	_dsn string
 }
 
 func (cfg *Config) Init() {
-
-	defaults.SetDefaults(cfg)
-
 	// 下面默认值可以写入配置文件
 	fh := structure.FieldHelper(cfg)
 	for _, fieldName := range []string{"MySQLHost", "MySQLPort", "UseGPU"} {

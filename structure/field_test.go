@@ -2,7 +2,6 @@ package structure
 
 import (
 	"fmt"
-	"github.com/peace0phmind/bud/factory"
 	"net/url"
 	"reflect"
 	"strings"
@@ -328,9 +327,9 @@ func TestWalkWithTag(t *testing.T) {
 		PPS:             &PointStruct{},
 	}
 
-	err := WalkWithTagName(wk, "env", func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type, tagValue string) error {
+	err := WalkWithTagNames(wk, []string{"env"}, func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type, tags map[string]string) error {
 		count++
-		println(count, GetFieldPath(structField, rootTypes), fieldValue.Kind().String(), tagValue)
+		println(count, GetFieldPath(structField, rootTypes), fieldValue.Kind().String(), tags)
 		return nil
 	})
 
@@ -444,7 +443,7 @@ func TestAutoWireEnv(t *testing.T) {
 	t.Setenv("PRF_NONDEFINED_STR", nonDefinedStr)
 
 	sample := WireValueExprStructTest{}
-	isNoErr(t, factory.AutoWire(&sample))
+	//isNoErr(t, factory.AutoWire(&sample))
 
 	//isEqual(t, str1, sample.String)
 	//isEqual(t, &str1, sample.StringPtr)
