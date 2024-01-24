@@ -240,7 +240,7 @@ tag comment 4
        int comment 2
     */
 	int=123
-    double=456.7
+    double = 456.7  // double inline comment
     bool = true) {
 	// comment 1
     // comment 2
@@ -302,8 +302,9 @@ tag comment 4
 								Value: toPtr(any(Int{Value: 123}).(Value)),
 							},
 							{
-								Key:   Key{Text: "double"},
-								Value: toPtr(any(Float{Value: 456.7}).(Value)),
+								Key:     Key{Text: "double"},
+								Value:   toPtr(any(Float{Value: 456.7}).(Value)),
+								Comment: &Comment{Text: "// double inline comment"},
 							},
 							{
 								Key:   Key{Text: "bool"},
