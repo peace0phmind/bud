@@ -3,11 +3,13 @@ module github.com/peace0phmind/bud
 go 1.20
 
 require (
+	github.com/alecthomas/participle/v2 v2.1.1
 	github.com/expr-lang/expr v1.15.8
 	github.com/go-playground/validator/v10 v10.16.0
 	github.com/gofiber/fiber/v2 v2.52.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/golang-migrate/migrate/v4 v4.17.0
+	github.com/google/go-cmp v0.5.9
 	github.com/google/uuid v1.5.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.18.2
