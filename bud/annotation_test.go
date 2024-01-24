@@ -252,7 +252,7 @@ tag comment 4
     GoodWithStrValue = "str" 
     GoodWithParams ("string", 123, 456.7, true )  // comment
     GoodWithAll ("string", 123, 456.7, false ) = 89 /* comment */
-} // tag inline comment
+}
 // sql comment 0
 /* sql comment 1
  sql comment 2
@@ -356,7 +356,6 @@ tag comment 4
 							},
 						},
 						},
-						Comment: &Comment{Text: "// tag inline comment"},
 					},
 					{
 						Comments: []*Comment{

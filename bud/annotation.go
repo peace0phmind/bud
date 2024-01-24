@@ -39,26 +39,24 @@ type AnnotationGroup struct {
 	Annotations []*Annotation `@@*`
 }
 
-type RightParenthesis struct {
-	Pos              lexer.Position
-	RightParenthesis string `")"`
+type ClosedParenthesis struct {
+	Pos               lexer.Position
+	ClosedParenthesis string `")"`
 }
 
 type Params struct {
-	LeftParenthesis  string             `"("`
-	List             []*AnnotationParam `@@*`
-	RightParenthesis RightParenthesis   `@@`
+	List              []*AnnotationParam `"(" @@*`
+	ClosedParenthesis ClosedParenthesis  `@@`
 }
 
-type RightBrace struct {
-	Pos        lexer.Position
-	RightBrace string `"}"`
+type ClosedBracket struct {
+	Pos           lexer.Position
+	ClosedBracket string `"}"`
 }
 
 type Extends struct {
-	LeftBrace  string              `"{"`
-	List       []*AnnotationExtend `@@*`
-	RightBrace RightBrace          `@@`
+	List          []*AnnotationExtend `"{" @@*`
+	ClosedBracket ClosedBracket       `@@`
 }
 
 type Annotation struct {
@@ -119,17 +117,17 @@ type Bool struct {
 
 func (f Bool) value() {}
 
-type Unknown struct {
-	Value string `@Ident ","? `
-}
-
-func (u Unknown) value() {}
+//type Unknown struct {
+//	Value string `@Ident ","? `
+//}
+//
+//func (u Unknown) value() {}
 
 var annotationParser = participle.MustBuild[AnnotationGroup](
 	participle.Lexer(lexer.NewTextScannerLexer(func(s *scanner.Scanner) {
 		s.Mode &^= scanner.SkipComments
 	})),
-	participle.Union[Value](Bool{}, Float{}, Int{}, String{}, Unknown{}),
+	participle.Union[Value](Bool{}, Float{}, Int{}, String{}),
 	participle.Unquote("String"),
 )
 
@@ -163,8 +161,8 @@ func fixComments(annotationGroup *AnnotationGroup, err error) (*AnnotationGroup,
 
 		if annotation.Comment != nil &&
 			!(annotation.Comment.Pos.Line == annotation.Name.Pos.Line ||
-				(annotation.Params != nil && annotation.Params.RightParenthesis.Pos.Line == annotation.Comment.Pos.Line) ||
-				(annotation.Extends != nil && annotation.Extends.RightBrace.Pos.Line == annotation.Comment.Pos.Line)) &&
+				(annotation.Params != nil && annotation.Params.ClosedParenthesis.Pos.Line == annotation.Comment.Pos.Line) ||
+				(annotation.Extends != nil && annotation.Extends.ClosedBracket.Pos.Line == annotation.Comment.Pos.Line)) &&
 			ai+1 < len(annotationGroup.Annotations) {
 			annotationGroup.Annotations[ai+1].Comments = append([]*Comment{annotation.Comment}, annotationGroup.Annotations[ai+1].Comments...)
 			annotation.Comment = nil
