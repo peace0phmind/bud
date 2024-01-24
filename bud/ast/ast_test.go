@@ -1,4 +1,4 @@
-package bud
+package ast
 
 import (
 	"fmt"
@@ -23,10 +23,6 @@ func (abc *Abc) Init(
 ) {
 }
 
-func TestName(t *testing.T) {
-	GenerateFromFile("./annotation.go")
-}
-
 func TestAAA(t *testing.T) {
 	const src = `package main
 
@@ -45,7 +41,7 @@ func ExampleFunction(
 
 	// 解析源码以获得AST
 	file, err := parser.ParseFile(fset, "", src, parser.ParseComments)
-	//file, err := parser.ParseFile(fset, "./annotation.go", nil, parser.ParseComments)
+	//file, err := ast.ParseFile(fset, "./annotation.go", nil, ast.ParseComments)
 	if err != nil {
 		panic(err)
 	}
@@ -60,24 +56,12 @@ func ExampleFunction(
 					// 找到Param2参数
 					if name.Name == "Param2" {
 						// 获取Param2参数的位置
-						paramPos := fset.Position(field.Pos())
-
-						// 遍历文件中的所有注释
-						for _, commentGroup := range file.Comments {
-							commentGroupPos := fset.Position(commentGroup.End())
-							fmt.Printf("commentGroupPos: %#+v \n", commentGroupPos)
-							for _, comment := range commentGroup.List {
-								// 获取注释的位置
-								commentPos := fset.Position(comment.Slash)
-								fmt.Printf("commentPos: %#+v \n", commentPos)
-								fmt.Printf("paramPos: %#+v \n", paramPos)
-
-								// 如果注释在Param2参数之前，且在同一行或紧接在前一行
-								if (commentPos.Line == paramPos.Line && paramPos.Offset < commentPos.Offset) ||
-									(commentPos.Offset < paramPos.Offset && commentPos.Line+1 == paramPos.Line) {
-									fmt.Println(strings.TrimSpace(comment.Text))
-								}
-							}
+						doc, comment := FindCommentGroup(file, fset, field.Pos())
+						if doc != nil {
+							fmt.Println(strings.TrimSpace(doc.Text()))
+						}
+						if comment != nil {
+							fmt.Println(strings.TrimSpace(comment.Text()))
 						}
 					}
 				}

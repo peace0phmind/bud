@@ -1,24 +1,10 @@
-package bud
+package ast
 
 import (
 	"github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/participle/v2/lexer"
 	"text/scanner"
 )
-
-//go:generate go-enum --marshal --values --nocomments --nocase
-
-// AnnotationType
-// ENUM
-//
-//	enum="@Enum"
-//	singleton = "@Singleton"
-//
-// )
-
-type AnnotationType string
-
-const AnnotationEnum AnnotationType = "@enum"
 
 type Key struct {
 	Pos  lexer.Position
@@ -60,11 +46,13 @@ type Extends struct {
 }
 
 type Annotation struct {
-	Comments []*Comment `@@*`
-	Name     Name       `"@" @@`
-	Params   *Params    `@@?`
-	Extends  *Extends   `@@?`
-	Comment  *Comment   `@@?`
+	BeforeUseless *string    `(~(Comment | "@"))*`
+	Comments      []*Comment `@@*`
+	Name          Name       `"@" @@`
+	Params        *Params    `@@?`
+	Extends       *Extends   `@@?`
+	Comment       *Comment   `@@?`
+	AfterUseless  *string    `(~(Comment | "@"))*`
 }
 
 type AnnotationParam struct {

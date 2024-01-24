@@ -1,4 +1,4 @@
-package bud
+package ast
 
 import (
 	"github.com/google/go-cmp/cmp"
@@ -61,6 +61,65 @@ func TestParseAnnotation(t *testing.T) {
 						Name: Name{Text: "tag"},
 					},
 					{
+						Name: Name{Text: "sql"},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name:     "two annotation name with real comments",
+			fileName: "file.go",
+			text: `
+
+some real comment 1
+some real comment 2
+
+// tag comment 1
+/* tag comment 2
+   tag comment 3
+   tag comment 4
+*/
+@tag // tag inline comment
+some real sql comment 0
+some real sql comment 1
+some real sql comment 2
+
+/* sql comment 1
+sql comment2
+*/
+// sql comment 3
+@sql
+some real sql comment
+`,
+			want: &AnnotationGroup{
+				Annotations: []*Annotation{
+					{
+						Comments: []*Comment{
+							{
+								Text: "// tag comment 1",
+							},
+							{
+								Text: `/* tag comment 2
+   tag comment 3
+   tag comment 4
+*/`,
+							},
+						},
+						Name:    Name{Text: "tag"},
+						Comment: &Comment{Text: "// tag inline comment"},
+					},
+					{
+						Comments: []*Comment{
+							{
+								Text: `/* sql comment 1
+sql comment2
+*/`,
+							},
+							{
+								Text: "// sql comment 3",
+							},
+						},
 						Name: Name{Text: "sql"},
 					},
 				},
