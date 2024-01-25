@@ -49,12 +49,6 @@ func TestNewWithOption(t *testing.T) {
 		expectError   bool
 	}{
 		{
-			name:          "OptionWithNoSettings",
-			option:        NewOption().AutoWire(true),
-			expectedPanic: "init called",
-			expectError:   true,
-		},
-		{
 			name:          "OptionWithInitMethod",
 			option:        NewOption().UseConstructor(true),
 			expectedPanic: "constructor called",

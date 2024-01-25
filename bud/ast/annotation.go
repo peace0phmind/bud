@@ -3,6 +3,10 @@ package ast
 import (
 	"github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/participle/v2/lexer"
+	"github.com/peace0phmind/bud/factory"
+	"github.com/peace0phmind/bud/structure"
+	"reflect"
+	"strings"
 	"text/scanner"
 )
 
@@ -72,25 +76,29 @@ type AnnotationExtend struct {
 	Comment  *Comment   `@@?`
 }
 
-type Value interface{ value() }
+type Value interface{ value() any }
 
 type Float struct {
 	Value float64 `@Float ","? `
 }
 
-func (f Float) value() {}
+func (f Float) value() any { return f.Value }
 
 type Int struct {
 	Value int `@Int ","? `
 }
 
-func (f Int) value() {}
+func (i Int) value() any {
+	return i.Value
+}
 
 type String struct {
 	Value string `@(String | Ident) ","? `
 }
 
-func (f String) value() {}
+func (s String) value() any {
+	return s.Value
+}
 
 type Boolean bool
 
@@ -103,7 +111,9 @@ type Bool struct {
 	Value Boolean `@("true" | "false") ","? `
 }
 
-func (f Bool) value() {}
+func (b Bool) value() any {
+	return bool(b.Value)
+}
 
 //type Unknown struct {
 //	Value string `@Ident ","? `
@@ -158,6 +168,47 @@ func fixComments(annotationGroup *AnnotationGroup, err error) (*AnnotationGroup,
 	}
 
 	return annotationGroup, err
+}
+
+var defaultBoolValue = any(Bool{Value: true}).(Value)
+
+func AnnotationParamsTo[T any](a *Annotation) (t *T, err error) {
+
+	t = factory.New[T]()
+
+	if a.Params != nil {
+		err = structure.WalkField(t, func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type) error {
+			switch fieldValue.Kind() {
+			case reflect.Ptr, reflect.Struct:
+				return nil
+			}
+
+			var ap *AnnotationParam = nil
+
+			for _, p := range a.Params.List {
+				if strings.EqualFold(structField.Name, p.Key.Text) {
+					ap = p
+					break
+				}
+			}
+
+			if ap == nil {
+				return nil
+			}
+
+			if fieldValue.Kind() == reflect.Bool && ap.Value == nil {
+				ap.Value = &defaultBoolValue
+			}
+
+			if ap.Value != nil {
+				return structure.MapToValue((*ap.Value).value(), fieldValue)
+			}
+
+			return nil
+		})
+	}
+
+	return
 }
 
 func ParseAnnotation(fileName string, text string) (*AnnotationGroup, error) {

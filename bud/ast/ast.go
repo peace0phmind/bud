@@ -5,69 +5,126 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"log"
 )
 
 func ParseFromFile(inputFile string) ([]byte, error) {
 	fileSet := token.NewFileSet()
-	f, err := parser.ParseFile(fileSet, inputFile, nil, parser.ParseComments)
+	_, err := parser.ParseFile(fileSet, inputFile, nil, parser.ParseComments)
 	if err != nil {
 		return nil, fmt.Errorf("generate: error parsing input file '%s': %s", inputFile, err)
 	}
 
-	InspectAnnotation(f, fileSet)
-
 	return nil, nil
 }
 
-func InspectAnnotation(fileNode *ast.File, fileSet *token.FileSet) map[string]*ast.TypeSpec {
-	annotations := make(map[string]*ast.TypeSpec)
-	// Inspect the AST and find all structs.
-	ast.Inspect(fileNode, func(n ast.Node) bool {
-		//fmt.Printf("Node: %#v\n", n)
-		switch x := n.(type) {
-		case *ast.GenDecl:
-		case *ast.FuncDecl:
-		case *ast.Ident:
-			if x.Obj != nil {
-				if x.Obj.Kind == ast.Typ {
-					if ts, ok := x.Obj.Decl.(*ast.TypeSpec); ok {
-						if ts.Doc == nil || ts.Comment == nil {
+func GetRecvType(fd *ast.FuncDecl) *ast.TypeSpec {
+	if fd.Recv != nil {
+		if fd.Recv.NumFields() == 1 {
+			var recvTypeIdent *ast.Ident
+			switch tt := fd.Recv.List[0].Type.(type) {
+			case *ast.Ident:
+				recvTypeIdent = tt
 
+			case *ast.StarExpr:
+				if itt, ok := tt.X.(*ast.Ident); ok {
+					recvTypeIdent = itt
+				}
+			}
+
+			if recvTypeIdent != nil && recvTypeIdent.Obj != nil {
+				if recvType, ok := recvTypeIdent.Obj.Decl.(*ast.TypeSpec); ok {
+					return recvType
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func InspectMapper[From any, To any](fileNode *ast.File, fileSet *token.FileSet, mapper func(*From) *To) []*To {
+	result := []*To{}
+
+	ast.Inspect(fileNode, func(n ast.Node) bool {
+		switch x := n.(type) {
+		case *ast.TypeSpec:
+			if ts, ok := any(x).(*From); ok {
+				if x.Doc == nil {
+					x.Doc = FindDocLocationCommentGroup(fileNode, fileSet, x.Pos())
+				}
+
+				if x.Comment == nil {
+					x.Comment = FindCommentLocationCommentGroup(fileNode, fileSet, x.Pos())
+				}
+
+				if t := mapper(ts); t != nil {
+					result = append(result, t)
+				}
+			}
+		case *ast.FuncDecl:
+			if fd, ok := any(x).(*From); ok {
+				if x.Doc == nil {
+					x.Doc = FindDocLocationCommentGroup(fileNode, fileSet, x.Pos())
+				}
+
+				if x.Recv != nil {
+					recvType := GetRecvType(x)
+					if recvType != nil {
+						if recvType.Doc == nil {
+							recvType.Doc = FindDocLocationCommentGroup(fileNode, fileSet, recvType.Pos())
+						}
+
+						if recvType.Comment == nil {
+							recvType.Comment = FindCommentLocationCommentGroup(fileNode, fileSet, recvType.Pos())
 						}
 					}
 				}
-			}
-		case *ast.Field:
-			if len(x.Names) > 0 && x.Names[0].Name == "b" {
-				if x.Doc != nil {
-					comment := x.Doc.Text()
-					log.Printf("Found comment for Param2: %s", comment)
+
+				for _, field := range x.Type.Params.List {
+					if field.Doc == nil {
+						field.Doc = FindDocLocationCommentGroup(fileNode, fileSet, field.Pos())
+					}
+					if field.Comment == nil {
+						field.Comment = FindCommentLocationCommentGroup(fileNode, fileSet, field.Pos())
+					}
+				}
+
+				if t := mapper(fd); t != nil {
+					result = append(result, t)
 				}
 			}
 		}
 
-		//Return true to continue through the tree
 		return true
 	})
 
-	return annotations
+	return result
 }
 
-func FindCommentGroup(fileNode *ast.File, fileSet *token.FileSet, pos token.Pos) (doc, comment *ast.CommentGroup) {
+func FindDocLocationCommentGroup(fileNode *ast.File, fileSet *token.FileSet, pos token.Pos) *ast.CommentGroup {
+	indentPos := fileSet.Position(pos)
+
+	for _, commentGroup := range fileNode.Comments {
+		commentGroupPos := fileSet.Position(commentGroup.End())
+
+		if commentGroupPos.Line+1 == indentPos.Line && commentGroupPos.Offset < indentPos.Offset {
+			return commentGroup
+		}
+	}
+
+	return nil
+}
+
+func FindCommentLocationCommentGroup(fileNode *ast.File, fileSet *token.FileSet, pos token.Pos) *ast.CommentGroup {
 	indentPos := fileSet.Position(pos)
 
 	for _, commentGroup := range fileNode.Comments {
 		commentGroupPos := fileSet.Position(commentGroup.End())
 
 		if commentGroupPos.Line == indentPos.Line && indentPos.Offset < commentGroupPos.Offset {
-			comment = commentGroup
-		}
-
-		if commentGroupPos.Line+1 == indentPos.Line && commentGroupPos.Offset < indentPos.Offset {
-			doc = commentGroup
+			return commentGroup
 		}
 	}
 
-	return
+	return nil
 }

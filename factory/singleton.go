@@ -20,9 +20,7 @@ type singleton[T any] struct {
 
 func _singleton[T any]() *singleton[T] {
 	result := &singleton[T]{
-		option: Option{
-			doAutoWire: true,
-		},
+		option: Option{},
 	}
 
 	result._type = reflect.TypeOf((*T)(nil))
@@ -75,7 +73,6 @@ func (s *singleton[T]) WithOption(option *Option) *singleton[T] {
 		s.option.lock.Lock()
 		defer s.option.lock.Unlock()
 
-		s.option.doAutoWire = option.doAutoWire
 		s.option.useConstructor = option.useConstructor
 		s.option.initMethodName = option.initMethodName
 		s.option.initParams = option.initParams
@@ -89,11 +86,6 @@ func (s *singleton[T]) SetInitFunc(initFunc func() *T) *singleton[T] {
 	defer s.lock.Unlock()
 
 	s.initFunc = initFunc
-	return s
-}
-
-func (s *singleton[T]) AutoWire(autoWire bool) *singleton[T] {
-	s.option.AutoWire(autoWire)
 	return s
 }
 
