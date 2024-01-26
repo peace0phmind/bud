@@ -2,8 +2,8 @@ package enum
 
 // Animal x @ENUM(Name string){
 // Cat(_),
-// Dog(_),
-// Fish(_)
+// Dog(Dog),
+// Fish("Fish")
 // FishPlusPlus("Fish++")
 // FishSharp("Fish#")
 // }.

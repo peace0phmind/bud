@@ -13,12 +13,16 @@ import (
 	"reflect"
 )
 
+const (
+	BlankIdentifier = "_"
+)
+
 type EnumConfig struct {
 	NoPrefix    bool   `value:"false"` // 所有生成的枚举不携带类型名称前缀
 	Marshal     bool   `value:"true"`
 	MarshalName string `value:"Name"`
 	Sql         bool   `value:"false"`
-	SqlName     string `value:"value"`
+	SqlName     string `value:"Value"`
 	Names       bool   `value:"false"` // enum name list
 	Values      bool   `value:"true"`  // enum item list
 	NoCase      bool   `value:"true"`  // case insensitivity
@@ -138,9 +142,22 @@ func (e *Enum) CheckValid() error {
 		for _, ei := range e.Items {
 			ei.ExtendData = append([]any{ei.Name}, ei.ExtendData...)
 		}
+	} else {
+		for _, ei := range e.Items {
+			if isBlankIdentifier(ei.ExtendData[idx]) {
+				ei.ExtendData[idx] = ei.Name
+			}
+		}
 	}
 
 	return nil
+}
+
+func isBlankIdentifier(value any) bool {
+	if bi, ok := value.(string); ok {
+		return bi == BlankIdentifier
+	}
+	return false
 }
 
 func (e *Enum) FindExtendByName(name string) (idx int, extend *EnumExtend) {
