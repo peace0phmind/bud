@@ -4,6 +4,7 @@ import (
 	"github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/participle/v2/lexer"
 	"github.com/peace0phmind/bud/factory"
+	"github.com/peace0phmind/bud/stream"
 	"github.com/peace0phmind/bud/structure"
 	"reflect"
 	"strings"
@@ -63,7 +64,7 @@ type AnnotationParam struct {
 	Pos      lexer.Position
 	Comments []*Comment `@@*`
 	Key      Key        `@@`
-	Value    *Value     `@@? ","?`
+	Value    Value      `@@? ","?`
 	Comment  *Comment   `@@?`
 }
 
@@ -72,32 +73,32 @@ type AnnotationExtend struct {
 	Comments []*Comment `@@*`
 	Name     Name       `@@`
 	Values   []Value    `("(" @@* ")")?`
-	Value    *Value     `("=" @@)?`
+	Value    Value      `("=" @@)?`
 	Comment  *Comment   `@@?`
 }
 
-type Value interface{ value() any }
+type Value interface{ Value() any }
 
 type Float struct {
-	Value float64 `@Float ","? `
+	V float64 `@Float ","? `
 }
 
-func (f Float) value() any { return f.Value }
+func (f Float) Value() any { return f.V }
 
 type Int struct {
-	Value int `@Int ","? `
+	V int `@Int ","? `
 }
 
-func (i Int) value() any {
-	return i.Value
+func (i Int) Value() any {
+	return i.V
 }
 
 type String struct {
-	Value string `@(String | Ident) ","? `
+	V string `@(String | Ident) ","? `
 }
 
-func (s String) value() any {
-	return s.Value
+func (s String) Value() any {
+	return s.V
 }
 
 type Boolean bool
@@ -108,18 +109,18 @@ func (b *Boolean) Capture(values []string) error {
 }
 
 type Bool struct {
-	Value Boolean `@("true" | "false") ","? `
+	V Boolean `@("true" | "false") ","? `
 }
 
-func (b Bool) value() any {
-	return bool(b.Value)
+func (b Bool) Value() any {
+	return bool(b.V)
 }
 
 //type Unknown struct {
-//	Value string `@Ident ","? `
+//	V string `@Ident ","? `
 //}
 //
-//func (u Unknown) value() {}
+//func (u Unknown) Value() {}
 
 var annotationParser = participle.MustBuild[AnnotationGroup](
 	participle.Lexer(lexer.NewTextScannerLexer(func(s *scanner.Scanner) {
@@ -170,7 +171,7 @@ func fixComments(annotationGroup *AnnotationGroup, err error) (*AnnotationGroup,
 	return annotationGroup, err
 }
 
-var defaultBoolValue = any(Bool{Value: true}).(Value)
+var defaultBoolValue = any(Bool{V: true}).(Value)
 
 func AnnotationParamsTo[T any](a *Annotation) (t *T, err error) {
 
@@ -197,11 +198,11 @@ func AnnotationParamsTo[T any](a *Annotation) (t *T, err error) {
 			}
 
 			if fieldValue.Kind() == reflect.Bool && ap.Value == nil {
-				ap.Value = &defaultBoolValue
+				ap.Value = defaultBoolValue
 			}
 
 			if ap.Value != nil {
-				return structure.MapToValue((*ap.Value).value(), fieldValue)
+				return structure.MapToValue(ap.Value.Value(), fieldValue)
 			}
 
 			return nil
@@ -213,4 +214,33 @@ func AnnotationParamsTo[T any](a *Annotation) (t *T, err error) {
 
 func ParseAnnotation(fileName string, text string) (*AnnotationGroup, error) {
 	return fixComments(annotationParser.ParseString(fileName, text))
+}
+
+func GetCommentsText(comments []*Comment) string {
+	if len(comments) == 0 {
+		return ""
+	}
+
+	return strings.Join(stream.Map[*Comment, string](stream.Of(comments), func(comment *Comment) (string, error) {
+		return comment.Text, nil
+	}).MustToSlice(), "\n")
+}
+
+func GetCommentText(comment *Comment) string {
+	if comment == nil {
+		return ""
+	}
+	return comment.Text
+}
+
+func (ag *AnnotationGroup) FindAnnotationByName(name string) *Annotation {
+	if len(ag.Annotations) > 0 {
+		for _, a := range ag.Annotations {
+			if strings.EqualFold(a.Name.Text, name) {
+				return a
+			}
+		}
+	}
+
+	return nil
 }

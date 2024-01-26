@@ -801,7 +801,7 @@ func GroupBy[T any, K comparable](s Stream[T], getKey func(T) K) map[K]Stream[T]
 // If the input stream has an error, it is returned as it is.
 // The resulting map is returned along with a potential error.
 // If the map function returns an error, the conversion stops and the error is returned immediately.
-// The keys and values in the map are of types Key and Value, respectively.
+// The keys and values in the map are of types Key and value, respectively.
 func ToMap[In any, Key comparable, Value any](in Stream[In], mapFunc func(In) (Key, Value, error)) (map[Key]Value, error) {
 	if in.err != nil {
 		return nil, in.err

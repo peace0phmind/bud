@@ -97,7 +97,7 @@ func TestUint2uintMapper(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			// Create reflect.Value items
+			// Create reflect.value items
 			fromVal := reflect.ValueOf(tc.from)
 			toVal := reflect.ValueOf(&tc.to).Elem()
 

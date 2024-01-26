@@ -7,14 +7,14 @@ import (
 	"go/token"
 )
 
-func ParseFromFile(inputFile string) ([]byte, error) {
+func ParseFile(inputFile string) (*ast.File, *token.FileSet, error) {
 	fileSet := token.NewFileSet()
-	_, err := parser.ParseFile(fileSet, inputFile, nil, parser.ParseComments)
+	fileNode, err := parser.ParseFile(fileSet, inputFile, nil, parser.ParseComments)
 	if err != nil {
-		return nil, fmt.Errorf("generate: error parsing input file '%s': %s", inputFile, err)
+		return nil, nil, fmt.Errorf("generate: error parsing input file '%s': %s", inputFile, err)
 	}
 
-	return nil, nil
+	return fileNode, fileSet, nil
 }
 
 func GetRecvType(fd *ast.FuncDecl) *ast.TypeSpec {
@@ -46,15 +46,15 @@ func InspectMapper[From any, To any](fileNode *ast.File, fileSet *token.FileSet,
 	result := []*To{}
 
 	ast.Inspect(fileNode, func(n ast.Node) bool {
-		switch x := n.(type) {
+		switch decl := n.(type) {
 		case *ast.TypeSpec:
-			if ts, ok := any(x).(*From); ok {
-				if x.Doc == nil {
-					x.Doc = FindDocLocationCommentGroup(fileNode, fileSet, x.Pos())
+			if ts, ok := any(decl).(*From); ok {
+				if decl.Doc == nil {
+					decl.Doc = FindDocLocationCommentGroup(fileNode, fileSet, decl.Pos())
 				}
 
-				if x.Comment == nil {
-					x.Comment = FindCommentLocationCommentGroup(fileNode, fileSet, x.Pos())
+				if decl.Comment == nil {
+					decl.Comment = FindCommentLocationCommentGroup(fileNode, fileSet, decl.Pos())
 				}
 
 				if t := mapper(ts); t != nil {
@@ -62,13 +62,13 @@ func InspectMapper[From any, To any](fileNode *ast.File, fileSet *token.FileSet,
 				}
 			}
 		case *ast.FuncDecl:
-			if fd, ok := any(x).(*From); ok {
-				if x.Doc == nil {
-					x.Doc = FindDocLocationCommentGroup(fileNode, fileSet, x.Pos())
+			if fd, ok := any(decl).(*From); ok {
+				if decl.Doc == nil {
+					decl.Doc = FindDocLocationCommentGroup(fileNode, fileSet, decl.Pos())
 				}
 
-				if x.Recv != nil {
-					recvType := GetRecvType(x)
+				if decl.Recv != nil {
+					recvType := GetRecvType(decl)
 					if recvType != nil {
 						if recvType.Doc == nil {
 							recvType.Doc = FindDocLocationCommentGroup(fileNode, fileSet, recvType.Pos())
@@ -80,7 +80,7 @@ func InspectMapper[From any, To any](fileNode *ast.File, fileSet *token.FileSet,
 					}
 				}
 
-				for _, field := range x.Type.Params.List {
+				for _, field := range decl.Type.Params.List {
 					if field.Doc == nil {
 						field.Doc = FindDocLocationCommentGroup(fileNode, fileSet, field.Pos())
 					}

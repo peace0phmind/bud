@@ -19,6 +19,6 @@ func int64value2intMapper(from reflect.Value, to reflect.Value) error {
 }
 
 func int2int64valueMapper(from reflect.Value, to reflect.Value) error {
-	to.FieldByName("Value").SetInt(from.Int())
+	to.FieldByName("value").SetInt(from.Int())
 	return nil
 }

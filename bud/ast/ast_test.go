@@ -80,13 +80,13 @@ type MyInitTest struct {
 } // struct inline comment
 
 func (m *MyInitTest) Init(
-    abc int, // @Value("123")
-    ddd string, // @Value(abc)
+    abc int, // @V("123")
+    ddd string, // @V(abc)
 ) {
 }
 
 func (m MyInitTest) Init1(
-    abc int, // @Value("123")
+    abc int, // @V("123")
 ) {
 }
 
