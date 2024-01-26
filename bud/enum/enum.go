@@ -1,12 +1,14 @@
 package enum
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/peace0phmind/bud/bud/ast"
 	"github.com/peace0phmind/bud/factory"
 	"github.com/peace0phmind/bud/stream"
 	"github.com/peace0phmind/bud/structure"
+	"github.com/peace0phmind/bud/util"
 	goast "go/ast"
 	"reflect"
 )
@@ -27,27 +29,14 @@ type Enum struct {
 	Name    string
 	Type    reflect.Kind
 	Comment string
-	Extends []EnumExtend
-	Items   []EnumItem
+	Extends []*EnumExtend
+	Items   []*EnumItem
 	Config  *EnumConfig
-}
-
-type EnumExtend struct {
-	Name    string
-	Type    reflect.Kind
-	Comment string
-}
-
-type EnumItem struct {
-	Name       string
-	Value      any
-	Comment    string
-	ExtendData []any
 }
 
 func (e *Enum) UpdateExtends(a *ast.Annotation) error {
 	if a.Params != nil && len(a.Params.List) > 0 {
-		for _, p := range a.Params.List {
+		for idx, p := range a.Params.List {
 			if p.Value == nil {
 				return errors.New(fmt.Sprintf("Enum %s's extend field %s's type is empty", e.Name, p.Key.Text))
 			}
@@ -55,7 +44,7 @@ func (e *Enum) UpdateExtends(a *ast.Annotation) error {
 			if err != nil {
 				return errors.New(fmt.Sprintf("Enum %s's extend field %s's type parse error: %v", e.Name, p.Key.Text, err))
 			}
-			t, err := getKindByName(typeName)
+			t, err := getEnumExtendKindByName(typeName)
 			if err != nil {
 				return errors.New(fmt.Sprintf("enum type err: %v", err))
 			}
@@ -65,8 +54,10 @@ func (e *Enum) UpdateExtends(a *ast.Annotation) error {
 				comment = ast.GetCommentText(p.Comment)
 			}
 
-			e.Extends = append(e.Extends, EnumExtend{
-				Name:    p.Key.Text,
+			e.Extends = append(e.Extends, &EnumExtend{
+				enum:    e,
+				idx:     idx,
+				Name:    util.Capitalize(p.Key.Text),
 				Type:    t,
 				Comment: comment,
 			})
@@ -78,7 +69,7 @@ func (e *Enum) UpdateExtends(a *ast.Annotation) error {
 
 func (e *Enum) UpdateEnumItem(a *ast.Annotation) error {
 	if a.Extends != nil && len(a.Extends.List) > 0 {
-		for _, ex := range a.Extends.List {
+		for idx, ex := range a.Extends.List {
 			if len(e.Extends) != len(ex.Values) {
 				return errors.New("enum data number not equals with extend type")
 			}
@@ -92,7 +83,9 @@ func (e *Enum) UpdateEnumItem(a *ast.Annotation) error {
 				comment = ast.GetCommentText(ex.Comment)
 			}
 
-			ei := EnumItem{
+			ei := &EnumItem{
+				enum:    e,
+				idx:     idx,
 				Name:    ex.Name.Text,
 				Value:   value,
 				Comment: comment,
@@ -111,8 +104,71 @@ func (e *Enum) UpdateEnumItem(a *ast.Annotation) error {
 }
 
 func (e *Enum) CheckValid() error {
+	// check e.Extend exist name equals "Name" and type is string
+	for _, ex := range e.Extends {
+		if ex.Name == EnumItemName && ex.Type != reflect.String {
+			return errors.New("enum extend field 'Name' must have type string")
+		}
+	}
+
+	// check e.Extend name is unique
+	extendNames := make(map[string]bool)
+	for _, ex := range e.Extends {
+		if extendNames[ex.Name] {
+			return fmt.Errorf("enum extend field names must be unique, %s", ex.Name)
+		}
+		extendNames[ex.Name] = true
+	}
+
+	// if e.Extend is empty or e.Extend havn't a EnumItemName item, then use item's name to create it
+	if idx, _ := e.FindExtendByName(EnumItemName); idx == -1 {
+		for _, ee := range e.Extends {
+			ee.idx += 1
+		}
+
+		ee := &EnumExtend{
+			enum:    e,
+			idx:     0,
+			Name:    EnumItemName,
+			Type:    reflect.String,
+			Comment: "",
+		}
+		e.Extends = append([]*EnumExtend{ee}, e.Extends...)
+
+		for _, ei := range e.Items {
+			ei.ExtendData = append([]any{ei.Name}, ei.ExtendData...)
+		}
+	}
 
 	return nil
+}
+
+func (e *Enum) FindExtendByName(name string) (idx int, extend *EnumExtend) {
+	if len(e.Extends) > 0 {
+		for eei, ee := range e.Extends {
+			if ee.Name == name {
+				return eei, ee
+			}
+		}
+	}
+
+	return -1, nil
+}
+
+func (e *Enum) GetNameMap() string {
+	buf := bytes.NewBuffer([]byte{})
+
+	buf.WriteString(fmt.Sprintf("var _%sNameMap = map[string]%s{\n", e.Name, e.Name))
+	index := 0
+	for _, item := range e.Items {
+		nextIndex := index + len(item.GetName())
+		buf.WriteString(fmt.Sprintf("	_%sName[%d:%d]: %s,\n", e.Name, index, nextIndex, item.GetCodeName()))
+		index = nextIndex
+	}
+
+	buf.WriteString("}\n")
+
+	return buf.String()
 }
 
 func annotationGroupToEnum(ag *ast.AnnotationGroup, ts *goast.TypeSpec) (*Enum, error) {
@@ -138,7 +194,7 @@ func annotationGroupToEnum(ag *ast.AnnotationGroup, ts *goast.TypeSpec) (*Enum, 
 		Config: ec,
 	}
 
-	t, err := getKindByName(fmt.Sprintf("%s", ts.Type))
+	t, err := getEnumKindByName(fmt.Sprintf("%s", ts.Type))
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("enum type err: %v", err))
 	}

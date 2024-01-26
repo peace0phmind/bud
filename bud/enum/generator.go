@@ -32,7 +32,7 @@ func newEnumGenerator(allEnums []*Enum) *EnumGenerator {
 }
 
 func (eg *EnumGenerator) GetImports() []string {
-	return []string{"fmt"}
+	return []string{"errors", "fmt"}
 }
 
 func NewGenerator(fileNode *goast.File, fileSet *token.FileSet) (ast.Generator, error) {

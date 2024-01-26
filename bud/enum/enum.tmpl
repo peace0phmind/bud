@@ -1,8 +1,47 @@
 {{- define "const"}}
-{{- $enumName := .Name -}}
-{{- $enumType := .Type.String -}}
-{{- $config := .Config -}}
-
-hello = 1
-
+const (
+{{- range $ei, $item := .Items }}
+    {{$item.GetConstLine}}
+{{- end}}
+)
 {{end -}}
+
+{{- define "body"}}
+{{- $enumName := .Name -}}
+
+var ErrInvalid{{$enumName}} = errors.New("not a valid {{$enumName}} enum")
+
+var _{{$enumName}}Name = "{{- range $ei, $item := .Items -}}{{$item.GetName}}{{- end -}}"
+
+{{ range $ei, $extend := .Extends -}}
+{{$extend.GetExtendValueMap}}
+func (x {{$enumName}}) {{$extend.Name}}() {{$extend.Type.String}} {
+    if result, ok := _{{$enumName}}Map{{$extend.Name}}[x]; ok {
+        return result
+    }
+    panic(ErrInvalid{{$enumName}})
+}
+{{- end}}
+
+func (x {{$enumName}}) String() string {
+	if str, ok := _{{$enumName}}MapName[x]; ok {
+		return str
+	}
+	return fmt.Sprintf("{{$enumName}}(%d)", x)
+}
+
+func (x {{$enumName}}) IsValid() bool {
+	_, ok := _{{$enumName}}MapName[x]
+	return ok
+}
+
+{{.GetNameMap}}
+
+func Parse{{$enumName}}(name string) ({{$enumName}}, error) {
+	if x, ok := _{{$enumName}}NameMap[name]; ok {
+		return x, nil
+	}
+	return {{$enumName}}(0), fmt.Errorf("%s is %w", name, ErrInvalid{{$enumName}})
+}
+{{end -}}
+

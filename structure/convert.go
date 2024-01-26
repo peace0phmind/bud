@@ -57,6 +57,15 @@ func ConvertToKind(from any, toKind reflect.Kind) (any, error) {
 	return ConvertToKindWithOption(from, toKind, defaultMapOption)
 }
 
+func MustConvertToKind(from any, toKind reflect.Kind) any {
+	result, err := ConvertToKind(from, toKind)
+	if err != nil {
+		panic(err)
+	} else {
+		return result
+	}
+}
+
 func ConvertToKindWithOption(from any, toKind reflect.Kind, option *MapOption) (any, error) {
 	if option == nil {
 		option = defaultMapOption

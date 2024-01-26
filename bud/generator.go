@@ -27,7 +27,7 @@ func GenerateFile(filename string, outputSuffix string) {
 
 	// write package
 	buf.WriteString("package " + fileNode.Name.Name)
-	buf.WriteString("\n")
+	buf.WriteString("\n\n")
 
 	// write import
 	imports := eg.GetImports()
@@ -36,21 +36,18 @@ func GenerateFile(filename string, outputSuffix string) {
 		buf.WriteString("\"" + imp + "\"")
 		buf.WriteString("\n")
 	}
-	buf.WriteString(")\n")
+	buf.WriteString(")\n\n")
 
-	buf.WriteString("const (\n")
 	err = eg.WriteConst(buf)
 	if err != nil {
 		panic(err)
 	}
-	buf.WriteString(")\n")
 
-	buf.WriteString("func init() {")
 	err = eg.WriteInitFunc(buf)
 	if err != nil {
 		panic(err)
 	}
-	buf.WriteString("}\n")
+	buf.WriteString("\n")
 
 	err = eg.WriteBody(buf)
 	if err != nil {
