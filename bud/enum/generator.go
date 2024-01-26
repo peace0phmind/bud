@@ -1,17 +1,41 @@
 package enum
 
 import (
+	"embed"
 	"fmt"
 	"github.com/peace0phmind/bud/bud/ast"
+	"github.com/peace0phmind/bud/stream"
 	goast "go/ast"
+	"go/token"
 	"strings"
+	"text/template"
 )
 
-func GenerateFromFile(inputFile string) ([]byte, error) {
-	fileNode, fileSet, err := ast.ParseFile(inputFile)
-	if err != nil {
-		return nil, err
-	}
+//go:embed enum.tmpl
+var enumTmpl embed.FS
+
+type EnumGenerator struct {
+	ast.BaseGenerator[Enum]
+}
+
+func newEnumGenerator(allEnums []*Enum) *EnumGenerator {
+	result := &EnumGenerator{}
+
+	tmpl := template.New("enum")
+	tmpl = template.Must(tmpl.ParseFS(enumTmpl, "*.tmpl"))
+
+	result.Tmpl = tmpl
+
+	result.DataList = stream.Of(allEnums).Sort(func(x, y *Enum) int { return strings.Compare(x.Name, y.Name) }).MustToSlice()
+
+	return result
+}
+
+func (eg *EnumGenerator) GetImports() []string {
+	return []string{"fmt"}
+}
+
+func NewGenerator(fileNode *goast.File, fileSet *token.FileSet) (ast.Generator, error) {
 
 	allEnums := ast.InspectMapper[goast.TypeSpec, Enum](fileNode, fileSet, func(ts *goast.TypeSpec) *Enum {
 		var comment string
@@ -41,6 +65,7 @@ func GenerateFromFile(inputFile string) ([]byte, error) {
 
 	if len(allEnums) > 0 {
 		// create enums
+		return newEnumGenerator(allEnums), nil
 	}
 
 	return nil, nil

@@ -104,9 +104,15 @@ func (e *Enum) UpdateEnumItem(a *ast.Annotation) error {
 
 			e.Items = append(e.Items, ei)
 		}
+		return nil
 	}
 
 	return errors.New("Enum must have some items")
+}
+
+func (e *Enum) CheckValid() error {
+
+	return nil
 }
 
 func annotationGroupToEnum(ag *ast.AnnotationGroup, ts *goast.TypeSpec) (*Enum, error) {
@@ -140,12 +146,22 @@ func annotationGroupToEnum(ag *ast.AnnotationGroup, ts *goast.TypeSpec) (*Enum, 
 	enum.Name = ts.Name.Name
 	enum.Type = t
 
+	enum.Comment = ast.GetCommentsText(enumAnnotation.Comments)
+	if len(enum.Comment) == 0 {
+		enum.Comment = ast.GetCommentText(enumAnnotation.Comment)
+	}
+
 	err = enum.UpdateExtends(enumAnnotation)
 	if err != nil {
 		return nil, err
 	}
 
 	err = enum.UpdateEnumItem(enumAnnotation)
+	if err != nil {
+		return nil, err
+	}
+
+	err = enum.CheckValid()
 	if err != nil {
 		return nil, err
 	}

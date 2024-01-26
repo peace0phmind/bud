@@ -73,7 +73,7 @@ type AnnotationExtend struct {
 	Comments []*Comment `@@*`
 	Name     Name       `@@`
 	Values   []Value    `("(" @@* ")")?`
-	Value    Value      `("=" @@)?`
+	Value    Value      `("=" @@)? ","?`
 	Comment  *Comment   `@@?`
 }
 

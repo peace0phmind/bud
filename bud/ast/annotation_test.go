@@ -5,12 +5,7 @@ import (
 	"testing"
 )
 
-func toPtr(v Value) Value {
-	return v
-}
-
 func TestParseAnnotation(t *testing.T) {
-	//comment := "// test"
 	singleComment := "// comment"
 	multiComment := "/* comment */"
 
@@ -143,19 +138,19 @@ sql comment2
 							},
 							{
 								Key:   Key{Text: "string"},
-								Value: toPtr(any(String{V: "str\"ing"}).(Value)),
+								Value: any(String{V: "str\"ing"}).(Value),
 							},
 							{
 								Key:   Key{Text: "int"},
-								Value: toPtr(any(Int{V: 123}).(Value)),
+								Value: any(Int{V: 123}).(Value),
 							},
 							{
 								Key:   Key{Text: "double"},
-								Value: toPtr(any(Float{V: 456.7}).(Value)),
+								Value: any(Float{V: 456.7}).(Value),
 							},
 							{
 								Key:   Key{Text: "bool"},
-								Value: toPtr(any(Bool{V: true}).(Value)),
+								Value: any(Bool{V: true}).(Value),
 							},
 						},
 						},
@@ -165,15 +160,15 @@ sql comment2
 						Params: &Params{List: []*AnnotationParam{
 							{
 								Key:   Key{Text: "code"},
-								Value: toPtr(any(String{V: "int32"}).(Value)),
+								Value: any(String{V: "int32"}).(Value),
 							},
 							{
 								Key:   Key{Text: "name"},
-								Value: toPtr(any(String{V: "string"}).(Value)),
+								Value: any(String{V: "string"}).(Value),
 							},
 							{
 								Key:   Key{Text: "message"},
-								Value: toPtr(any(String{V: "string"}).(Value)),
+								Value: any(String{V: "string"}).(Value),
 							},
 						},
 						},
@@ -187,7 +182,7 @@ sql comment2
 			fileName: "file.go",
 			text: `
 @tag(disable, string = "str\"ing" , int=123, double=456.7, bool = true) {
-	Good  
+	Good  ,
     GoodWithIntValue = 12 
     GoodWithStrValue = "str" 
     GoodWithParams ("string", 123, 456.7, true )  // comment
@@ -205,19 +200,19 @@ sql comment2
 							},
 							{
 								Key:   Key{Text: "string"},
-								Value: toPtr(any(String{V: "str\"ing"}).(Value)),
+								Value: any(String{V: "str\"ing"}).(Value),
 							},
 							{
 								Key:   Key{Text: "int"},
-								Value: toPtr(any(Int{V: 123}).(Value)),
+								Value: any(Int{V: 123}).(Value),
 							},
 							{
 								Key:   Key{Text: "double"},
-								Value: toPtr(any(Float{V: 456.7}).(Value)),
+								Value: any(Float{V: 456.7}).(Value),
 							},
 							{
 								Key:   Key{Text: "bool"},
-								Value: toPtr(any(Bool{V: true}).(Value)),
+								Value: any(Bool{V: true}).(Value),
 							},
 						},
 						},
@@ -227,11 +222,11 @@ sql comment2
 							},
 							{
 								Name:  Name{Text: "GoodWithIntValue"},
-								Value: toPtr(any(Int{V: 12}).(Value)),
+								Value: any(Int{V: 12}).(Value),
 							},
 							{
 								Name:  Name{Text: "GoodWithStrValue"},
-								Value: toPtr(any(String{V: "str"}).(Value)),
+								Value: any(String{V: "str"}).(Value),
 							},
 							{
 								Name: Name{Text: "GoodWithParams"},
@@ -251,7 +246,7 @@ sql comment2
 									any(Float{V: 456.7}).(Value),
 									any(Bool{V: false}).(Value),
 								},
-								Value:   toPtr(any(Int{V: 89}).(Value)),
+								Value:   any(Int{V: 89}).(Value),
 								Comment: &Comment{Text: multiComment},
 							},
 						},
@@ -262,15 +257,15 @@ sql comment2
 						Params: &Params{List: []*AnnotationParam{
 							{
 								Key:   Key{Text: "code"},
-								Value: toPtr(any(String{V: "int32"}).(Value)),
+								Value: any(String{V: "int32"}).(Value),
 							},
 							{
 								Key:   Key{Text: "name"},
-								Value: toPtr(any(String{V: "string"}).(Value)),
+								Value: any(String{V: "string"}).(Value),
 							},
 							{
 								Key:   Key{Text: "message"},
-								Value: toPtr(any(String{V: "string"}).(Value)),
+								Value: any(String{V: "string"}).(Value),
 							},
 						},
 						},
@@ -349,7 +344,7 @@ tag comment 4
 									{Text: "// string comment 2"},
 								},
 								Key:   Key{Text: "string"},
-								Value: toPtr(any(String{V: "str\"ing"}).(Value)),
+								Value: any(String{V: "str\"ing"}).(Value),
 							},
 							{
 								Comments: []*Comment{
@@ -358,16 +353,16 @@ tag comment 4
     */`},
 								},
 								Key:   Key{Text: "int"},
-								Value: toPtr(any(Int{V: 123}).(Value)),
+								Value: any(Int{V: 123}).(Value),
 							},
 							{
 								Key:     Key{Text: "double"},
-								Value:   toPtr(any(Float{V: 456.7}).(Value)),
+								Value:   any(Float{V: 456.7}).(Value),
 								Comment: &Comment{Text: "// double inline comment"},
 							},
 							{
 								Key:   Key{Text: "bool"},
-								Value: toPtr(any(Bool{V: true}).(Value)),
+								Value: any(Bool{V: true}).(Value),
 							},
 						},
 						},
@@ -386,11 +381,11 @@ tag comment 4
        comment 3 */`},
 								},
 								Name:  Name{Text: "GoodWithIntValue"},
-								Value: toPtr(any(Int{V: 12}).(Value)),
+								Value: any(Int{V: 12}).(Value),
 							},
 							{
 								Name:  Name{Text: "GoodWithStrValue"},
-								Value: toPtr(any(String{V: "str"}).(Value)),
+								Value: any(String{V: "str"}).(Value),
 							},
 							{
 								Name: Name{Text: "GoodWithParams"},
@@ -410,7 +405,7 @@ tag comment 4
 									any(Float{V: 456.7}).(Value),
 									any(Bool{V: false}).(Value),
 								},
-								Value:   toPtr(any(Int{V: 89}).(Value)),
+								Value:   any(Int{V: 89}).(Value),
 								Comment: &Comment{Text: multiComment},
 							},
 						},
@@ -431,15 +426,15 @@ tag comment 4
 						Params: &Params{List: []*AnnotationParam{
 							{
 								Key:   Key{Text: "code"},
-								Value: toPtr(any(String{V: "int32"}).(Value)),
+								Value: any(String{V: "int32"}).(Value),
 							},
 							{
 								Key:   Key{Text: "name"},
-								Value: toPtr(any(String{V: "string"}).(Value)),
+								Value: any(String{V: "string"}).(Value),
 							},
 							{
 								Key:   Key{Text: "message"},
-								Value: toPtr(any(String{V: "string"}).(Value)),
+								Value: any(String{V: "string"}).(Value),
 							},
 						},
 						},
