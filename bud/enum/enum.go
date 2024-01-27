@@ -85,17 +85,14 @@ func (e *Enum) UpdateEnumItem(a *ast.Annotation) error {
 			if ex.Value != nil {
 				value = ex.Value.Value()
 			}
-			comment := ast.GetCommentsText(ex.Comments)
-			if len(comment) == 0 {
-				comment = ast.GetCommentText(ex.Comment)
-			}
 
 			ei := &EnumItem{
-				enum:    e,
-				idx:     idx,
-				Name:    ex.Name.Text,
-				Value:   value,
-				Comment: comment,
+				enum:        e,
+				idx:         idx,
+				Name:        ex.Name.Text,
+				Value:       value,
+				DocComment:  ast.GetCommentsText(ex.Comments),
+				LineComment: ast.GetCommentText(ex.Comment),
 			}
 
 			if ei.Name == BlankIdentifier {

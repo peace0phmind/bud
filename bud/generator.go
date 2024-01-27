@@ -57,7 +57,7 @@ func GenerateFile(filename string, outputSuffix string) {
 
 	formatted, err := imports.Process(fileNode.Name.Name, buf.Bytes(), nil)
 	if err != nil {
-		err = fmt.Errorf("generate: error formatting code %s\n\n%s", err, buf.String())
+		panic(fmt.Errorf("generate: error formatting code %s\n\n%s", err, buf.String()))
 	}
 
 	outFilePath := fmt.Sprintf("%s%s.go", strings.TrimSuffix(filename, filepath.Ext(filename)), outputSuffix)

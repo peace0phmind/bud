@@ -17,7 +17,8 @@ type EnumItem struct {
 	idx               int
 	Name              string
 	Value             any
-	Comment           string
+	DocComment        string
+	LineComment       string
 	ExtendData        []any
 	IsBlankIdentifier bool
 }

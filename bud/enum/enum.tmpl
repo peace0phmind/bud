@@ -6,10 +6,10 @@ const (
     {{- if not $cfg.NoComments }}
     {{ if $item.IsBlankIdentifier }}// Skipped value.{{else}}// {{$item.GetCodeName}} is {{ IA $enumName }} of type {{$item.GetName}}.{{end}}
     {{- end}}
-    {{- if $item.Comment}}
-    {{$item.Comment}}
+    {{- if $item.DocComment}}
+    {{$item.DocComment}}
     {{- end}}
-    {{$item.GetConstLine}}
+    {{$item.GetConstLine}} {{ if $item.LineComment}}{{$item.LineComment}}{{- end}}
 {{- end}}
 )
 
@@ -38,7 +38,7 @@ func (x {{$enumName}}) {{$extend.Name}}() {{$extend.Type.String}} {
     }
     panic(ErrInvalid{{$enumName}})
 }
-{{- end}}
+{{end}}
 
 func (x {{.Name}}) String() string {
 	if str, ok := _{{.Name}}MapName[x]; ok {
