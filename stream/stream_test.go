@@ -165,7 +165,7 @@ func TestStream_Shuffle(t *testing.T) {
 				}
 			}
 
-			shuffledElems := shuffled.MustToSlice()
+			shuffledElems := Must(shuffled.ToSlice())
 
 			// Check the number of elements is same in the original and shuffled stream
 			if got, want := len(tc.elems), len(shuffledElems); got != want {
@@ -378,7 +378,7 @@ func TestAllMatch(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			s := Stream[int]{elems: tc.elems}
-			got := s.MustAllMatch(tc.match)
+			got := Must(s.AllMatch(tc.match))
 			if got != tc.want {
 				t.Errorf("AllMatch got = %v, want = %v", got, tc.want)
 			}
@@ -440,7 +440,7 @@ func TestStream_AnyMatch(t *testing.T) {
 					t.Fatalf("want %v, but got %v", tc.expectedResult, result)
 				}
 			} else {
-				result := tc.stream.MustAnyMatch(tc.matchFunc)
+				result := Must(tc.stream.AnyMatch(tc.matchFunc))
 				if result != tc.expectedResult {
 					t.Fatalf("want %v, but got %v", tc.expectedResult, result)
 				}
@@ -505,7 +505,7 @@ func TestMustMax(t *testing.T) {
 					t.Errorf("MustMax() recovered panic = %v, wantErr %v", err, tc.err)
 				}
 			}()
-			if got := tc.init.MustMax(compareInts); got != tc.want {
+			if got := Must(tc.init.Max(compareInts)); got != tc.want {
 				t.Errorf("MustMax() = %v, want %v", got, tc.want)
 			}
 		})
@@ -556,7 +556,7 @@ func TestMustMin(t *testing.T) {
 				}
 			}()
 
-			if result := tc.stream.MustMin(tc.compareFunc); result != tc.expected && !tc.expectPanic {
+			if result := Must(tc.stream.Min(tc.compareFunc)); result != tc.expected && !tc.expectPanic {
 				t.Errorf("got %v, want %v", result, tc.expected)
 			}
 		})
@@ -602,7 +602,7 @@ func TestMustFirst(t *testing.T) {
 					}
 				}
 			}()
-			got := s.MustFirst()
+			got := Must(s.First())
 			if got != tc.want {
 				t.Errorf("MustFirst() = %v, want = %v", got, tc.want)
 			}
@@ -757,7 +757,7 @@ func TestStreamSort(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			stream := Of(tc.input).Sort(compare)
-			result := stream.MustToSlice()
+			result := Must(stream.ToSlice())
 
 			if len(tc.want) != len(result) {
 				t.Fatalf("want length %v but got %v", len(tc.want), len(result))
@@ -821,7 +821,7 @@ func TestMustReduce(t *testing.T) {
 					t.Errorf("MustReduce() panic = %v, expectPanic = %v", r, tt.expectPanic)
 				}
 			}()
-			if got := tt.stream.MustReduce(tt.accumulator); got != tt.want {
+			if got := Must(tt.stream.Reduce(tt.accumulator)); got != tt.want {
 				t.Errorf("MustReduce() = %v, want %v", got, tt.want)
 			}
 		})
@@ -868,7 +868,7 @@ func TestMustReduceWithInit(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			s := Of(tc.elems)
-			got := s.MustReduceWithInit(tc.init, accumulator)
+			got := Must(s.ReduceWithInit(tc.init, accumulator))
 			if got != tc.want {
 				t.Errorf("MustReduceWithInit() = %v, want %v", got, tc.want)
 			}
@@ -1246,7 +1246,7 @@ func TestMustToAny(t *testing.T) {
 						err = errors.New("error occurred")
 					}
 				}()
-				got := tt.data.MustToAny()
+				got := Must(tt.data.ToAny())
 				for i, wantVal := range tt.want {
 					if got[i] != wantVal {
 						t.Errorf("MustToAny() = %v, want %v", got, tt.want)

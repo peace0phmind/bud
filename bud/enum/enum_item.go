@@ -41,7 +41,6 @@ func (ei *EnumItem) GetConstLine() string {
 			return ei.GetCodeName()
 		}
 	} else {
-		// TODO
-		return ""
+		return ei.GetCodeName()
 	}
 }

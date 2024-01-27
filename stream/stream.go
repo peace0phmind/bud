@@ -288,17 +288,6 @@ func (s Stream[T]) ToSlice() ([]T, error) {
 	return s.elems, s.err
 }
 
-// MustToSlice returns the elements of the stream as a slice of type []T.
-// If the stream has an error, it panics with the error message.
-// The order of the elements in the returned slice is the same as in the stream.
-func (s Stream[T]) MustToSlice() []T {
-	if s.err != nil {
-		panic(s.err)
-	}
-
-	return s.elems
-}
-
 // ToAny converts the elements of the stream to the `any` type and returns them as a slice.
 // It creates a new slice and appends the converted elements of the stream to it.
 // The original stream is not modified.
@@ -316,25 +305,6 @@ func (s Stream[T]) ToAny() ([]any, error) {
 	}
 
 	return result, nil
-}
-
-// MustToAny converts the elements of the stream to a slice of `any` type.
-// If an error occurs during the conversion, it will panic and propagate the error.
-// The elements of the new slice will have the same values as the original elements of the stream,
-// but their type will be `any`.
-// The original stream is not modified.
-// The new slice is returned.
-// Panics:
-// - If an error occurs during the conversion.
-// Returns:
-// - A slice of `any` type containing the converted elements of the stream.
-func (s Stream[T]) MustToAny() []any {
-	result, err := s.ToAny()
-	if err != nil {
-		panic(err)
-	}
-
-	return result
 }
 
 // AllMatch returns true if all elements in the stream satisfy the given matchFunc function.
@@ -380,51 +350,6 @@ func (s Stream[T]) AllMatch(matchFunc func(T) (bool, error)) (bool, error) {
 	return true, nil
 }
 
-// MustAllMatch returns true if all elements of the stream satisfy the matchFunc,
-// and panics with the stored stream error otherwise.
-// It iterates over each element of the stream and checks if it satisfies the matchFunc.
-// If any element does not satisfy the matchFunc, it returns false.
-// If the stream contains an error, it panics with the stored stream error.
-// If all elements satisfy the matchFunc, it returns true.
-// Example:
-//
-//	stream := Of([]int{1, 2, 3, 4, 5})
-//	allMatch := stream.MustAllMatch(func(n int) bool {
-//		return n > 0
-//	})
-//	// allMatch is true
-//
-//	stream = Of([]int{1, 2, 3, 4, 5})
-//	allMatch = stream.MustAllMatch(func(n int) bool {
-//		return n > 3
-//	})
-//	// allMatch is false
-//
-//	stream = Of([]int{1, 2, 3, 4, 5})
-//	stream = stream.Filter(func(n int) bool {
-//		return n < 3
-//	})
-//	allMatch = stream.MustAllMatch(func(n int) bool {
-//		return n > 0
-//	})
-//	// allMatch panics with the error: Stream is empty
-//
-//	stream = Of([]int{1, 2, 3, 4, 5})
-//	stream = stream.Filter(func(n int) bool {
-//		return n < 3
-//	})
-//	allMatch = stream.MustAllMatch(func(n int) bool {
-//		return n > 3
-//	})
-//	// allMatch panics with the error: Stream is empty
-func (s Stream[T]) MustAllMatch(matchFunc func(T) (bool, error)) bool {
-	match, err := s.AllMatch(matchFunc)
-	if err != nil {
-		panic(err)
-	}
-	return match
-}
-
 // AnyMatch checks if any element in the stream satisfies the given matchFunc.
 // It iterates over each element in the stream and applies the matchFunc function to it.
 // If the matchFunc returns true for any element, the method returns true.
@@ -452,29 +377,6 @@ func (s Stream[T]) AnyMatch(matchFunc func(T) (bool, error)) (bool, error) {
 	}
 
 	return false, nil
-}
-
-// MustAnyMatch checks if any element in the stream matches the given matchFunc.
-// If the stream contains an error, it panics with the error message.
-// It iterates over each element in the stream and calls matchFunc on each element.
-// If matchFunc returns true for any element, it returns true.
-// If matchFunc returns false for all elements, it returns false.
-// The elements are checked in the order they appear in the stream.
-// The matchFunc should return true for elements that match the condition, and false for elements that don't match.
-// If the stream is empty, it returns false.
-// Example usage:
-//
-//	s := Stream[Int]{elems: []Int{1, 2, 3, 4, 5}}
-//	result := s.MustAnyMatch(func(elem Int) bool {
-//	  return elem > 3
-//	})
-//	// result: true
-func (s Stream[T]) MustAnyMatch(matchFunc func(T) (bool, error)) bool {
-	match, err := s.AnyMatch(matchFunc)
-	if err != nil {
-		panic(err)
-	}
-	return match
 }
 
 // FindFirst returns the first element in the stream that satisfies the keep function.
@@ -544,21 +446,6 @@ func (s Stream[T]) Max(compareFunc func(x, y T) (int, error)) (t T, err error) {
 	return max, nil
 }
 
-// MustMax returns the maximum element of the stream based on the provided compareFunc.
-// If an error occurs during the calculation of the maximum element, it panics.
-// The compareFunc is used to determine the ordering of the elements.
-// It should return a negative value if x is less than y, 0 if x is equal to y, and a positive value if x is greater than y.
-// The maximum element is returned as a single value of type T.
-// The original stream is not modified.
-// Note: This function assumes that the stream is not empty.
-func (s Stream[T]) MustMax(compareFunc func(x, y T) (int, error)) T {
-	result, err := s.Max(compareFunc)
-	if err != nil {
-		panic(err)
-	}
-	return result
-}
-
 func (s Stream[T]) Min(compareFunc func(x, y T) (int, error)) (t T, err error) {
 	if s.err != nil {
 		return t, s.err
@@ -587,23 +474,6 @@ func (s Stream[T]) Min(compareFunc func(x, y T) (int, error)) (t T, err error) {
 	return min, nil
 }
 
-// MustMin returns the minimum element in the stream, determined by the compareFunc.
-// It first calls the Min method of the stream with the compareFunc to get the minimum element and the error.
-// If the Min method returns an error, MustMin panics with that error.
-// Otherwise, it returns the minimum element.
-// The compareFunc should return a negative value if x < y, zero if x == y, and a positive value if x > y.
-// The type T should be comparable with the compareFunc.
-// This method does not modify the original stream.
-// It returns the minimum element as the result.
-// It does not return an error because it panics if the Min method returns an error.
-func (s Stream[T]) MustMin(compareFunc func(x, y T) (int, error)) T {
-	result, err := s.Min(compareFunc)
-	if err != nil {
-		panic(err)
-	}
-	return result
-}
-
 func (s Stream[T]) First() (t T, err error) {
 	if s.err != nil {
 		return t, s.err
@@ -614,17 +484,6 @@ func (s Stream[T]) First() (t T, err error) {
 	}
 
 	return s.elems[0], nil
-}
-
-// MustFirst returns the first element of the stream.
-// If the stream is empty, it panics with the message "Stream is empty".
-// The element is returned of type T.
-func (s Stream[T]) MustFirst() T {
-	result, err := s.First()
-	if err != nil {
-		panic(err)
-	}
-	return result
 }
 
 func (s Stream[T]) _reduce(initItem T, beginItem int, accumulator func(preItem, nextItem T) (T, error)) (t T, err error) {
@@ -662,14 +521,6 @@ func (s Stream[T]) Reduce(accumulator func(preItem, nextItem T) (T, error)) (t T
 	return s._reduce(s.elems[0], 1, accumulator)
 }
 
-func (s Stream[T]) MustReduce(accumulator func(preItem, nextItem T) (T, error)) T {
-	result, err := s.Reduce(accumulator)
-	if err != nil {
-		panic(err)
-	}
-	return result
-}
-
 // ReduceWithInit reduces the stream by applying the accumulator function to each element,
 // starting with the initial value initItem. The accumulator function takes the previous
 // accumulated value and the next element of the stream, and returns the new accumulated value.
@@ -693,14 +544,6 @@ func (s Stream[T]) ReduceWithInit(initItem T, accumulator func(preItem, nextItem
 	}
 
 	return s._reduce(initItem, 0, accumulator)
-}
-
-func (s Stream[T]) MustReduceWithInit(initItem T, accumulator func(preItem, nextItem T) (T, error)) T {
-	result, err := s.ReduceWithInit(initItem, accumulator)
-	if err != nil {
-		panic(err)
-	}
-	return result
 }
 
 // Range iterates over each element in the stream and applies the forEach function to it.
@@ -888,4 +731,11 @@ func FlatMap[In any, Out any](in Stream[In], flatMap func(In) Stream[Out]) Strea
 	}
 
 	return result
+}
+
+func Must[T any](t T, err error) T {
+	if err != nil {
+		panic(err)
+	}
+	return t
 }

@@ -95,9 +95,9 @@ func (e *Enum) UpdateEnumItem(a *ast.Annotation) error {
 				Comment: comment,
 			}
 
-			ei.ExtendData = stream.Map[ast.Value, any](stream.Of(ex.Values), func(value ast.Value) (any, error) {
+			ei.ExtendData = stream.Must(stream.Map[ast.Value, any](stream.Of(ex.Values), func(value ast.Value) (any, error) {
 				return value.Value(), nil
-			}).MustToSlice()
+			}).ToSlice())
 
 			e.Items = append(e.Items, ei)
 		}
@@ -147,6 +147,21 @@ func (e *Enum) CheckValid() error {
 			if isBlankIdentifier(ei.ExtendData[idx]) {
 				ei.ExtendData[idx] = ei.Name
 			}
+		}
+	}
+
+	// check and set item value
+	if e.Type == reflect.String {
+		for _, ei := range e.Items {
+			if ei.Value == nil {
+				ei.Value = ei.GetName()
+			} else {
+				ei.Value = structure.MustConvertTo[string](ei.Value)
+			}
+		}
+	} else {
+		if stream.Must(stream.Of(e.Items).AnyMatch(func(item *EnumItem) (bool, error) { return item.Value != nil, nil })) {
+
 		}
 	}
 
