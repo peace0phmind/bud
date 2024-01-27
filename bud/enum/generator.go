@@ -26,7 +26,7 @@ func newEnumGenerator(allEnums []*Enum) *EnumGenerator {
 
 	result.Tmpl = tmpl
 
-	result.DataList = stream.Of(allEnums).Sort(func(x, y *Enum) int { return strings.Compare(x.Name, y.Name) }).MustToSlice()
+	result.DataList = stream.Must(stream.Of(allEnums).Sort(func(x, y *Enum) int { return strings.Compare(x.Name, y.Name) }).ToSlice())
 
 	return result
 }

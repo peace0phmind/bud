@@ -221,9 +221,9 @@ func GetCommentsText(comments []*Comment) string {
 		return ""
 	}
 
-	return strings.Join(stream.Map[*Comment, string](stream.Of(comments), func(comment *Comment) (string, error) {
+	return strings.Join(stream.Must(stream.Map[*Comment, string](stream.Of(comments), func(comment *Comment) (string, error) {
 		return comment.Text, nil
-	}).MustToSlice(), "\n")
+	}).ToSlice()), "\n")
 }
 
 func GetCommentText(comment *Comment) string {

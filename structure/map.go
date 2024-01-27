@@ -3,6 +3,7 @@ package structure
 import (
 	"errors"
 	"fmt"
+	"github.com/peace0phmind/bud/stream"
 	"github.com/peace0phmind/bud/util"
 	"reflect"
 	"strings"
@@ -246,12 +247,12 @@ func Value2ValueWithOption(from reflect.Value, to reflect.Value, option *MapOpti
 	}
 
 	// get all implements interface, is not err, return direct
-	cachePairs := mapperCache.FilterToStream(func(k mapperKey, v Mapper) bool {
+	cachePairs := stream.Must(mapperCache.FilterToStream(func(k mapperKey, v Mapper) bool {
 		if k.to.Kind() == reflect.Interface {
 			return toType.Implements(k.to) || reflect.PtrTo(toType).Implements(k.to)
 		}
 		return false
-	}).MustToSlice()
+	}).ToSlice())
 
 	for _, cachePair := range cachePairs {
 		if err := cachePair.V(from, to); err == nil {

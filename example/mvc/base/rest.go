@@ -219,7 +219,7 @@ func (br *BaseRest[T]) Delete(c *fiber.Ctx) error {
 		return c.JSON(RetErr(RetCodeDeleteErr, err.Error()))
 	}
 
-	if err := br.Repo.DeleteByIds(stream.Of(idList).MustToAny()); err != nil {
+	if err := br.Repo.DeleteByIds(stream.Must(stream.Of(idList).ToAny())); err != nil {
 		return c.JSON(RetErr(RetCodeDeleteErr, err.Error()))
 	}
 

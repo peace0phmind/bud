@@ -3,6 +3,7 @@ package enum
 import (
 	"fmt"
 	"github.com/peace0phmind/bud/util"
+	"reflect"
 )
 
 const (
@@ -28,7 +29,7 @@ func (ei *EnumItem) GetCodeName() string {
 	}
 }
 
-// GetName return the item real name, default equals with the code name, or an extend named `Name`
+// GetName return the item real name, default equals with the code name, or an extent named `Name`
 func (ei *EnumItem) GetName() string {
 	return ei.ExtendData[0].(string)
 }
@@ -41,6 +42,10 @@ func (ei *EnumItem) GetConstLine() string {
 			return ei.GetCodeName()
 		}
 	} else {
-		return ei.GetCodeName()
+		if ei.enum.Type == reflect.String {
+			return fmt.Sprintf("%s %s = \"%s\"", ei.GetCodeName(), ei.enum.Name, ei.Value)
+		} else {
+			return fmt.Sprintf("%s %s = %v", ei.GetCodeName(), ei.enum.Name, ei.Value)
+		}
 	}
 }

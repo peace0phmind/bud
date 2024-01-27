@@ -137,9 +137,9 @@ func GetFieldPath(structField reflect.StructField, rootTypes []reflect.Type) str
 	var results []string
 	if len(rootTypes) > 0 {
 		results = append(results, rootTypes[0].PkgPath())
-		names := stream.Map(stream.Of(rootTypes), func(in reflect.Type) (string, error) {
+		names := stream.Must(stream.Map(stream.Of(rootTypes), func(in reflect.Type) (string, error) {
 			return in.Name(), nil
-		}).MustToSlice()
+		}).ToSlice())
 		results = append(results, names...)
 	}
 

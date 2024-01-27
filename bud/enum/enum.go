@@ -124,7 +124,7 @@ func (e *Enum) CheckValid() error {
 		extendNames[ex.Name] = true
 	}
 
-	// if e.Extend is empty or e.Extend havn't a EnumItemName item, then use item's name to create it
+	// if e.Extend is empty or e.Extend haven't a EnumItemName item, then use item's name to create it
 	if idx, _ := e.FindExtendByName(EnumItemName); idx == -1 {
 		for _, ee := range e.Extends {
 			ee.idx += 1
@@ -161,7 +161,16 @@ func (e *Enum) CheckValid() error {
 		}
 	} else {
 		if stream.Must(stream.Of(e.Items).AnyMatch(func(item *EnumItem) (bool, error) { return item.Value != nil, nil })) {
-
+			value := 0
+			for _, item := range e.Items {
+				if item.Value == nil {
+					item.Value = value
+					value += 1
+				} else {
+					item.Value = structure.MustConvertTo[int](item.Value)
+					value = item.Value.(int) + 1
+				}
+			}
 		}
 	}
 

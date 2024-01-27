@@ -33,9 +33,9 @@ func (tv *TagValue[T]) String() string {
 
 func ParseTagValue(tagValue string, checkAndSet func(tv *TagValue[WireValue])) (tv *TagValue[WireValue], err error) {
 	result := &TagValue[WireValue]{}
-	values := stream.Of(strings.SplitN(strings.TrimSpace(tagValue), ":", 2)).
+	values := stream.Must(stream.Of(strings.SplitN(strings.TrimSpace(tagValue), ":", 2)).
 		Map(func(s string) string { return strings.TrimSpace(s) }).
-		Filter(func(s string) (bool, error) { return len(s) > 0, nil }).MustToSlice()
+		Filter(func(s string) (bool, error) { return len(s) > 0, nil }).ToSlice())
 
 	if len(values) == 0 {
 		return nil, errors.New("tag value is empty")
