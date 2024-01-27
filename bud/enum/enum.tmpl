@@ -12,9 +12,9 @@ const (
 {{- define "body"}}
 {{- $enumName := .Name -}}
 
-var ErrInvalid{{$enumName}} = errors.New("not a valid {{$enumName}} enum")
+var ErrInvalid{{.Name}} = errors.New("not a valid {{.Name}} enum")
 
-var _{{$enumName}}Name = "{{- range $ei, $item := .Items -}}{{$item.GetName}}{{- end -}}"
+var _{{.Name}}Name = "{{- range $ei, $item := .Items -}}{{$item.GetName}}{{- end -}}"
 
 {{ range $ei, $extend := .Extends -}}
 {{$extend.GetExtendValueMap}}
@@ -26,28 +26,61 @@ func (x {{$enumName}}) {{$extend.Name}}() {{$extend.Type.String}} {
 }
 {{- end}}
 
-func (x {{$enumName}}) String() string {
-	if str, ok := _{{$enumName}}MapName[x]; ok {
+func (x {{.Name}}) String() string {
+	if str, ok := _{{.Name}}MapName[x]; ok {
 		return str
 	}
-	return fmt.Sprintf("{{$enumName}}(%d)", x)
+	return fmt.Sprintf("{{.Name}}(%d)", x)
 }
 
-func (x {{$enumName}}) IsValid() bool {
-	_, ok := _{{$enumName}}MapName[x]
+func (x {{.Name}}) IsValid() bool {
+	_, ok := _{{.Name}}MapName[x]
 	return ok
 }
 
 {{.GetNameMap}}
 
-func Parse{{$enumName}}(name string) ({{$enumName}}, error) {
-	if x, ok := _{{$enumName}}NameMap[name]; ok {
+func Parse{{.Name}}(name string) ({{.Name}}, error) {
+	if x, ok := _{{.Name}}NameMap[name]; ok {
 		return x, nil
 	}{{if .Config.NoCase }}
-    if x, ok := _{{$enumName}}NameMap[strings.ToLower(name)]; ok {
+    if x, ok := _{{.Name}}NameMap[strings.ToLower(name)]; ok {
         return x, nil
     }{{- end}}
-	return {{$enumName}}(0), fmt.Errorf("%s is %w", name, ErrInvalid{{$enumName}})
+	return {{.Name}}(0), fmt.Errorf("%s is %w", name, ErrInvalid{{.Name}})
 }
+
+{{ if .Config.MustParse }}
+func MustParse{{.Name}}(name string) {{.Name}} {
+	val, err := Parse{{.Name}}(name)
+	if err != nil {
+		panic(err)
+	}
+	return val
+}
+{{end}}
+
+{{ if .Config.Ptr }}
+func (x {{.Name}}) Ptr() *{{.Name}} {
+	return &x
+}
+{{end}}
+
+{{ if .Config.Marshal }}
+func (x {{.Name}}) MarshalText() ([]byte, error) {
+	return []byte(x.String()), nil
+}
+
+func (x *{{.Name}}) UnmarshalText(text []byte) error {
+	name := string(text)
+	tmp, err := Parse{{.Name}}(name)
+	if err != nil {
+		return err
+	}
+	*x = tmp
+	return nil
+}
+{{end}}
+
 {{end -}}
 

@@ -29,6 +29,7 @@ type EnumConfig struct {
 	MustParse        bool   `value:"false"`
 	UseCamelCaseName bool   `value:"true"`
 	NoComments       bool   `value:"false"`
+	Ptr              bool   `value:"false"`
 }
 
 type Enum struct {
