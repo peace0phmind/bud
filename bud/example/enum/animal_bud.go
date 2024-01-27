@@ -6,10 +6,15 @@ import (
 )
 
 const (
+	// AnimalCat is an Animal of type Cat.
 	AnimalCat Animal = iota
+	// AnimalDog is an Animal of type Dog.
 	AnimalDog
+	// AnimalFish is an Animal of type Fish.
 	AnimalFish
+	// AnimalFishPlusPlus is an Animal of type Fish++.
 	AnimalFishPlusPlus
+	// AnimalFishSharp is an Animal of type Fish#.
 	AnimalFishSharp
 )
 

@@ -2,6 +2,7 @@ package enum
 
 import (
 	"fmt"
+	"github.com/iancoleman/strcase"
 	"github.com/peace0phmind/bud/util"
 	"reflect"
 )
@@ -22,10 +23,17 @@ type EnumItem struct {
 
 // GetCodeName return the item name used in code
 func (ei *EnumItem) GetCodeName() string {
-	if ei.enum.Config.NoPrefix {
-		return util.Capitalize(ei.Name)
+	casedName := ei.Name
+	if ei.enum.Config.UseCamelCaseName {
+		casedName = strcase.ToCamel(ei.Name)
 	} else {
-		return ei.enum.Name + util.Capitalize(ei.Name)
+		casedName = util.Capitalize(ei.Name)
+	}
+
+	if ei.enum.Config.NoPrefix {
+		return casedName
+	} else {
+		return ei.enum.Name + casedName
 	}
 }
 

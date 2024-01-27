@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/peace0phmind/bud/bud/ast"
 	"github.com/peace0phmind/bud/stream"
+	"github.com/peace0phmind/bud/util"
 	goast "go/ast"
 	"go/token"
 	"strings"
@@ -22,9 +23,12 @@ func newEnumGenerator(allEnums []*Enum) *EnumGenerator {
 	result := &EnumGenerator{}
 
 	tmpl := template.New("enum")
-	tmpl = template.Must(tmpl.ParseFS(enumTmpl, "*.tmpl"))
 
-	result.Tmpl = tmpl
+	funcs := template.FuncMap{}
+	funcs["IA"] = util.IndefiniteArticle
+	tmpl.Funcs(funcs)
+
+	result.Tmpl = template.Must(tmpl.ParseFS(enumTmpl, "*.tmpl"))
 
 	result.DataList = stream.Must(stream.Of(allEnums).Sort(func(x, y *Enum) int { return strings.Compare(x.Name, y.Name) }).ToSlice())
 

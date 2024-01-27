@@ -1,6 +1,9 @@
 {{- define "const"}}
+{{- $cfg := .Config -}}
+{{- $enumName := .Name -}}
 const (
 {{- range $ei, $item := .Items }}
+    {{ if not $cfg.NoComments -}}// {{$item.GetCodeName}} is {{ IA $enumName }} of type {{$item.GetName}}.{{- end}}
     {{$item.GetConstLine}}
 {{- end}}
 )
@@ -40,7 +43,10 @@ func (x {{$enumName}}) IsValid() bool {
 func Parse{{$enumName}}(name string) ({{$enumName}}, error) {
 	if x, ok := _{{$enumName}}NameMap[name]; ok {
 		return x, nil
-	}
+	}{{if .Config.NoCase }}
+    if x, ok := _{{$enumName}}NameMap[strings.ToLower(name)]; ok {
+        return x, nil
+    }{{- end}}
 	return {{$enumName}}(0), fmt.Errorf("%s is %w", name, ErrInvalid{{$enumName}})
 }
 {{end -}}

@@ -18,15 +18,17 @@ const (
 )
 
 type EnumConfig struct {
-	NoPrefix    bool   `value:"false"` // 所有生成的枚举不携带类型名称前缀
-	Marshal     bool   `value:"true"`
-	MarshalName string `value:"Name"`
-	Sql         bool   `value:"false"`
-	SqlName     string `value:"Value"`
-	Names       bool   `value:"false"` // enum name list
-	Values      bool   `value:"true"`  // enum item list
-	NoCase      bool   `value:"true"`  // case insensitivity
-	MustParse   bool   `value:"false"`
+	NoPrefix         bool   `value:"false"` // 所有生成的枚举不携带类型名称前缀
+	Marshal          bool   `value:"false"`
+	MarshalName      string `value:"Name"`
+	Sql              bool   `value:"false"`
+	SqlName          string `value:"Value"`
+	Names            bool   `value:"false"` // enum name list
+	Values           bool   `value:"true"`  // enum item list
+	NoCase           bool   `value:"false"` // case insensitivity
+	MustParse        bool   `value:"false"`
+	UseCamelCaseName bool   `value:"true"`
+	NoComments       bool   `value:"false"`
 }
 
 type Enum struct {
@@ -204,6 +206,9 @@ func (e *Enum) GetNameMap() string {
 	for _, item := range e.Items {
 		nextIndex := index + len(item.GetName())
 		buf.WriteString(fmt.Sprintf("	_%sName[%d:%d]: %s,\n", e.Name, index, nextIndex, item.GetCodeName()))
+		if e.Config.NoCase {
+			buf.WriteString(fmt.Sprintf("	strings.ToLower(_%sName[%d:%d]): %s,\n", e.Name, index, nextIndex, item.GetCodeName()))
+		}
 		index = nextIndex
 	}
 
