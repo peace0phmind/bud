@@ -20,6 +20,14 @@ const (
 
 var ErrInvalid{{.Name}} = errors.New("not a valid {{.Name}}")
 
+{{ if .Config.Values }}
+func {{.Name}}Values() []{{.Name}} {
+    return []{{.Name}}{ {{ range $ei, $item := .GetItems }}
+        {{$item.GetCodeName}},{{ end }}
+    }
+}
+{{ end -}}
+
 var _{{.Name}}Name = "{{- range $ei, $item := .GetItems -}}{{$item.GetName}}{{- end -}}"
 
 {{ range $ei, $extend := .Extends -}}

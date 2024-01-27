@@ -20,6 +20,16 @@ const (
 
 var ErrInvalidAnimal = errors.New("not a valid Animal")
 
+func AnimalValues() []Animal {
+	return []Animal{
+		AnimalCat,
+		AnimalDog,
+		AnimalFish,
+		AnimalFishPlusPlus,
+		AnimalFishSharp,
+	}
+}
+
 var _AnimalName = "CatDogFishFish++Fish#"
 
 var _AnimalMapName = map[Animal]string{
