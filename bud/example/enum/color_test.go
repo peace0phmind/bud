@@ -26,7 +26,7 @@ func TestColorString(t *testing.T) {
 func TestColorMustParse(t *testing.T) {
 	x := `avocadogreen`
 
-	assert.PanicsWithError(t, x+" is not a valid Color enum", func() { MustParseColor(x) })
+	assert.PanicsWithError(t, x+" is not a valid Color", func() { MustParseColor(x) })
 	assert.NotPanics(t, func() { MustParseColor(ColorGreen.String()) })
 	assert.NotPanics(t, func() { MustParseColor("BLack") })
 }
@@ -149,7 +149,7 @@ func TestColorUnmarshal(t *testing.T) {
 			input:         `{"color":"Magenta"}`,
 			output:        &testData{ColorX: ColorYellow},
 			errorExpected: true,
-			err:           errors.New("Magenta is not a valid Color enum"),
+			err:           errors.New("Magenta is not a valid Color"),
 		},
 	}
 

@@ -3,18 +3,24 @@
 {{- $enumName := .Name -}}
 const (
 {{- range $ei, $item := .Items }}
-    {{ if not $cfg.NoComments -}}// {{$item.GetCodeName}} is {{ IA $enumName }} of type {{$item.GetName}}.{{- end}}
+    {{- if not $cfg.NoComments }}
+    {{ if $item.IsBlankIdentifier }}// Skipped value.{{else}}// {{$item.GetCodeName}} is {{ IA $enumName }} of type {{$item.GetName}}.{{end}}
+    {{- end}}
+    {{- if $item.Comment}}
+    {{$item.Comment}}
+    {{- end}}
     {{$item.GetConstLine}}
 {{- end}}
 )
+
 {{end -}}
 
 {{- define "body"}}
 {{- $enumName := .Name -}}
 
-var ErrInvalid{{.Name}} = errors.New("not a valid {{.Name}} enum")
+var ErrInvalid{{.Name}} = errors.New("not a valid {{.Name}}")
 
-var _{{.Name}}Name = "{{- range $ei, $item := .Items -}}{{$item.GetName}}{{- end -}}"
+var _{{.Name}}Name = "{{- range $ei, $item := .GetItems -}}{{$item.GetName}}{{- end -}}"
 
 {{ range $ei, $extend := .Extends -}}
 {{$extend.GetExtendValueMap}}

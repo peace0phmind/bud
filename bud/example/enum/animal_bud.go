@@ -18,7 +18,7 @@ const (
 	AnimalFishSharp
 )
 
-var ErrInvalidAnimal = errors.New("not a valid Animal enum")
+var ErrInvalidAnimal = errors.New("not a valid Animal")
 
 var _AnimalName = "CatDogFishFish++Fish#"
 

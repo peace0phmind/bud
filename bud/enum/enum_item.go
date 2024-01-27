@@ -13,16 +13,21 @@ const (
 )
 
 type EnumItem struct {
-	enum       *Enum
-	idx        int
-	Name       string
-	Value      any
-	Comment    string
-	ExtendData []any
+	enum              *Enum
+	idx               int
+	Name              string
+	Value             any
+	Comment           string
+	ExtendData        []any
+	IsBlankIdentifier bool
 }
 
 // GetCodeName return the item name used in code
 func (ei *EnumItem) GetCodeName() string {
+	if ei.IsBlankIdentifier {
+		return BlankIdentifier
+	}
+
 	casedName := ei.Name
 	if ei.enum.Config.UseCamelCaseName {
 		casedName = strcase.ToCamel(ei.Name)

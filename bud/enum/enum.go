@@ -98,9 +98,15 @@ func (e *Enum) UpdateEnumItem(a *ast.Annotation) error {
 				Comment: comment,
 			}
 
-			ei.ExtendData = stream.Must(stream.Map[ast.Value, any](stream.Of(ex.Values), func(value ast.Value) (any, error) {
-				return value.Value(), nil
-			}).ToSlice())
+			if ei.Name == BlankIdentifier {
+				ei.IsBlankIdentifier = true
+			}
+
+			if !ei.IsBlankIdentifier {
+				ei.ExtendData = stream.Must(stream.Map[ast.Value, any](stream.Of(ex.Values), func(value ast.Value) (any, error) {
+					return value.Value(), nil
+				}).ToSlice())
+			}
 
 			e.Items = append(e.Items, ei)
 		}
@@ -127,6 +133,15 @@ func (e *Enum) CheckValid() error {
 		extendNames[ex.Name] = true
 	}
 
+	// check e.Items name is unique
+	itemNames := make(map[string]bool)
+	for _, item := range e.GetItems() {
+		if itemNames[item.Name] {
+			return fmt.Errorf("enum item names must be unique, %s", item.Name)
+		}
+		itemNames[item.Name] = true
+	}
+
 	// if e.Extend is empty or e.Extend haven't a EnumItemName item, then use item's name to create it
 	if idx, _ := e.FindExtendByName(EnumItemName); idx == -1 {
 		for _, ee := range e.Extends {
@@ -142,11 +157,11 @@ func (e *Enum) CheckValid() error {
 		}
 		e.Extends = append([]*EnumExtend{ee}, e.Extends...)
 
-		for _, ei := range e.Items {
+		for _, ei := range e.GetItems() {
 			ei.ExtendData = append([]any{ei.Name}, ei.ExtendData...)
 		}
 	} else {
-		for _, ei := range e.Items {
+		for _, ei := range e.GetItems() {
 			if isBlankIdentifier(ei.ExtendData[idx]) {
 				ei.ExtendData[idx] = ei.Name
 			}
@@ -155,7 +170,7 @@ func (e *Enum) CheckValid() error {
 
 	// check and set item value
 	if e.Type == reflect.String {
-		for _, ei := range e.Items {
+		for _, ei := range e.GetItems() {
 			if ei.Value == nil {
 				ei.Value = ei.GetName()
 			} else {
@@ -163,9 +178,9 @@ func (e *Enum) CheckValid() error {
 			}
 		}
 	} else {
-		if stream.Must(stream.Of(e.Items).AnyMatch(func(item *EnumItem) (bool, error) { return item.Value != nil, nil })) {
+		if stream.Must(stream.Of(e.GetItems()).AnyMatch(func(item *EnumItem) (bool, error) { return item.Value != nil, nil })) {
 			value := 0
-			for _, item := range e.Items {
+			for _, item := range e.GetItems() {
 				if item.Value == nil {
 					item.Value = value
 					value += 1
@@ -204,7 +219,7 @@ func (e *Enum) GetNameMap() string {
 
 	buf.WriteString(fmt.Sprintf("var _%sNameMap = map[string]%s{\n", e.Name, e.Name))
 	index := 0
-	for _, item := range e.Items {
+	for _, item := range e.GetItems() {
 		nextIndex := index + len(item.GetName())
 		buf.WriteString(fmt.Sprintf("	_%sName[%d:%d]: %s,\n", e.Name, index, nextIndex, item.GetCodeName()))
 		if e.Config.NoCase {
@@ -216,6 +231,12 @@ func (e *Enum) GetNameMap() string {
 	buf.WriteString("}\n")
 
 	return buf.String()
+}
+
+func (e *Enum) GetItems() []*EnumItem {
+	return stream.Must(stream.Of(e.Items).Filter(func(item *EnumItem) (bool, error) {
+		return !item.IsBlankIdentifier, nil
+	}).ToSlice())
 }
 
 func annotationGroupToEnum(ag *ast.AnnotationGroup, ts *goast.TypeSpec) (*Enum, error) {

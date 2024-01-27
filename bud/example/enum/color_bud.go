@@ -14,6 +14,7 @@ const (
 	// ColorRed is a Color of type Red.
 	ColorRed Color = 2
 	// ColorGreen is a Color of type Green.
+	// Green starts with 33
 	ColorGreen Color = 33
 	// ColorBlue is a Color of type Blue.
 	ColorBlue Color = 34
@@ -31,7 +32,7 @@ const (
 	ColorRedOrangeBlue Color = 50
 )
 
-var ErrInvalidColor = errors.New("not a valid Color enum")
+var ErrInvalidColor = errors.New("not a valid Color")
 
 var _ColorName = "BlackWhiteRedGreenBluegreyyellowblue-greenred-orangeyellow_greenred-orange-blue"
 
