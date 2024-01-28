@@ -11,6 +11,7 @@ import (
 	"github.com/peace0phmind/bud/util"
 	goast "go/ast"
 	"reflect"
+	"strings"
 )
 
 const (
@@ -219,7 +220,7 @@ func (e *Enum) GetNameMap() string {
 	for _, item := range e.GetItems() {
 		nextIndex := index + len(item.GetName())
 		buf.WriteString(fmt.Sprintf("	_%sName[%d:%d]: %s,\n", e.Name, index, nextIndex, item.GetCodeName()))
-		if e.Config.NoCase {
+		if e.Config.NoCase && (item.GetName() != strings.ToLower(item.GetName())) {
 			buf.WriteString(fmt.Sprintf("	strings.ToLower(_%sName[%d:%d]): %s,\n", e.Name, index, nextIndex, item.GetCodeName()))
 		}
 		index = nextIndex

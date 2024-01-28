@@ -14,8 +14,7 @@ const (
 	// ColorRed is a Color of type Red.
 	ColorRed Color = 2
 	// ColorGreen is a Color of type Green.
-	// Green starts with 33
-	ColorGreen Color = 33
+	ColorGreen Color = 33 // Green starts with 33
 	// ColorBlue is a Color of type Blue.
 	ColorBlue Color = 34
 	// ColorGrey is a Color of type grey.
@@ -33,6 +32,22 @@ const (
 )
 
 var ErrInvalidColor = errors.New("not a valid Color")
+
+func ColorValues() []Color {
+	return []Color{
+		ColorBlack,
+		ColorWhite,
+		ColorRed,
+		ColorGreen,
+		ColorBlue,
+		ColorGrey,
+		ColorYellow,
+		ColorBlueGreen,
+		ColorRedOrange,
+		ColorYellowGreen,
+		ColorRedOrangeBlue,
+	}
+}
 
 var _ColorName = "BlackWhiteRedGreenBluegreyyellowblue-greenred-orangeyellow_greenred-orange-blue"
 
@@ -81,17 +96,11 @@ var _ColorNameMap = map[string]Color{
 	_ColorName[18:22]:                  ColorBlue,
 	strings.ToLower(_ColorName[18:22]): ColorBlue,
 	_ColorName[22:26]:                  ColorGrey,
-	strings.ToLower(_ColorName[22:26]): ColorGrey,
 	_ColorName[26:32]:                  ColorYellow,
-	strings.ToLower(_ColorName[26:32]): ColorYellow,
 	_ColorName[32:42]:                  ColorBlueGreen,
-	strings.ToLower(_ColorName[32:42]): ColorBlueGreen,
 	_ColorName[42:52]:                  ColorRedOrange,
-	strings.ToLower(_ColorName[42:52]): ColorRedOrange,
 	_ColorName[52:64]:                  ColorYellowGreen,
-	strings.ToLower(_ColorName[52:64]): ColorYellowGreen,
 	_ColorName[64:79]:                  ColorRedOrangeBlue,
-	strings.ToLower(_ColorName[64:79]): ColorRedOrangeBlue,
 }
 
 func ParseColor(name string) (Color, error) {
