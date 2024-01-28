@@ -57,7 +57,7 @@ func (c *exprEnv) setValue(name string, value any) {
 	c.env[name] = value
 }
 
-func Get[T any]() *T {
+func Find[T any]() *T {
 	vt := reflect.TypeOf((*T)(nil))
 
 	result := _context.getByType(vt)
@@ -71,7 +71,7 @@ func Get[T any]() *T {
 	panic(fmt.Sprintf("Invalid type: need %v, get %v", vt, resultType))
 }
 
-func GetByName[T any](name string) *T {
+func FindByName[T any](name string) *T {
 	vt := reflect.TypeOf((*T)(nil))
 
 	result := _context.getByName(name)
