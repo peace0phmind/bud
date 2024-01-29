@@ -20,16 +20,6 @@ const (
 
 var ErrInvalidAnimal = errors.New("not a valid Animal")
 
-func AnimalValues() []Animal {
-	return []Animal{
-		AnimalCat,
-		AnimalDog,
-		AnimalFish,
-		AnimalFishPlusPlus,
-		AnimalFishSharp,
-	}
-}
-
 var _AnimalName = "CatDogFishFish++Fish#"
 
 var _AnimalMapName = map[Animal]string{
@@ -47,16 +37,16 @@ func (x Animal) Name() string {
 	panic(ErrInvalidAnimal)
 }
 
+func (x Animal) IsValid() bool {
+	_, ok := _AnimalMapName[x]
+	return ok
+}
+
 func (x Animal) String() string {
 	if str, ok := _AnimalMapName[x]; ok {
 		return str
 	}
 	return fmt.Sprintf("Animal(%d)", x)
-}
-
-func (x Animal) IsValid() bool {
-	_, ok := _AnimalMapName[x]
-	return ok
 }
 
 var _AnimalNameMap = map[string]Animal{

@@ -1,7 +1,6 @@
 package enum
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"github.com/peace0phmind/bud/bud/ast"
@@ -11,7 +10,6 @@ import (
 	"github.com/peace0phmind/bud/util"
 	goast "go/ast"
 	"reflect"
-	"strings"
 )
 
 const (
@@ -20,14 +18,16 @@ const (
 
 type EnumConfig struct {
 	NoPrefix         bool   `value:"false"` // 所有生成的枚举不携带类型名称前缀
+	StringParse      bool   `value:"true"`
+	StringParseName  string `value:"Name"`
+	MustParse        bool   `value:"false"`
 	Marshal          bool   `value:"false"`
 	MarshalName      string `value:"Name"`
 	Sql              bool   `value:"false"`
 	SqlName          string `value:"Value"`
 	Names            bool   `value:"false"` // enum name list
-	Values           bool   `value:"true"`  // enum item list
+	Values           bool   `value:"false"` // enum item list
 	NoCase           bool   `value:"false"` // case insensitivity
-	MustParse        bool   `value:"false"`
 	UseCamelCaseName bool   `value:"true"`
 	NoComments       bool   `value:"false"`
 	Ptr              bool   `value:"false"`
@@ -141,7 +141,7 @@ func (e *Enum) CheckValid() error {
 	}
 
 	// if e.Extend is empty or e.Extend haven't a EnumItemName item, then use item's name to create it
-	if idx, _ := e.FindExtendByName(EnumItemName); idx == -1 {
+	if fee := e.FindExtendByName(EnumItemName); fee == nil {
 		for _, ee := range e.Extends {
 			ee.idx += 1
 		}
@@ -160,8 +160,8 @@ func (e *Enum) CheckValid() error {
 		}
 	} else {
 		for _, ei := range e.GetItems() {
-			if isBlankIdentifier(ei.ExtendData[idx]) {
-				ei.ExtendData[idx] = ei.Name
+			if isBlankIdentifier(ei.ExtendData[fee.idx]) {
+				ei.ExtendData[fee.idx] = ei.Name
 			}
 		}
 	}
@@ -200,35 +200,16 @@ func isBlankIdentifier(value any) bool {
 	return false
 }
 
-func (e *Enum) FindExtendByName(name string) (idx int, extend *EnumExtend) {
+func (e *Enum) FindExtendByName(name string) *EnumExtend {
 	if len(e.Extends) > 0 {
-		for eei, ee := range e.Extends {
+		for _, ee := range e.Extends {
 			if ee.Name == name {
-				return eei, ee
+				return ee
 			}
 		}
 	}
 
-	return -1, nil
-}
-
-func (e *Enum) GetNameMap() string {
-	buf := bytes.NewBuffer([]byte{})
-
-	buf.WriteString(fmt.Sprintf("var _%sNameMap = map[string]%s{\n", e.Name, e.Name))
-	index := 0
-	for _, item := range e.GetItems() {
-		nextIndex := index + len(item.GetName())
-		buf.WriteString(fmt.Sprintf("	_%sName[%d:%d]: %s,\n", e.Name, index, nextIndex, item.GetCodeName()))
-		if e.Config.NoCase && (item.GetName() != strings.ToLower(item.GetName())) {
-			buf.WriteString(fmt.Sprintf("	strings.ToLower(_%sName[%d:%d]): %s,\n", e.Name, index, nextIndex, item.GetCodeName()))
-		}
-		index = nextIndex
-	}
-
-	buf.WriteString("}\n")
-
-	return buf.String()
+	return nil
 }
 
 func (e *Enum) GetItems() []*EnumItem {

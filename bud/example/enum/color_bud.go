@@ -33,22 +33,6 @@ const (
 
 var ErrInvalidColor = errors.New("not a valid Color")
 
-func ColorValues() []Color {
-	return []Color{
-		ColorBlack,
-		ColorWhite,
-		ColorRed,
-		ColorGreen,
-		ColorBlue,
-		ColorGrey,
-		ColorYellow,
-		ColorBlueGreen,
-		ColorRedOrange,
-		ColorYellowGreen,
-		ColorRedOrangeBlue,
-	}
-}
-
 var _ColorName = "BlackWhiteRedGreenBluegreyyellowblue-greenred-orangeyellow_greenred-orange-blue"
 
 var _ColorMapName = map[Color]string{
@@ -72,16 +56,16 @@ func (x Color) Name() string {
 	panic(ErrInvalidColor)
 }
 
+func (x Color) IsValid() bool {
+	_, ok := _ColorMapName[x]
+	return ok
+}
+
 func (x Color) String() string {
 	if str, ok := _ColorMapName[x]; ok {
 		return str
 	}
 	return fmt.Sprintf("Color(%d)", x)
-}
-
-func (x Color) IsValid() bool {
-	_, ok := _ColorMapName[x]
-	return ok
 }
 
 var _ColorNameMap = map[string]Color{

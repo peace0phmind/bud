@@ -8,22 +8,18 @@ import (
 
 const (
 	// CommentedValue1 is a Commented of type value1.
-	// Commented value 1
-	CommentedValue1 Commented = iota
+	CommentedValue1 Commented = iota // Commented value 1
 	// CommentedValue2 is a Commented of type value2.
 	CommentedValue2
 	// CommentedValue3 is a Commented of type value3.
-	// Commented value 3
-	CommentedValue3
+	CommentedValue3 // Commented value 3
 )
 
 const (
 	// Skipped value.
-	// Placeholder with a ','  in it. (for harder testing)
-	_ ComplexCommented = iota
+	_ ComplexCommented = iota // Placeholder with a ','  in it. (for harder testing)
 	// ComplexCommentedValue1 is a ComplexCommented of type value1.
-	// Commented value 1
-	ComplexCommentedValue1
+	ComplexCommentedValue1 // Commented value 1
 	// ComplexCommentedValue2 is a ComplexCommented of type value2.
 	ComplexCommentedValue2
 	// Skipped value.
@@ -31,8 +27,7 @@ const (
 	// Skipped value.
 	_
 	// ComplexCommentedValue3 is a ComplexCommented of type value3.
-	// Commented value 3
-	ComplexCommentedValue3
+	ComplexCommentedValue3 // Commented value 3
 )
 
 var ErrInvalidCommented = errors.New("not a valid Commented")
@@ -52,6 +47,11 @@ func (x Commented) Name() string {
 	panic(ErrInvalidCommented)
 }
 
+func (x Commented) IsValid() bool {
+	_, ok := _CommentedMapName[x]
+	return ok
+}
+
 func (x Commented) String() string {
 	if str, ok := _CommentedMapName[x]; ok {
 		return str
@@ -59,18 +59,10 @@ func (x Commented) String() string {
 	return fmt.Sprintf("Commented(%d)", x)
 }
 
-func (x Commented) IsValid() bool {
-	_, ok := _CommentedMapName[x]
-	return ok
-}
-
 var _CommentedNameMap = map[string]Commented{
-	_CommentedName[0:6]:                    CommentedValue1,
-	strings.ToLower(_CommentedName[0:6]):   CommentedValue1,
-	_CommentedName[6:12]:                   CommentedValue2,
-	strings.ToLower(_CommentedName[6:12]):  CommentedValue2,
-	_CommentedName[12:18]:                  CommentedValue3,
-	strings.ToLower(_CommentedName[12:18]): CommentedValue3,
+	_CommentedName[0:6]:   CommentedValue1,
+	_CommentedName[6:12]:  CommentedValue2,
+	_CommentedName[12:18]: CommentedValue3,
 }
 
 func ParseCommented(name string) (Commented, error) {
@@ -114,6 +106,11 @@ func (x ComplexCommented) Name() string {
 	panic(ErrInvalidComplexCommented)
 }
 
+func (x ComplexCommented) IsValid() bool {
+	_, ok := _ComplexCommentedMapName[x]
+	return ok
+}
+
 func (x ComplexCommented) String() string {
 	if str, ok := _ComplexCommentedMapName[x]; ok {
 		return str
@@ -121,18 +118,10 @@ func (x ComplexCommented) String() string {
 	return fmt.Sprintf("ComplexCommented(%d)", x)
 }
 
-func (x ComplexCommented) IsValid() bool {
-	_, ok := _ComplexCommentedMapName[x]
-	return ok
-}
-
 var _ComplexCommentedNameMap = map[string]ComplexCommented{
-	_ComplexCommentedName[0:6]:                    ComplexCommentedValue1,
-	strings.ToLower(_ComplexCommentedName[0:6]):   ComplexCommentedValue1,
-	_ComplexCommentedName[6:12]:                   ComplexCommentedValue2,
-	strings.ToLower(_ComplexCommentedName[6:12]):  ComplexCommentedValue2,
-	_ComplexCommentedName[12:18]:                  ComplexCommentedValue3,
-	strings.ToLower(_ComplexCommentedName[12:18]): ComplexCommentedValue3,
+	_ComplexCommentedName[0:6]:   ComplexCommentedValue1,
+	_ComplexCommentedName[6:12]:  ComplexCommentedValue2,
+	_ComplexCommentedName[12:18]: ComplexCommentedValue3,
 }
 
 func ParseComplexCommented(name string) (ComplexCommented, error) {
