@@ -32,6 +32,7 @@ type EnumConfig struct {
 	UseCamelCaseName bool   `value:"true"`
 	NoComments       bool   `value:"false"`
 	Ptr              bool   `value:"false"`
+	ForceLower       bool   `value:"false"`
 }
 
 type Enum struct {

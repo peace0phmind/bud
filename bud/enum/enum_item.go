@@ -5,6 +5,7 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/peace0phmind/bud/util"
 	"reflect"
+	"strings"
 )
 
 const (
@@ -45,6 +46,9 @@ func (ei *EnumItem) GetCodeName() string {
 
 // GetName return the item real name, default equals with the code name, or an extent named `Name`
 func (ei *EnumItem) GetName() string {
+	if ei.enum.Config.ForceLower {
+		return strings.ToLower(ei.ExtendData[0].(string))
+	}
 	return ei.ExtendData[0].(string)
 }
 
