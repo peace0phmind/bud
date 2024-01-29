@@ -17,7 +17,8 @@ const (
 )
 
 type EnumConfig struct {
-	NoPrefix         bool   `value:"false"` // 所有生成的枚举不携带类型名称前缀
+	NoPrefix         bool `value:"false"` // 所有生成的枚举不携带类型名称前缀
+	Prefix           string
 	StringParse      bool   `value:"true"`
 	StringParseName  string `value:"Name"`
 	MustParse        bool   `value:"false"`

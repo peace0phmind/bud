@@ -37,9 +37,9 @@ func (ei *EnumItem) GetCodeName() string {
 	}
 
 	if ei.enum.Config.NoPrefix {
-		return casedName
+		return ei.enum.Config.Prefix + casedName
 	} else {
-		return ei.enum.Name + casedName
+		return ei.enum.Config.Prefix + ei.enum.Name + casedName
 	}
 }
 
