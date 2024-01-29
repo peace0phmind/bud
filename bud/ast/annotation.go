@@ -93,6 +93,14 @@ func (i Int) Value() any {
 	return i.V
 }
 
+type Uint struct {
+	V uint `@Int ","? `
+}
+
+func (u Uint) Value() any {
+	return u.V
+}
+
 type String struct {
 	V string `@(String | Ident) ","? `
 }
@@ -126,7 +134,7 @@ var annotationParser = participle.MustBuild[AnnotationGroup](
 	participle.Lexer(lexer.NewTextScannerLexer(func(s *scanner.Scanner) {
 		s.Mode &^= scanner.SkipComments
 	})),
-	participle.Union[Value](Bool{}, Float{}, Int{}, String{}),
+	participle.Union[Value](Bool{}, Float{}, Int{}, Uint{}, String{}),
 	participle.Unquote("String"),
 )
 

@@ -26,7 +26,6 @@ type EnumConfig struct {
 	MarshalName      string `value:"Name"`
 	Sql              bool   `value:"false"`
 	SqlName          string `value:"Value"`
-	Names            bool   `value:"false"` // enum name list
 	Values           bool   `value:"false"` // enum item list
 	NoCase           bool   `value:"false"` // case insensitivity
 	UseCamelCaseName bool   `value:"true"`
@@ -188,6 +187,7 @@ func (e *Enum) CheckValid() error {
 					item.Value = structure.MustConvertTo[int](item.Value)
 					value = item.Value.(int) + 1
 				}
+				item.Value = structure.MustConvertToKind(item.Value, e.Type)
 			}
 		}
 	}
