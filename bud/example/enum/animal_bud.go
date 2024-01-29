@@ -30,23 +30,23 @@ var _AnimalMapName = map[Animal]string{
 	AnimalFishSharp:    _AnimalName[16:21],
 }
 
-func (x Animal) Name() string {
-	if result, ok := _AnimalMapName[x]; ok {
-		return result
-	}
-	panic(ErrInvalidAnimal)
-}
-
 func (x Animal) IsValid() bool {
 	_, ok := _AnimalMapName[x]
 	return ok
 }
 
-func (x Animal) String() string {
-	if str, ok := _AnimalMapName[x]; ok {
-		return str
+func (x Animal) Name() string {
+	if v, ok := _AnimalNameMap[string(x)]; ok {
+		return string(v)
 	}
-	return fmt.Sprintf("Animal(%d)", x)
+	panic(ErrInvalidAnimal)
+}
+
+func (x Animal) String() string {
+	if v, ok := _AnimalMapName[x]; ok {
+		return v
+	}
+	return fmt.Sprintf("Animal(%d)Name", x)
 }
 
 var _AnimalNameMap = map[string]Animal{

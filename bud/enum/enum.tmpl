@@ -20,6 +20,25 @@ const (
 
 var ErrInvalid{{.Name}} = errors.New("not a valid {{.Name}}")
 
+{{/* ---------  valid  ---------   */}}
+{{- $validEe := .FindExtendByName "Name" -}}
+{{ if eq .Type.String "string" }}
+{{ $validEe.Extend2EnumMap }}
+{{ else }}
+var _{{.Name}}Name = "{{- range $ei, $item := .GetItems -}}{{$item.GetName}}{{- end -}}"
+
+{{ $validEe.Enum2ExtendMap }}
+{{ end }}
+func (x {{.Name}}) IsValid() bool {
+    {{ if eq .Type.String "string" -}}
+    _, ok := {{$validEe.Extend2EnumVarName}}[string(x)]
+    {{- else -}}
+	_, ok := {{$validEe.Enum2ExtendVarName}}[x]
+	{{- end}}
+	return ok
+}
+
+{{/* ---------  values  ---------   */}}
 {{ if .Config.Values }}
 func {{.Name}}Values() []{{.Name}} {
     return []{{.Name}}{ {{ range $ei, $item := .GetItems }}
@@ -28,43 +47,58 @@ func {{.Name}}Values() []{{.Name}} {
 }
 {{ end -}}
 
-{{ if ne .Type.String "string" }}
-var _{{.Name}}Name = "{{- range $ei, $item := .GetItems -}}{{$item.GetName}}{{- end -}}"
-{{ end }}
-
+{{/* ---------  extend values  ---------   */}}
 {{ range $ei, $extend := .Extends -}}
-{{$extend.GetExtendValueMap}}
+{{$extend.Enum2ExtendMap}}
 
 func (x {{$enumName}}) {{$extend.Name}}() {{$extend.Type.String}} {
-    if result, ok := _{{$enumName}}Map{{$extend.Name}}[x]; ok {
+    {{ if eq $extend.Name "Name" -}}
+    if v, ok := {{$validEe.Extend2EnumVarName}}[string(x)]; ok {
+        return string(v)
+    }
+    {{- else -}}
+    if result, ok := {{$extend.Enum2ExtendVarName}}[x]; ok {
         return result
     }
+    {{- end}}
     panic(ErrInvalid{{$enumName}})
 }
 {{end}}
 
-func (x {{.Name}}) IsValid() bool {
-	_, ok := _{{.Name}}MapName[x]
-	return ok
-}
-
+{{/* ---------  stringer and parse  ---------   */}}
 {{ if .Config.StringParse }}
-{{- $ee := .FindExtendByName .Config.StringParseName -}}
-{{ if $ee }}
+{{- $stringParseEe := .FindExtendByName .Config.StringParseName -}}
+{{ if $stringParseEe }}
+
+{{ if not (and (eq $stringParseEe.Name "Name") (eq .Type.String "string")) }}
+{{ $stringParseEe.Enum2ExtendMap }}
+{{ end }}
+
 func (x {{.Name}}) String() string {
-	if str, ok := _{{.Name}}Map{{$ee.Name}}[x]; ok {
-		return str
-	}
-	return fmt.Sprintf("{{.Name}}(%d)", x)
+{{ if and (eq $stringParseEe.Name "Name") (eq .Type.String "string") -}}
+    if v, ok := {{$stringParseEe.Extend2EnumVarName}}[string(x)]; ok {
+        return string(v)
+    }
+    return fmt.Sprintf("{{.Name}}(%s){{$stringParseEe.Name}}", string(x))
+{{- else -}}
+    if v, ok := {{$stringParseEe.Enum2ExtendVarName}}[x]; ok {
+        {{ if eq $stringParseEe.Type.String "string" -}}
+        return v
+        {{- else -}}
+        return fmt.Sprintf("%v", v)
+        {{- end }}
+    }
+    return fmt.Sprintf("{{.Name}}(%d){{$stringParseEe.Name}}", x)
+{{- end}}
 }
 
-{{ $ee.GetExtendNameMap }}
+{{ $stringParseEe.Extend2EnumMap }}
 
 func Parse{{.Name}}(name string) ({{.Name}}, error) {
-	if x, ok := _{{.Name}}{{$ee.Name}}Map[name]; ok {
+	if x, ok := {{$stringParseEe.Extend2EnumVarName}}[name]; ok {
 		return x, nil
 	}{{if .Config.NoCase }}
-    if x, ok := _{{.Name}}NameMap[strings.ToLower(name)]; ok {
+    if x, ok := {{$stringParseEe.Extend2EnumVarName}}[strings.ToLower(name)]; ok {
         return x, nil
     }{{- end}}
 	return {{.Name}}(0), fmt.Errorf("%s is %w", name, ErrInvalid{{.Name}})
@@ -72,6 +106,7 @@ func Parse{{.Name}}(name string) ({{.Name}}, error) {
 {{ end }}
 {{ end }}
 
+{{/* ---------  must parse  ---------   */}}
 {{ if .Config.MustParse }}
 func MustParse{{.Name}}(name string) {{.Name}} {
 	val, err := Parse{{.Name}}(name)
