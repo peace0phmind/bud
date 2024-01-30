@@ -36,8 +36,8 @@ func (x Animal) IsValid() bool {
 }
 
 func (x Animal) Name() string {
-	if v, ok := _AnimalNameMap[string(x)]; ok {
-		return string(v)
+	if v, ok := _AnimalMapName[x]; ok {
+		return v
 	}
 	panic(ErrInvalidAnimal)
 }
@@ -57,9 +57,9 @@ var _AnimalNameMap = map[string]Animal{
 	_AnimalName[16:21]: AnimalFishSharp,
 }
 
-func ParseAnimal(name string) (Animal, error) {
-	if x, ok := _AnimalNameMap[name]; ok {
+func ParseAnimal(value string) (Animal, error) {
+	if x, ok := _AnimalNameMap[value]; ok {
 		return x, nil
 	}
-	return Animal(0), fmt.Errorf("%s is %w", name, ErrInvalidAnimal)
+	return Animal(0), fmt.Errorf("%s is %w", value, ErrInvalidAnimal)
 }

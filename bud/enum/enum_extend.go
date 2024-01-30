@@ -107,3 +107,18 @@ func (ee *EnumExtend) Extend2EnumMap() string {
 
 	return buf.String()
 }
+
+func (ee *EnumExtend) FirstValueBits() int {
+	if ee.Type == reflect.String {
+		return 0
+	}
+	return reflect.TypeOf(ee.enum.Items[0].ExtendData[ee.idx]).Bits()
+}
+
+func (ee *EnumExtend) ParseNumberFuncString() string {
+	if ee.Type.String()[0] == 'u' {
+		return fmt.Sprintf("strconv.ParseUint(value, 0, %d)", ee.FirstValueBits())
+	} else {
+		return fmt.Sprintf("strconv.ParseInt(value, 0, %d)", ee.FirstValueBits())
+	}
+}

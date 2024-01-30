@@ -307,6 +307,24 @@ func (s Stream[T]) ToAny() ([]any, error) {
 	return result, nil
 }
 
+func (s Stream[T]) Contains(value T, eqFn func(x, y T) (bool, error)) (bool, error) {
+	for _, v := range s.elems {
+		ok, err := eqFn(v, value)
+		if err != nil {
+			if errors.Is(err, ErrContinue) {
+				continue
+			}
+			return false, err
+		}
+
+		if ok {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
 // AllMatch returns true if all elements in the stream satisfy the given matchFunc function.
 //
 // It iterates through each element in the stream and applies the matchFunc function to determine if the element satisfies the condition.

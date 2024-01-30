@@ -38,9 +38,9 @@ func (x TestOnlyEnum) String() string {
 	return fmt.Sprintf("TestOnlyEnum(%s)Name", string(x))
 }
 
-func ParseTestOnlyEnum(name string) (TestOnlyEnum, error) {
-	if x, ok := _TestOnlyEnumNameMap[name]; ok {
+func ParseTestOnlyEnum(value string) (TestOnlyEnum, error) {
+	if x, ok := _TestOnlyEnumNameMap[value]; ok {
 		return x, nil
 	}
-	return TestOnlyEnum(0), fmt.Errorf("%s is %w", name, ErrInvalidTestOnlyEnum)
+	return "", fmt.Errorf("%s is %w", value, ErrInvalidTestOnlyEnum)
 }

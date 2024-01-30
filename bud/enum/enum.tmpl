@@ -52,13 +52,13 @@ func {{.Name}}Values() []{{.Name}} {
 {{$extend.Enum2ExtendMap}}
 
 func (x {{$enumName}}) {{$extend.Name}}() {{$extend.Type.String}} {
-    {{ if eq $extend.Name "Name" -}}
+    {{ if and (eq $extend.Name "Name") (eq $extend.Enum.Type.String "string") -}}
     if v, ok := {{$validEe.Extend2EnumVarName}}[string(x)]; ok {
         return string(v)
     }
     {{- else -}}
-    if result, ok := {{$extend.Enum2ExtendVarName}}[x]; ok {
-        return result
+    if v, ok := {{$extend.Enum2ExtendVarName}}[x]; ok {
+        return v
     }
     {{- end}}
     panic(ErrInvalid{{$enumName}})
@@ -94,14 +94,34 @@ func (x {{.Name}}) String() string {
 
 {{ $stringParseEe.Extend2EnumMap }}
 
-func Parse{{.Name}}(name string) ({{.Name}}, error) {
-	if x, ok := {{$stringParseEe.Extend2EnumVarName}}[name]; ok {
+func Parse{{.Name}}(value string) ({{.Name}}, error) {
+{{ if eq $stringParseEe.Type.String "string" -}}
+	if x, ok := {{$stringParseEe.Extend2EnumVarName}}[value]; ok {
 		return x, nil
-	}{{if .Config.NoCase }}
-    if x, ok := {{$stringParseEe.Extend2EnumVarName}}[strings.ToLower(name)]; ok {
+	}
+	{{ if .Config.NoCase -}}
+    if x, ok := {{$stringParseEe.Extend2EnumVarName}}[strings.ToLower(value)]; ok {
         return x, nil
-    }{{- end}}
-	return {{.Name}}(0), fmt.Errorf("%s is %w", name, ErrInvalid{{.Name}})
+    }
+    {{- end -}}
+{{- else -}}
+    if v, err := {{ $stringParseEe.ParseNumberFuncString }}
+    if err != nil {
+        {{ if eq .Type.String "string" }}
+        return {{.Name}}(""), fmt.Errorf("%s is %w, %w", value, ErrInvalid{{.Name}}, err)
+        {{- else -}}
+        return {{.Name}}(0), fmt.Errorf("%s is %w, %w", value, ErrInvalid{{.Name}}, err)
+        {{- end }}
+    }
+    if x, ok := {{$stringParseEe.Extend2EnumVarName}}[v]; ok {
+        return x, nil
+    }
+{{- end -}}
+    {{- if eq .Type.String "string" -}}
+    return "", fmt.Errorf("%s is %w", value, ErrInvalid{{.Name}})
+    {{- else -}}
+	return {{.Name}}(0), fmt.Errorf("%s is %w", value, ErrInvalid{{.Name}})
+	{{- end }}
 }
 {{ end }}
 {{ end }}

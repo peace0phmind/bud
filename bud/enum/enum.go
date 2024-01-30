@@ -141,6 +141,34 @@ func (e *Enum) CheckValid() error {
 		itemNames[item.Name] = true
 	}
 
+	// check config names and type
+	spee := e.FindExtendByName(e.Config.StringParseName)
+	if spee == nil {
+		return errors.New("enum config string parse name must exist in enum extends")
+	} else {
+		if !stream.Must(stream.Of(enumTypes).Contains(spee.Type, func(x, y reflect.Kind) (bool, error) { return x == y, nil })) {
+			return errors.New("StringParseName's type muse be number or string")
+		}
+	}
+
+	mee := e.FindExtendByName(e.Config.MarshalName)
+	if mee == nil {
+		return errors.New("enum config marshal name must exist in enum extends")
+	} else {
+		if !stream.Must(stream.Of(enumTypes).Contains(mee.Type, func(x, y reflect.Kind) (bool, error) { return x == y, nil })) {
+			return errors.New("MarshalName's type muse be number or string")
+		}
+	}
+
+	//see := e.FindExtendByName(e.Config.SqlName)
+	//if see == nil {
+	//	return errors.New("enum config sql name must exist in enum extends")
+	//} else {
+	//	if !stream.Must(stream.Of(enumTypes).Contains(see.Type, func(x, y reflect.Kind) (bool, error) { return x == y, nil })) {
+	//		return errors.New("SqlName's type muse be number or string")
+	//	}
+	//}
+
 	// if e.Extend is empty or e.Extend haven't a EnumItemName item, then use item's name to create it
 	if fee := e.FindExtendByName(EnumItemName); fee == nil {
 		for _, ee := range e.Extends {
