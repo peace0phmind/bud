@@ -108,7 +108,7 @@ func Parse{{.Name}}(value string) ({{.Name}}, error) {
     if v, err := {{ $stringParseEe.ParseNumberFuncString }}
     if err != nil {
         {{ if eq .Type.String "string" }}
-        return {{.Name}}(""), fmt.Errorf("%s is %w, %w", value, ErrInvalid{{.Name}}, err)
+        return "", fmt.Errorf("%s is %w, %w", value, ErrInvalid{{.Name}}, err)
         {{- else -}}
         return {{.Name}}(0), fmt.Errorf("%s is %w, %w", value, ErrInvalid{{.Name}}, err)
         {{- end }}
