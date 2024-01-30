@@ -55,6 +55,7 @@ func NewGenerator(fileNode *goast.File, fileSet *token.FileSet) (ast.Generator, 
 				return nil, fmt.Errorf("parse annotation to enum config err: %v", err)
 			}
 			ec = ec1
+			break
 		}
 	}
 

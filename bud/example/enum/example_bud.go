@@ -120,7 +120,6 @@ func ParseMake(value string) (Make, error) {
 	if x, ok := _MakeNameMap[value]; ok {
 		return x, nil
 	}
-
 	return Make(0), fmt.Errorf("%s is %w", value, ErrInvalidMake)
 }
 
@@ -169,6 +168,5 @@ func ParseNoZeros(value string) (NoZeros, error) {
 	if x, ok := _NoZerosNameMap[value]; ok {
 		return x, nil
 	}
-
 	return NoZeros(0), fmt.Errorf("%s is %w", value, ErrInvalidNoZeros)
 }

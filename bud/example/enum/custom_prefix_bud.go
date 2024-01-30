@@ -53,6 +53,5 @@ func ParseProduct(value string) (Product, error) {
 	if x, ok := _ProductNameMap[value]; ok {
 		return x, nil
 	}
-
 	return Product(0), fmt.Errorf("%s is %w", value, ErrInvalidProduct)
 }

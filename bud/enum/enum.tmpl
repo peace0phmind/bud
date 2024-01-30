@@ -97,8 +97,7 @@ func Parse{{.Name}}(value string) ({{.Name}}, error) {
 {{ if eq $stringParseEe.Type.String "string" -}}
 	if x, ok := {{$stringParseEe.Extend2EnumVarName}}[value]; ok {
 		return x, nil
-	}
-	{{if .Config.NoCase -}}
+	}{{ if .Config.NoCase }}
     if x, ok := {{$stringParseEe.Extend2EnumVarName}}[strings.ToLower(value)]; ok {
         return x, nil
     }
@@ -115,8 +114,8 @@ func Parse{{.Name}}(value string) ({{.Name}}, error) {
     if x, ok := {{$stringParseEe.Extend2EnumVarName}}[v]; ok {
         return x, nil
     }
-{{- end}}
-    {{if eq .Type.String "string" -}}
+{{- end }}
+    {{ if eq .Type.String "string" -}}
     return "", fmt.Errorf("%s is %w", value, ErrInvalid{{.Name}})
     {{- else -}}
 	return {{.Name}}(0), fmt.Errorf("%s is %w", value, ErrInvalid{{.Name}})

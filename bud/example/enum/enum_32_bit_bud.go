@@ -89,6 +89,5 @@ func ParseEnum32bit(value string) (Enum32bit, error) {
 	if x, ok := _Enum32bitNameMap[value]; ok {
 		return x, nil
 	}
-
 	return Enum32bit(0), fmt.Errorf("%s is %w", value, ErrInvalidEnum32bit)
 }

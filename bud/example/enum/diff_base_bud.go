@@ -77,6 +77,5 @@ func ParseDiffBase(value string) (DiffBase, error) {
 	if x, ok := _DiffBaseNameMap[value]; ok {
 		return x, nil
 	}
-
 	return DiffBase(0), fmt.Errorf("%s is %w", value, ErrInvalidDiffBase)
 }

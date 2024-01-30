@@ -105,6 +105,5 @@ func ParseEnum64bit(value string) (Enum64bit, error) {
 	if x, ok := _Enum64bitNameMap[value]; ok {
 		return x, nil
 	}
-
 	return Enum64bit(0), fmt.Errorf("%s is %w", value, ErrInvalidEnum64bit)
 }
