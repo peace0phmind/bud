@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/peace0phmind/bud/bud/ast"
-	"github.com/peace0phmind/bud/factory"
 	"github.com/peace0phmind/bud/stream"
 	"github.com/peace0phmind/bud/structure"
 	"github.com/peace0phmind/bud/util"
@@ -17,8 +16,8 @@ const (
 )
 
 type EnumConfig struct {
-	NoPrefix         bool `value:"false"` // 所有生成的枚举不携带类型名称前缀
 	Prefix           string
+	NoPrefix         bool   `value:"false"` // 所有生成的枚举不携带类型名称前缀
 	StringParse      bool   `value:"true"`
 	StringParseName  string `value:"Name"`
 	MustParse        bool   `value:"false"`
@@ -248,23 +247,33 @@ func (e *Enum) GetItems() []*EnumItem {
 	}).ToSlice())
 }
 
-func annotationGroupToEnum(ag *ast.AnnotationGroup, ts *goast.TypeSpec) (*Enum, error) {
-	enumAnnotation := ag.FindAnnotationByName("enum")
+func annotationGroupToEnumConfig(ag *ast.AnnotationGroup, globalConfig *EnumConfig) (*EnumConfig, error) {
 	enumConfAnnotation := ag.FindAnnotationByName("EnumConfig")
 
+	if enumConfAnnotation != nil {
+		ec, err := ast.AnnotationParamsTo[EnumConfig](structure.Clone(globalConfig), enumConfAnnotation)
+		if err != nil {
+			return nil, errors.New(fmt.Sprintf("pase annotation err: %v", err))
+		}
+		return ec, nil
+	}
+
+	if globalConfig != nil {
+		return structure.Clone(globalConfig), nil
+	} else {
+		return nil, nil
+	}
+}
+
+func annotationGroupToEnum(ag *ast.AnnotationGroup, ts *goast.TypeSpec, globalConfig *EnumConfig) (*Enum, error) {
+	enumAnnotation := ag.FindAnnotationByName("enum")
 	if enumAnnotation == nil {
 		return nil, nil
 	}
 
-	var ec *EnumConfig = nil
-	var err error
-	if enumConfAnnotation != nil {
-		ec, err = ast.AnnotationParamsTo[EnumConfig](enumConfAnnotation)
-		if err != nil {
-			return nil, errors.New(fmt.Sprintf("pase annotation err: %v", err))
-		}
-	} else {
-		ec = factory.New[EnumConfig]()
+	ec, err := annotationGroupToEnumConfig(ag, globalConfig)
+	if err != nil {
+		return nil, err
 	}
 
 	enum := &Enum{

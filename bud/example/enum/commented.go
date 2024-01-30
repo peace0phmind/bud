@@ -1,10 +1,10 @@
 package enum
 
+//@EnumConfig(marshal, nocase)
 //go:generate go run ../../../main.go
 
 // Commented is an enumeration of commented values
 /*
-@EnumConfig(marshal, nocase)
 @ENUM{
 value1 // Commented value 1
 value2
@@ -15,7 +15,6 @@ type Commented int
 
 // ComplexCommented has some extra complicated parsing rules.
 /*
-@EnumConfig(marshal, nocase)
 @ENUM{
 	_, // Placeholder with a ','  in it. (for harder testing)
 value1 // Commented value 1

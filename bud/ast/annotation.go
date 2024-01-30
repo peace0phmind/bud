@@ -181,9 +181,11 @@ func fixComments(annotationGroup *AnnotationGroup, err error) (*AnnotationGroup,
 
 var defaultBoolValue = any(Bool{V: true}).(Value)
 
-func AnnotationParamsTo[T any](a *Annotation) (t *T, err error) {
-
-	t = factory.New[T]()
+func AnnotationParamsTo[T any](val *T, a *Annotation) (t *T, err error) {
+	t = val
+	if t == nil {
+		t = factory.New[T]()
+	}
 
 	if a.Params != nil {
 		err = structure.WalkField(t, func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type) error {

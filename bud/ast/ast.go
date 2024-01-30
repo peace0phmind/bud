@@ -47,6 +47,12 @@ func InspectMapper[From any, To any](fileNode *ast.File, fileSet *token.FileSet,
 
 	ast.Inspect(fileNode, func(n ast.Node) bool {
 		switch decl := n.(type) {
+		case *ast.Comment, *ast.CommentGroup:
+			if cg, ok := any(decl).(*From); ok {
+				if t := mapper(cg); t != nil {
+					result = append(result, t)
+				}
+			}
 		case *ast.TypeSpec:
 			if ts, ok := any(decl).(*From); ok {
 				if decl.Doc == nil {

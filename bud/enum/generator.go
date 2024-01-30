@@ -4,6 +4,7 @@ import (
 	"embed"
 	"fmt"
 	"github.com/peace0phmind/bud/bud/ast"
+	"github.com/peace0phmind/bud/factory"
 	"github.com/peace0phmind/bud/stream"
 	"github.com/peace0phmind/bud/util"
 	goast "go/ast"
@@ -40,7 +41,28 @@ func (eg *EnumGenerator) GetImports() []string {
 }
 
 func NewGenerator(fileNode *goast.File, fileSet *token.FileSet) (ast.Generator, error) {
+	// get global enum config
+	var ec *EnumConfig = nil
+	for _, cg := range fileNode.Comments {
+		if strings.HasPrefix(cg.List[len(cg.List)-1].Text, "//go:generate") {
+			ag, err := ast.ParseAnnotation(fileNode.Name.Name, cg.Text())
+			if err != nil {
+				return nil, fmt.Errorf("parse annotation err: %v", err)
+			}
 
+			ec1, err := annotationGroupToEnumConfig(ag, nil)
+			if err != nil {
+				return nil, fmt.Errorf("parse annotation to enum config err: %v", err)
+			}
+			ec = ec1
+		}
+	}
+
+	if ec == nil {
+		ec = factory.New[EnumConfig]()
+	}
+
+	// get all enums
 	allEnums := ast.InspectMapper[goast.TypeSpec, Enum](fileNode, fileSet, func(ts *goast.TypeSpec) *Enum {
 		var comment string
 		if ts.Doc != nil {
@@ -56,7 +78,7 @@ func NewGenerator(fileNode *goast.File, fileSet *token.FileSet) (ast.Generator, 
 				return nil
 			}
 
-			enum, err := annotationGroupToEnum(ag, ts)
+			enum, err := annotationGroupToEnum(ag, ts, ec)
 			if err != nil {
 				panic(fmt.Sprintf("update extends err: %v", err))
 			}
