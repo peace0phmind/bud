@@ -15,7 +15,7 @@ type commentedData struct {
 
 func TestCommentedEnumString(t *testing.T) {
 	x := Commented(109)
-	assert.Equal(t, "Commented(109)", x.String())
+	assert.Equal(t, "Commented(109)Name", x.String())
 	x = Commented(1)
 	assert.Equal(t, "value2", x.String())
 

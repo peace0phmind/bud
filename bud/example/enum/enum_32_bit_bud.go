@@ -51,23 +51,23 @@ var _Enum32bitMapName = map[Enum32bit]string{
 	Enum32bitE2P30: _Enum32bitName[55:60],
 }
 
-func (x Enum32bit) Name() string {
-	if result, ok := _Enum32bitMapName[x]; ok {
-		return result
-	}
-	panic(ErrInvalidEnum32bit)
-}
-
 func (x Enum32bit) IsValid() bool {
 	_, ok := _Enum32bitMapName[x]
 	return ok
 }
 
-func (x Enum32bit) String() string {
-	if str, ok := _Enum32bitMapName[x]; ok {
-		return str
+func (x Enum32bit) Name() string {
+	if v, ok := _Enum32bitMapName[x]; ok {
+		return v
 	}
-	return fmt.Sprintf("Enum32bit(%d)", x)
+	panic(ErrInvalidEnum32bit)
+}
+
+func (x Enum32bit) String() string {
+	if v, ok := _Enum32bitMapName[x]; ok {
+		return v
+	}
+	return fmt.Sprintf("Enum32bit(%d)Name", x)
 }
 
 var _Enum32bitNameMap = map[string]Enum32bit{
@@ -85,9 +85,10 @@ var _Enum32bitNameMap = map[string]Enum32bit{
 	_Enum32bitName[55:60]: Enum32bitE2P30,
 }
 
-func ParseEnum32bit(name string) (Enum32bit, error) {
-	if x, ok := _Enum32bitNameMap[name]; ok {
+func ParseEnum32bit(value string) (Enum32bit, error) {
+	if x, ok := _Enum32bitNameMap[value]; ok {
 		return x, nil
 	}
-	return Enum32bit(0), fmt.Errorf("%s is %w", name, ErrInvalidEnum32bit)
+
+	return Enum32bit(0), fmt.Errorf("%s is %w", value, ErrInvalidEnum32bit)
 }

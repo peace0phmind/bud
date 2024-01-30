@@ -141,6 +141,32 @@ func (e *Enum) CheckValid() error {
 		itemNames[item.Name] = true
 	}
 
+	// if e.Extend is empty or e.Extend haven't a EnumItemName item, then use item's name to create it
+	if fee := e.FindExtendByName(EnumItemName); fee == nil {
+		for _, ee := range e.Extends {
+			ee.idx += 1
+		}
+
+		ee := &EnumExtend{
+			enum:    e,
+			idx:     0,
+			Name:    EnumItemName,
+			Type:    reflect.String,
+			Comment: "",
+		}
+		e.Extends = append([]*EnumExtend{ee}, e.Extends...)
+
+		for _, ei := range e.GetItems() {
+			ei.ExtendData = append([]any{ei.Name}, ei.ExtendData...)
+		}
+	} else {
+		for _, ei := range e.GetItems() {
+			if isBlankIdentifier(ei.ExtendData[fee.idx]) {
+				ei.ExtendData[fee.idx] = ei.Name
+			}
+		}
+	}
+
 	// check config names and type
 	spee := e.FindExtendByName(e.Config.StringParseName)
 	if spee == nil {
@@ -168,32 +194,6 @@ func (e *Enum) CheckValid() error {
 	//		return errors.New("SqlName's type muse be number or string")
 	//	}
 	//}
-
-	// if e.Extend is empty or e.Extend haven't a EnumItemName item, then use item's name to create it
-	if fee := e.FindExtendByName(EnumItemName); fee == nil {
-		for _, ee := range e.Extends {
-			ee.idx += 1
-		}
-
-		ee := &EnumExtend{
-			enum:    e,
-			idx:     0,
-			Name:    EnumItemName,
-			Type:    reflect.String,
-			Comment: "",
-		}
-		e.Extends = append([]*EnumExtend{ee}, e.Extends...)
-
-		for _, ei := range e.GetItems() {
-			ei.ExtendData = append([]any{ei.Name}, ei.ExtendData...)
-		}
-	} else {
-		for _, ei := range e.GetItems() {
-			if isBlankIdentifier(ei.ExtendData[fee.idx]) {
-				ei.ExtendData[fee.idx] = ei.Name
-			}
-		}
-	}
 
 	// check and set item value
 	if e.Type == reflect.String {

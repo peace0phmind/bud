@@ -42,23 +42,23 @@ var _DiffBaseMapName = map[DiffBase]string{
 	DiffBaseB11: _DiffBaseName[17:20],
 }
 
-func (x DiffBase) Name() string {
-	if result, ok := _DiffBaseMapName[x]; ok {
-		return result
-	}
-	panic(ErrInvalidDiffBase)
-}
-
 func (x DiffBase) IsValid() bool {
 	_, ok := _DiffBaseMapName[x]
 	return ok
 }
 
-func (x DiffBase) String() string {
-	if str, ok := _DiffBaseMapName[x]; ok {
-		return str
+func (x DiffBase) Name() string {
+	if v, ok := _DiffBaseMapName[x]; ok {
+		return v
 	}
-	return fmt.Sprintf("DiffBase(%d)", x)
+	panic(ErrInvalidDiffBase)
+}
+
+func (x DiffBase) String() string {
+	if v, ok := _DiffBaseMapName[x]; ok {
+		return v
+	}
+	return fmt.Sprintf("DiffBase(%d)Name", x)
 }
 
 var _DiffBaseNameMap = map[string]DiffBase{
@@ -73,9 +73,10 @@ var _DiffBaseNameMap = map[string]DiffBase{
 	_DiffBaseName[17:20]: DiffBaseB11,
 }
 
-func ParseDiffBase(name string) (DiffBase, error) {
-	if x, ok := _DiffBaseNameMap[name]; ok {
+func ParseDiffBase(value string) (DiffBase, error) {
+	if x, ok := _DiffBaseNameMap[value]; ok {
 		return x, nil
 	}
-	return DiffBase(0), fmt.Errorf("%s is %w", name, ErrInvalidDiffBase)
+
+	return DiffBase(0), fmt.Errorf("%s is %w", value, ErrInvalidDiffBase)
 }

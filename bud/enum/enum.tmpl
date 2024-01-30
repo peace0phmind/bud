@@ -68,7 +68,6 @@ func (x {{$enumName}}) {{$extend.Name}}() {{$extend.Type.String}} {
 {{/* ---------  stringer and parse  --------- */}}
 {{ if .Config.StringParse }}
 {{- $stringParseEe := .FindExtendByName .Config.StringParseName -}}
-{{ if $stringParseEe }}
 
 {{ if not (and (eq $stringParseEe.Name "Name") (eq .Type.String "string")) }}
 {{ $stringParseEe.Enum2ExtendMap }}
@@ -99,15 +98,15 @@ func Parse{{.Name}}(value string) ({{.Name}}, error) {
 	if x, ok := {{$stringParseEe.Extend2EnumVarName}}[value]; ok {
 		return x, nil
 	}
-	{{ if .Config.NoCase -}}
+	{{- if .Config.NoCase -}}
     if x, ok := {{$stringParseEe.Extend2EnumVarName}}[strings.ToLower(value)]; ok {
         return x, nil
     }
-    {{- end -}}
+    {{- end }}
 {{- else -}}
     if v, err := {{ $stringParseEe.ParseNumberFuncString }}
     if err != nil {
-        {{ if eq .Type.String "string" }}
+        {{ if eq .Type.String "string" -}}
         return "", fmt.Errorf("%s is %w, %w", value, ErrInvalid{{.Name}}, err)
         {{- else -}}
         return {{.Name}}(0), fmt.Errorf("%s is %w, %w", value, ErrInvalid{{.Name}}, err)
@@ -116,14 +115,13 @@ func Parse{{.Name}}(value string) ({{.Name}}, error) {
     if x, ok := {{$stringParseEe.Extend2EnumVarName}}[v]; ok {
         return x, nil
     }
-{{- end -}}
-    {{- if eq .Type.String "string" -}}
+{{- end}}
+    {{if eq .Type.String "string" -}}
     return "", fmt.Errorf("%s is %w", value, ErrInvalid{{.Name}})
     {{- else -}}
 	return {{.Name}}(0), fmt.Errorf("%s is %w", value, ErrInvalid{{.Name}})
 	{{- end }}
 }
-{{ end }}
 {{ end }}
 
 {{/* ---------  must parse  --------- */}}
@@ -146,7 +144,7 @@ func (x {{.Name}}) Ptr() *{{.Name}} {
 
 {{/* ---------  marshal  --------- */}}
 {{ if .Config.Marshal }}
-{{ if and (.Config.StringParse (eq .Config.StringParseName .Config.MarshalName)) }}
+{{ if and .Config.StringParse (eq .Config.StringParseName .Config.MarshalName) }}
 func (x {{.Name}}) MarshalText() ([]byte, error) {
 	return []byte(x.String()), nil
 }
@@ -160,7 +158,64 @@ func (x *{{.Name}}) UnmarshalText(text []byte) error {
 	return nil
 }
 {{- else -}}
+{{- $mEe := .FindExtendByName .Config.MarshalName -}}
 
+{{ if not (and (eq $mEe.Name "Name") (eq .Type.String "string")) }}
+{{ $mEe.Enum2ExtendMap }}
+{{ end }}
+
+func (x {{.Name}}) MarshalText() ([]byte, error) {
+{{ if and (eq $mEe.Name "Name") (eq .Type.String "string") -}}
+    if v, ok := {{$mEe.Extend2EnumVarName}}[string(x)]; ok {
+        return []byte(string(v)), nil
+    }
+    return nil, fmt.Sprintf("{{.Name}}(%s){{$mEe.Name}}", string(x))
+{{- else -}}
+    if v, ok := {{$mEe.Enum2ExtendVarName}}[x]; ok {
+        {{ if eq $mEe.Type.String "string" -}}
+        return []byte(v), nil
+        {{- else -}}
+        return []byte(fmt.Sprintf("%v", v)), nil
+        {{- end }}
+    }
+    return nil, fmt.Sprintf("{{.Name}}(%d){{$mEe.Name}}", x)
+{{- end}}
+}
+
+{{ $mEe.Extend2EnumMap }}
+
+func (x *{{.Name}}) UnmarshalText(text []byte) error {
+{{ if eq $mEe.Type.String "string" -}}
+	if val, ok := {{$mEe.Extend2EnumVarName}}[string(text)]; ok {
+	    *x = val
+		return nil
+	}
+	{{ if .Config.NoCase -}}
+    if val, ok := {{$mEe.Extend2EnumVarName}}[strings.ToLower(string(text))]; ok {
+        *x = val
+        return nil
+    }
+    {{- end -}}
+{{- else -}}
+    if v, err := {{ $mEe.ParseNumberFuncString }}
+    if err != nil {
+        {{ if eq .Type.String "string" }}
+        return fmt.Errorf("%s is %w, %w", value, ErrInvalid{{.Name}}, err)
+        {{- else -}}
+        return fmt.Errorf("%s is %w, %w", value, ErrInvalid{{.Name}}, err)
+        {{- end }}
+    }
+    if val, ok := {{$mEe.Extend2EnumVarName}}[v]; ok {
+        *x = val
+        return nil
+    }
+{{- end -}}
+    {{- if eq .Type.String "string" -}}
+    return fmt.Errorf("%s is %w", value, ErrInvalid{{.Name}})
+    {{- else -}}
+	return fmt.Errorf("%s is %w", value, ErrInvalid{{.Name}})
+	{{- end }}
+}
 {{- end }}
 {{end}}
 

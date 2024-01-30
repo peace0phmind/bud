@@ -40,23 +40,23 @@ var _CommentedMapName = map[Commented]string{
 	CommentedValue3: _CommentedName[12:18],
 }
 
-func (x Commented) Name() string {
-	if result, ok := _CommentedMapName[x]; ok {
-		return result
-	}
-	panic(ErrInvalidCommented)
-}
-
 func (x Commented) IsValid() bool {
 	_, ok := _CommentedMapName[x]
 	return ok
 }
 
-func (x Commented) String() string {
-	if str, ok := _CommentedMapName[x]; ok {
-		return str
+func (x Commented) Name() string {
+	if v, ok := _CommentedMapName[x]; ok {
+		return v
 	}
-	return fmt.Sprintf("Commented(%d)", x)
+	panic(ErrInvalidCommented)
+}
+
+func (x Commented) String() string {
+	if v, ok := _CommentedMapName[x]; ok {
+		return v
+	}
+	return fmt.Sprintf("Commented(%d)Name", x)
 }
 
 var _CommentedNameMap = map[string]Commented{
@@ -65,14 +65,14 @@ var _CommentedNameMap = map[string]Commented{
 	_CommentedName[12:18]: CommentedValue3,
 }
 
-func ParseCommented(name string) (Commented, error) {
-	if x, ok := _CommentedNameMap[name]; ok {
+func ParseCommented(value string) (Commented, error) {
+	if x, ok := _CommentedNameMap[value]; ok {
 		return x, nil
 	}
-	if x, ok := _CommentedNameMap[strings.ToLower(name)]; ok {
+	if x, ok := _CommentedNameMap[strings.ToLower(value)]; ok {
 		return x, nil
 	}
-	return Commented(0), fmt.Errorf("%s is %w", name, ErrInvalidCommented)
+	return Commented(0), fmt.Errorf("%s is %w", value, ErrInvalidCommented)
 }
 
 func (x Commented) MarshalText() ([]byte, error) {
@@ -80,12 +80,11 @@ func (x Commented) MarshalText() ([]byte, error) {
 }
 
 func (x *Commented) UnmarshalText(text []byte) error {
-	name := string(text)
-	tmp, err := ParseCommented(name)
+	val, err := ParseCommented(string(text))
 	if err != nil {
 		return err
 	}
-	*x = tmp
+	*x = val
 	return nil
 }
 
@@ -99,23 +98,23 @@ var _ComplexCommentedMapName = map[ComplexCommented]string{
 	ComplexCommentedValue3: _ComplexCommentedName[12:18],
 }
 
-func (x ComplexCommented) Name() string {
-	if result, ok := _ComplexCommentedMapName[x]; ok {
-		return result
-	}
-	panic(ErrInvalidComplexCommented)
-}
-
 func (x ComplexCommented) IsValid() bool {
 	_, ok := _ComplexCommentedMapName[x]
 	return ok
 }
 
-func (x ComplexCommented) String() string {
-	if str, ok := _ComplexCommentedMapName[x]; ok {
-		return str
+func (x ComplexCommented) Name() string {
+	if v, ok := _ComplexCommentedMapName[x]; ok {
+		return v
 	}
-	return fmt.Sprintf("ComplexCommented(%d)", x)
+	panic(ErrInvalidComplexCommented)
+}
+
+func (x ComplexCommented) String() string {
+	if v, ok := _ComplexCommentedMapName[x]; ok {
+		return v
+	}
+	return fmt.Sprintf("ComplexCommented(%d)Name", x)
 }
 
 var _ComplexCommentedNameMap = map[string]ComplexCommented{
@@ -124,14 +123,14 @@ var _ComplexCommentedNameMap = map[string]ComplexCommented{
 	_ComplexCommentedName[12:18]: ComplexCommentedValue3,
 }
 
-func ParseComplexCommented(name string) (ComplexCommented, error) {
-	if x, ok := _ComplexCommentedNameMap[name]; ok {
+func ParseComplexCommented(value string) (ComplexCommented, error) {
+	if x, ok := _ComplexCommentedNameMap[value]; ok {
 		return x, nil
 	}
-	if x, ok := _ComplexCommentedNameMap[strings.ToLower(name)]; ok {
+	if x, ok := _ComplexCommentedNameMap[strings.ToLower(value)]; ok {
 		return x, nil
 	}
-	return ComplexCommented(0), fmt.Errorf("%s is %w", name, ErrInvalidComplexCommented)
+	return ComplexCommented(0), fmt.Errorf("%s is %w", value, ErrInvalidComplexCommented)
 }
 
 func (x ComplexCommented) MarshalText() ([]byte, error) {
@@ -139,11 +138,10 @@ func (x ComplexCommented) MarshalText() ([]byte, error) {
 }
 
 func (x *ComplexCommented) UnmarshalText(text []byte) error {
-	name := string(text)
-	tmp, err := ParseComplexCommented(name)
+	val, err := ParseComplexCommented(string(text))
 	if err != nil {
 		return err
 	}
-	*x = tmp
+	*x = val
 	return nil
 }

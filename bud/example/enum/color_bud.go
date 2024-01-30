@@ -49,23 +49,23 @@ var _ColorMapName = map[Color]string{
 	ColorRedOrangeBlue: _ColorName[64:79],
 }
 
-func (x Color) Name() string {
-	if result, ok := _ColorMapName[x]; ok {
-		return result
-	}
-	panic(ErrInvalidColor)
-}
-
 func (x Color) IsValid() bool {
 	_, ok := _ColorMapName[x]
 	return ok
 }
 
-func (x Color) String() string {
-	if str, ok := _ColorMapName[x]; ok {
-		return str
+func (x Color) Name() string {
+	if v, ok := _ColorMapName[x]; ok {
+		return v
 	}
-	return fmt.Sprintf("Color(%d)", x)
+	panic(ErrInvalidColor)
+}
+
+func (x Color) String() string {
+	if v, ok := _ColorMapName[x]; ok {
+		return v
+	}
+	return fmt.Sprintf("Color(%d)Name", x)
 }
 
 var _ColorNameMap = map[string]Color{
@@ -87,18 +87,18 @@ var _ColorNameMap = map[string]Color{
 	_ColorName[64:79]:                  ColorRedOrangeBlue,
 }
 
-func ParseColor(name string) (Color, error) {
-	if x, ok := _ColorNameMap[name]; ok {
+func ParseColor(value string) (Color, error) {
+	if x, ok := _ColorNameMap[value]; ok {
 		return x, nil
 	}
-	if x, ok := _ColorNameMap[strings.ToLower(name)]; ok {
+	if x, ok := _ColorNameMap[strings.ToLower(value)]; ok {
 		return x, nil
 	}
-	return Color(0), fmt.Errorf("%s is %w", name, ErrInvalidColor)
+	return Color(0), fmt.Errorf("%s is %w", value, ErrInvalidColor)
 }
 
-func MustParseColor(name string) Color {
-	val, err := ParseColor(name)
+func MustParseColor(value string) Color {
+	val, err := ParseColor(value)
 	if err != nil {
 		panic(err)
 	}
@@ -114,11 +114,10 @@ func (x Color) MarshalText() ([]byte, error) {
 }
 
 func (x *Color) UnmarshalText(text []byte) error {
-	name := string(text)
-	tmp, err := ParseColor(name)
+	val, err := ParseColor(string(text))
 	if err != nil {
 		return err
 	}
-	*x = tmp
+	*x = val
 	return nil
 }

@@ -83,23 +83,23 @@ var _MakeMapName = map[Make]string{
 	MakeVolkswagon:   _MakeName[59:69],
 }
 
-func (x Make) Name() string {
-	if result, ok := _MakeMapName[x]; ok {
-		return result
-	}
-	panic(ErrInvalidMake)
-}
-
 func (x Make) IsValid() bool {
 	_, ok := _MakeMapName[x]
 	return ok
 }
 
-func (x Make) String() string {
-	if str, ok := _MakeMapName[x]; ok {
-		return str
+func (x Make) Name() string {
+	if v, ok := _MakeMapName[x]; ok {
+		return v
 	}
-	return fmt.Sprintf("Make(%d)", x)
+	panic(ErrInvalidMake)
+}
+
+func (x Make) String() string {
+	if v, ok := _MakeMapName[x]; ok {
+		return v
+	}
+	return fmt.Sprintf("Make(%d)Name", x)
 }
 
 var _MakeNameMap = map[string]Make{
@@ -116,11 +116,12 @@ var _MakeNameMap = map[string]Make{
 	_MakeName[59:69]: MakeVolkswagon,
 }
 
-func ParseMake(name string) (Make, error) {
-	if x, ok := _MakeNameMap[name]; ok {
+func ParseMake(value string) (Make, error) {
+	if x, ok := _MakeNameMap[value]; ok {
 		return x, nil
 	}
-	return Make(0), fmt.Errorf("%s is %w", name, ErrInvalidMake)
+
+	return Make(0), fmt.Errorf("%s is %w", value, ErrInvalidMake)
 }
 
 var ErrInvalidNoZeros = errors.New("not a valid NoZeros")
@@ -136,23 +137,23 @@ var _NoZerosMapName = map[NoZeros]string{
 	NoZerosPpps:   _NoZerosName[19:23],
 }
 
-func (x NoZeros) Name() string {
-	if result, ok := _NoZerosMapName[x]; ok {
-		return result
-	}
-	panic(ErrInvalidNoZeros)
-}
-
 func (x NoZeros) IsValid() bool {
 	_, ok := _NoZerosMapName[x]
 	return ok
 }
 
-func (x NoZeros) String() string {
-	if str, ok := _NoZerosMapName[x]; ok {
-		return str
+func (x NoZeros) Name() string {
+	if v, ok := _NoZerosMapName[x]; ok {
+		return v
 	}
-	return fmt.Sprintf("NoZeros(%d)", x)
+	panic(ErrInvalidNoZeros)
+}
+
+func (x NoZeros) String() string {
+	if v, ok := _NoZerosMapName[x]; ok {
+		return v
+	}
+	return fmt.Sprintf("NoZeros(%d)Name", x)
 }
 
 var _NoZerosNameMap = map[string]NoZeros{
@@ -164,9 +165,10 @@ var _NoZerosNameMap = map[string]NoZeros{
 	_NoZerosName[19:23]: NoZerosPpps,
 }
 
-func ParseNoZeros(name string) (NoZeros, error) {
-	if x, ok := _NoZerosNameMap[name]; ok {
+func ParseNoZeros(value string) (NoZeros, error) {
+	if x, ok := _NoZerosNameMap[value]; ok {
 		return x, nil
 	}
-	return NoZeros(0), fmt.Errorf("%s is %w", name, ErrInvalidNoZeros)
+
+	return NoZeros(0), fmt.Errorf("%s is %w", value, ErrInvalidNoZeros)
 }
