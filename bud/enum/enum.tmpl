@@ -20,7 +20,7 @@ const (
 
 var ErrInvalid{{.Name}} = errors.New("not a valid {{.Name}}")
 
-{{/* ---------  valid  ---------   */}}
+{{/* ---------  valid  --------- */}}
 {{- $validEe := .FindExtendByName "Name" -}}
 {{ if eq .Type.String "string" }}
 {{ $validEe.Extend2EnumMap }}
@@ -38,7 +38,7 @@ func (x {{.Name}}) IsValid() bool {
 	return ok
 }
 
-{{/* ---------  values  ---------   */}}
+{{/* ---------  values  --------- */}}
 {{ if .Config.Values }}
 func {{.Name}}Values() []{{.Name}} {
     return []{{.Name}}{ {{ range $ei, $item := .GetItems }}
@@ -47,7 +47,7 @@ func {{.Name}}Values() []{{.Name}} {
 }
 {{ end -}}
 
-{{/* ---------  extend values  ---------   */}}
+{{/* ---------  extend values  --------- */}}
 {{ range $ei, $extend := .Extends -}}
 {{$extend.Enum2ExtendMap}}
 
@@ -65,7 +65,7 @@ func (x {{$enumName}}) {{$extend.Name}}() {{$extend.Type.String}} {
 }
 {{end}}
 
-{{/* ---------  stringer and parse  ---------   */}}
+{{/* ---------  stringer and parse  --------- */}}
 {{ if .Config.StringParse }}
 {{- $stringParseEe := .FindExtendByName .Config.StringParseName -}}
 {{ if $stringParseEe }}
@@ -126,10 +126,10 @@ func Parse{{.Name}}(value string) ({{.Name}}, error) {
 {{ end }}
 {{ end }}
 
-{{/* ---------  must parse  ---------   */}}
+{{/* ---------  must parse  --------- */}}
 {{ if .Config.MustParse }}
-func MustParse{{.Name}}(name string) {{.Name}} {
-	val, err := Parse{{.Name}}(name)
+func MustParse{{.Name}}(value string) {{.Name}} {
+	val, err := Parse{{.Name}}(value)
 	if err != nil {
 		panic(err)
 	}
@@ -137,26 +137,31 @@ func MustParse{{.Name}}(name string) {{.Name}} {
 }
 {{end}}
 
+{{/* ---------  ptr  --------- */}}
 {{ if .Config.Ptr }}
 func (x {{.Name}}) Ptr() *{{.Name}} {
 	return &x
 }
 {{end}}
 
+{{/* ---------  marshal  --------- */}}
 {{ if .Config.Marshal }}
+{{ if and (.Config.StringParse (eq .Config.StringParseName .Config.MarshalName)) }}
 func (x {{.Name}}) MarshalText() ([]byte, error) {
 	return []byte(x.String()), nil
 }
 
 func (x *{{.Name}}) UnmarshalText(text []byte) error {
-	name := string(text)
-	tmp, err := Parse{{.Name}}(name)
+	val, err := Parse{{.Name}}(string(text))
 	if err != nil {
 		return err
 	}
-	*x = tmp
+	*x = val
 	return nil
 }
+{{- else -}}
+
+{{- end }}
 {{end}}
 
 {{end -}}
