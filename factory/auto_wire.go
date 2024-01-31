@@ -10,8 +10,7 @@ import (
 	"strings"
 )
 
-//////go:generate go run ../main.go
-//go:generate go-enum --marshal --values --nocomments --nocase
+//go:generate go run ../main.go
 
 // WireTag is a constant that defines the annotation string used for wire injection in Go code.
 const WireTag = "wire"
@@ -20,9 +19,8 @@ const WireTag = "wire"
 const ValueTag = "value"
 
 // WireValue is an enum
-// @EnumConfig(marshal, noComments, noCase)
+// @EnumConfig(marshal, values, noComments, noCase)
 // @Enum{self, auto, type, name, value}
-// ENUM(self, aUto, type, name, value)
 type WireValue string
 
 type TagValue[T any] struct {
