@@ -86,7 +86,7 @@ type Float struct {
 func (f Float) Value() any { return f.V }
 
 type Int struct {
-	V int `@Int ","? `
+	V int `@(("-" | "+")? Int) ","? `
 }
 
 func (i Int) Value() any {
