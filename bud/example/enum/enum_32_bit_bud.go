@@ -56,6 +56,23 @@ func (x Enum32bit) IsValid() bool {
 	return ok
 }
 
+func Enum32bitValues() []Enum32bit {
+	return []Enum32bit{
+		Enum32bitUnkno,
+		Enum32bitE2P15,
+		Enum32bitE2P16,
+		Enum32bitE2P17,
+		Enum32bitE2P18,
+		Enum32bitE2P19,
+		Enum32bitE2P20,
+		Enum32bitE2P21,
+		Enum32bitE2P22,
+		Enum32bitE2P23,
+		Enum32bitE2P28,
+		Enum32bitE2P30,
+	}
+}
+
 func (x Enum32bit) Name() string {
 	if v, ok := _Enum32bitMapName[x]; ok {
 		return v

@@ -3,6 +3,7 @@ package enum
 //go:generate go run ../../../main.go
 
 /*
+@EnumConfig(values)
 @ENUM{
 Unkno					= 0
 E2P15					= 32768

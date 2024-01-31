@@ -68,6 +68,27 @@ func (x Enum64bit) IsValid() bool {
 	return ok
 }
 
+func Enum64bitValues() []Enum64bit {
+	return []Enum64bit{
+		Enum64bitUnkno,
+		Enum64bitE2P15,
+		Enum64bitE2P16,
+		Enum64bitE2P17,
+		Enum64bitE2P18,
+		Enum64bitE2P19,
+		Enum64bitE2P20,
+		Enum64bitE2P21,
+		Enum64bitE2P22,
+		Enum64bitE2P23,
+		Enum64bitE2P28,
+		Enum64bitE2P30,
+		Enum64bitE2P31,
+		Enum64bitE2P32,
+		Enum64bitE2P33,
+		Enum64bitE2P63,
+	}
+}
+
 func (x Enum64bit) Name() string {
 	if v, ok := _Enum64bitMapName[x]; ok {
 		return v

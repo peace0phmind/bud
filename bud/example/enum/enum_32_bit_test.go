@@ -36,5 +36,8 @@ func TestEnum32Bit(t *testing.T) {
 		assert.Equal(t, "Enum32bit(99)", Enum32bit(99).String())
 		_, err := ParseEnum32bit("-1")
 		assert.Error(t, err)
+
+		values := Enum32bitValues()
+		assert.Len(t, values, 12)
 	})
 }
