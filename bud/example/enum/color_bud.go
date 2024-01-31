@@ -65,7 +65,7 @@ func (x Color) String() string {
 	if v, ok := _ColorMapName[x]; ok {
 		return v
 	}
-	return fmt.Sprintf("Color(%d)Name", x)
+	return fmt.Sprintf("Color(%d)", x)
 }
 
 var _ColorNameMap = map[string]Color{

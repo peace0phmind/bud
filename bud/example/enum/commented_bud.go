@@ -56,7 +56,7 @@ func (x Commented) String() string {
 	if v, ok := _CommentedMapName[x]; ok {
 		return v
 	}
-	return fmt.Sprintf("Commented(%d)Name", x)
+	return fmt.Sprintf("Commented(%d)", x)
 }
 
 var _CommentedNameMap = map[string]Commented{
@@ -114,7 +114,7 @@ func (x ComplexCommented) String() string {
 	if v, ok := _ComplexCommentedMapName[x]; ok {
 		return v
 	}
-	return fmt.Sprintf("ComplexCommented(%d)Name", x)
+	return fmt.Sprintf("ComplexCommented(%d)", x)
 }
 
 var _ComplexCommentedNameMap = map[string]ComplexCommented{

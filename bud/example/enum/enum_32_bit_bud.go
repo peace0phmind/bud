@@ -67,7 +67,7 @@ func (x Enum32bit) String() string {
 	if v, ok := _Enum32bitMapName[x]; ok {
 		return v
 	}
-	return fmt.Sprintf("Enum32bit(%d)Name", x)
+	return fmt.Sprintf("Enum32bit(%d)", x)
 }
 
 var _Enum32bitNameMap = map[string]Enum32bit{

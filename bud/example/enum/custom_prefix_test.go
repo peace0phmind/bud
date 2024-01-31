@@ -14,7 +14,7 @@ type productData struct {
 
 func TestProductString(t *testing.T) {
 	x := Product(109)
-	assert.Equal(t, "Product(109)Name", x.String())
+	assert.Equal(t, "Product(109)", x.String())
 	x = Product(1)
 	assert.Equal(t, "Dynamite", x.String())
 

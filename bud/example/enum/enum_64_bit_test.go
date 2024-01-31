@@ -33,7 +33,7 @@ func TestEnum64Bit(t *testing.T) {
 
 	t.Run("basics", func(t *testing.T) {
 		assert.Equal(t, "E2P23", Enum64bitE2P23.String())
-		assert.Equal(t, "Enum64bit(99)Name", Enum64bit(99).String())
+		assert.Equal(t, "Enum64bit(99)", Enum64bit(99).String())
 		_, err := ParseEnum64bit("-1")
 		assert.Error(t, err)
 	})

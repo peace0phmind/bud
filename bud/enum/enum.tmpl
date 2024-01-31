@@ -78,7 +78,7 @@ func (x {{.Name}}) String() string {
     if v, ok := {{$stringParseEe.Extend2EnumVarName}}[string(x)]; ok {
         return string(v)
     }
-    return fmt.Sprintf("{{.Name}}(%s){{$stringParseEe.Name}}", string(x))
+    return fmt.Sprintf("{{.Name}}(%s)", string(x))
 {{- else -}}
     if v, ok := {{$stringParseEe.Enum2ExtendVarName}}[x]; ok {
         {{ if eq $stringParseEe.Type.String "string" -}}
@@ -87,7 +87,7 @@ func (x {{.Name}}) String() string {
         return fmt.Sprintf("%v", v)
         {{- end }}
     }
-    return fmt.Sprintf("{{.Name}}(%d){{$stringParseEe.Name}}", x)
+    return fmt.Sprintf("{{.Name}}(%d)", x)
 {{- end}}
 }
 

@@ -15,31 +15,13 @@ const (
 	BlankIdentifier = "_"
 )
 
-type EnumConfig struct {
-	Prefix           string
-	NoPrefix         bool   `value:"false"` // 所有生成的枚举不携带类型名称前缀
-	StringParse      bool   `value:"true"`
-	StringParseName  string `value:"Name"`
-	MustParse        bool   `value:"false"`
-	Marshal          bool   `value:"false"`
-	MarshalName      string `value:"Name"`
-	Sql              bool   `value:"false"`
-	SqlName          string `value:"Value"`
-	Values           bool   `value:"false"` // enum item list
-	NoCase           bool   `value:"false"` // case insensitivity
-	UseCamelCaseName bool   `value:"true"`
-	NoComments       bool   `value:"false"`
-	Ptr              bool   `value:"false"`
-	ForceLower       bool   `value:"false"`
-}
-
 type Enum struct {
 	Name    string
 	Type    reflect.Kind
 	Comment string
-	Extends []*EnumExtend
-	Items   []*EnumItem
-	Config  *EnumConfig
+	Extends []*Extend
+	Items   []*Item
+	Config  *Config
 }
 
 func (e *Enum) UpdateExtends(a *ast.Annotation) error {
@@ -62,7 +44,7 @@ func (e *Enum) UpdateExtends(a *ast.Annotation) error {
 				comment = ast.GetCommentText(p.Comment)
 			}
 
-			e.Extends = append(e.Extends, &EnumExtend{
+			e.Extends = append(e.Extends, &Extend{
 				enum:    e,
 				idx:     idx,
 				Name:    util.Capitalize(p.Key.Text),
@@ -87,7 +69,7 @@ func (e *Enum) UpdateEnumItem(a *ast.Annotation) error {
 				value = ex.Value.Value()
 			}
 
-			ei := &EnumItem{
+			ei := &Item{
 				enum:        e,
 				idx:         idx,
 				Name:        ex.Name.Text,
@@ -117,7 +99,7 @@ func (e *Enum) UpdateEnumItem(a *ast.Annotation) error {
 func (e *Enum) CheckValid() error {
 	// check e.Extend exist name equals "Name" and type is string
 	for _, ex := range e.Extends {
-		if ex.Name == EnumItemName && ex.Type != reflect.String {
+		if ex.Name == ItemName && ex.Type != reflect.String {
 			return errors.New("enum extend field 'Name' must have type string")
 		}
 	}
@@ -140,20 +122,20 @@ func (e *Enum) CheckValid() error {
 		itemNames[item.Name] = true
 	}
 
-	// if e.Extend is empty or e.Extend haven't a EnumItemName item, then use item's name to create it
-	if fee := e.FindExtendByName(EnumItemName); fee == nil {
+	// if e.Extend is empty or e.Extend haven't a ItemName item, then use item's name to create it
+	if fee := e.FindExtendByName(ItemName); fee == nil {
 		for _, ee := range e.Extends {
 			ee.idx += 1
 		}
 
-		ee := &EnumExtend{
+		ee := &Extend{
 			enum:    e,
 			idx:     0,
-			Name:    EnumItemName,
+			Name:    ItemName,
 			Type:    reflect.String,
 			Comment: "",
 		}
-		e.Extends = append([]*EnumExtend{ee}, e.Extends...)
+		e.Extends = append([]*Extend{ee}, e.Extends...)
 
 		for _, ei := range e.GetItems() {
 			ei.ExtendData = append([]any{ei.Name}, ei.ExtendData...)
@@ -204,7 +186,7 @@ func (e *Enum) CheckValid() error {
 			}
 		}
 	} else {
-		if stream.Must(stream.Of(e.GetItems()).AnyMatch(func(item *EnumItem) (bool, error) { return item.Value != nil, nil })) {
+		if stream.Must(stream.Of(e.GetItems()).AnyMatch(func(item *Item) (bool, error) { return item.Value != nil, nil })) {
 			value := 0
 			for _, item := range e.GetItems() {
 				if item.Value == nil {
@@ -229,7 +211,7 @@ func isBlankIdentifier(value any) bool {
 	return false
 }
 
-func (e *Enum) FindExtendByName(name string) *EnumExtend {
+func (e *Enum) FindExtendByName(name string) *Extend {
 	if len(e.Extends) > 0 {
 		for _, ee := range e.Extends {
 			if ee.Name == name {
@@ -241,17 +223,17 @@ func (e *Enum) FindExtendByName(name string) *EnumExtend {
 	return nil
 }
 
-func (e *Enum) GetItems() []*EnumItem {
-	return stream.Must(stream.Of(e.Items).Filter(func(item *EnumItem) (bool, error) {
+func (e *Enum) GetItems() []*Item {
+	return stream.Must(stream.Of(e.Items).Filter(func(item *Item) (bool, error) {
 		return !item.IsBlankIdentifier, nil
 	}).ToSlice())
 }
 
-func annotationGroupToEnumConfig(ag *ast.AnnotationGroup, globalConfig *EnumConfig) (*EnumConfig, error) {
+func annotationGroupToEnumConfig(ag *ast.AnnotationGroup, globalConfig *Config) (*Config, error) {
 	enumConfAnnotation := ag.FindAnnotationByName("EnumConfig")
 
 	if enumConfAnnotation != nil {
-		ec, err := ast.AnnotationParamsTo[EnumConfig](structure.Clone(globalConfig), enumConfAnnotation)
+		ec, err := ast.AnnotationParamsTo[Config](structure.Clone(globalConfig), enumConfAnnotation)
 		if err != nil {
 			return nil, errors.New(fmt.Sprintf("pase annotation err: %v", err))
 		}
@@ -265,7 +247,7 @@ func annotationGroupToEnumConfig(ag *ast.AnnotationGroup, globalConfig *EnumConf
 	}
 }
 
-func annotationGroupToEnum(ag *ast.AnnotationGroup, ts *goast.TypeSpec, globalConfig *EnumConfig) (*Enum, error) {
+func annotationGroupToEnum(ag *ast.AnnotationGroup, ts *goast.TypeSpec, globalConfig *Config) (*Enum, error) {
 	enumAnnotation := ag.FindAnnotationByName("enum")
 	if enumAnnotation == nil {
 		return nil, nil

@@ -46,7 +46,7 @@ func (x Animal) String() string {
 	if v, ok := _AnimalMapName[x]; ok {
 		return v
 	}
-	return fmt.Sprintf("Animal(%d)Name", x)
+	return fmt.Sprintf("Animal(%d)", x)
 }
 
 var _AnimalNameMap = map[string]Animal{

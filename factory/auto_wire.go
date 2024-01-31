@@ -69,8 +69,8 @@ func ParseTagValue(tagValue string, checkAndSet func(tv *TagValue[WireValue])) (
 	}
 }
 
-func wireError(structField reflect.StructField, rootTypes []reflect.Type, wireRule string) error {
-	fieldPath := structure.GetFieldPath(structField, rootTypes)
+func wireError(structField reflect.StructField, rootValues []reflect.Value, wireRule string) error {
+	fieldPath := structure.GetFieldPath(structField, rootValues)
 	return errors.New(fmt.Sprintf("The field of 'wire' must be defined as a pointer to an object or an interface. %s, tag value: %s", fieldPath, wireRule))
 }
 
@@ -138,7 +138,7 @@ func AutoWire(self any) error {
 	_context.wiring(vt)
 	defer _context.wired(vt)
 
-	return structure.WalkWithTagNames(self, []string{WireTag, ValueTag}, func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type, tags map[string]string) (err error) {
+	return structure.WalkWithTagNames(self, []string{WireTag, ValueTag}, func(fieldValue reflect.Value, structField reflect.StructField, rootValues []reflect.Value, tags map[string]string) (err error) {
 		if len(tags) > 1 {
 			panic("Only one can exist at a time, either 'wire' or 'value'.")
 		}
@@ -170,9 +170,13 @@ func AutoWire(self any) error {
 		}
 
 		if wiredValue, err1 := getValueByWireTag(self, tv, structField.Type); err1 == nil {
+			// Prefer using the set method
+			if structure.SetFieldBySetMethod(fieldValue, wiredValue, structField, rootValues[len(rootValues)-1]) {
+				return nil
+			}
 			return structure.SetField(fieldValue, wiredValue)
 		} else {
-			return errors.New(fmt.Sprintf("%v on %s", err1, structure.GetFieldPath(structField, rootTypes)))
+			return errors.New(fmt.Sprintf("%v on %s", err1, structure.GetFieldPath(structField, rootValues)))
 		}
 	})
 }

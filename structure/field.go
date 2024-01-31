@@ -4,25 +4,26 @@ import (
 	"errors"
 	"fmt"
 	"github.com/peace0phmind/bud/stream"
+	"github.com/peace0phmind/bud/util"
 	"reflect"
 	"strings"
 	"unsafe"
 )
 
-type WalkFunc func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type) error
+type WalkFunc func(fieldValue reflect.Value, structField reflect.StructField, rootValues []reflect.Value) error
 
-type ParamsWalkFunc[T any] func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type, params T) error
+type ParamsWalkFunc[T any] func(fieldValue reflect.Value, structField reflect.StructField, rootValues []reflect.Value, params T) error
 
 // 查找strut point的所有元素，包括子struct，将其中所有的field都调用WalkFunc进行处理
-func _walk(v any, walkFn WalkFunc, rootTypes []reflect.Type) error {
+func _walk(v any, walkFn WalkFunc, rootValues []reflect.Value) error {
 	val := reflect.ValueOf(v)
 
 	if reflect.Ptr == val.Kind() {
 		val = val.Elem()
 	}
 
+	rootValues = append(rootValues, val)
 	valType := val.Type()
-	rootTypes = append(rootTypes, valType)
 
 	for i := 0; i < valType.NumField(); i++ {
 		fieldValue := val.Field(i)
@@ -37,7 +38,7 @@ func _walk(v any, walkFn WalkFunc, rootTypes []reflect.Type) error {
 		// 尝试遍历内嵌型struct
 		// TODO 尝试遍历非导出结构体field
 		if reflect.Struct == ff.Kind() && ff.CanAddr() && ff.CanInterface() {
-			if err := _walk(ff.Addr().Interface(), walkFn, rootTypes); err != nil {
+			if err := _walk(ff.Addr().Interface(), walkFn, rootValues); err != nil {
 				return err
 			}
 		}
@@ -47,7 +48,7 @@ func _walk(v any, walkFn WalkFunc, rootTypes []reflect.Type) error {
 			if reflect.Ptr == ff.Type().Elem().Kind() && reflect.Struct == ff.Type().Elem().Elem().Kind() {
 				for i := 0; i < ff.Len(); i++ {
 					if ff.Index(i).CanAddr() && !ff.Index(i).IsNil() && ff.Index(i).CanInterface() {
-						if err := _walk(ff.Index(i).Interface(), walkFn, rootTypes); err != nil {
+						if err := _walk(ff.Index(i).Interface(), walkFn, rootValues); err != nil {
 							return err
 						}
 					}
@@ -58,7 +59,7 @@ func _walk(v any, walkFn WalkFunc, rootTypes []reflect.Type) error {
 			if reflect.Struct == ff.Type().Elem().Kind() {
 				for i := 0; i < ff.Len(); i++ {
 					if ff.Index(i).CanAddr() && ff.Index(i).CanInterface() {
-						if err := _walk(ff.Index(i).Addr().Interface(), walkFn, rootTypes); err != nil {
+						if err := _walk(ff.Index(i).Addr().Interface(), walkFn, rootValues); err != nil {
 							return err
 						}
 					}
@@ -66,7 +67,7 @@ func _walk(v any, walkFn WalkFunc, rootTypes []reflect.Type) error {
 			}
 		}
 
-		if err := walkFn(fieldValue, structField, rootTypes); err != nil {
+		if err := walkFn(fieldValue, structField, rootValues); err != nil {
 			return err
 		}
 	}
@@ -93,7 +94,7 @@ func WalkField(v any, walkFn WalkFunc) error {
 }
 
 func WalkWithTagNames(v any, tagNames []string, walkFn ParamsWalkFunc[map[string]string]) error {
-	return WalkField(v, func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type) error {
+	return WalkField(v, func(fieldValue reflect.Value, structField reflect.StructField, rootValues []reflect.Value) error {
 		tags := map[string]string{}
 		for _, tagName := range tagNames {
 			if tagValue, ok := structField.Tag.Lookup(tagName); ok {
@@ -102,7 +103,7 @@ func WalkWithTagNames(v any, tagNames []string, walkFn ParamsWalkFunc[map[string
 		}
 
 		if len(tags) > 0 {
-			if err := walkFn(fieldValue, structField, rootTypes, tags); err != nil {
+			if err := walkFn(fieldValue, structField, rootValues, tags); err != nil {
 				return err
 			}
 		}
@@ -112,7 +113,6 @@ func WalkWithTagNames(v any, tagNames []string, walkFn ParamsWalkFunc[map[string
 }
 
 func SetField(fieldValue reflect.Value, v any) error {
-
 	if !fieldValue.CanAddr() {
 		return errors.New("fieldValue is not addressable")
 	}
@@ -133,12 +133,43 @@ func SetField(fieldValue reflect.Value, v any) error {
 	return nil
 }
 
-func GetFieldPath(structField reflect.StructField, rootTypes []reflect.Type) string {
+func _SetFieldBySetMethod(fieldValue reflect.Value, v any, setFunName string, structValue reflect.Value) bool {
+	if method, ok := structValue.Type().MethodByName(setFunName); ok {
+		// Check if the method has the correct signature
+		if method.Type.NumOut() == 0 && method.Type.NumIn() == 2 && method.Type.In(1).AssignableTo(fieldValue.Type()) {
+			method.Func.Call([]reflect.Value{structValue, reflect.ValueOf(v)})
+			return true
+		}
+	}
+	return false
+}
+
+func SetFieldBySetMethod(fieldValue reflect.Value, v any, fieldStruct reflect.StructField, structValue reflect.Value) bool {
+	setFunName := "Set" + util.Capitalize(fieldStruct.Name)
+
+	if structValue.Kind() == reflect.Ptr && structValue.Elem().Kind() == reflect.Struct {
+		if set := _SetFieldBySetMethod(fieldValue, v, setFunName, structValue); set {
+			return true
+		}
+		return _SetFieldBySetMethod(fieldValue, v, setFunName, structValue.Elem())
+	} else if structValue.Kind() == reflect.Struct {
+		if set := _SetFieldBySetMethod(fieldValue, v, setFunName, structValue); set {
+			return true
+		}
+		if structValue.CanAddr() {
+			return _SetFieldBySetMethod(fieldValue, v, setFunName, structValue.Addr())
+		}
+	}
+
+	return false
+}
+
+func GetFieldPath(structField reflect.StructField, rootValues []reflect.Value) string {
 	var results []string
-	if len(rootTypes) > 0 {
-		results = append(results, rootTypes[0].PkgPath())
-		names := stream.Must(stream.Map(stream.Of(rootTypes), func(in reflect.Type) (string, error) {
-			return in.Name(), nil
+	if len(rootValues) > 0 {
+		results = append(results, rootValues[0].Type().PkgPath())
+		names := stream.Must(stream.Map(stream.Of(rootValues), func(in reflect.Value) (string, error) {
+			return in.Type().Name(), nil
 		}).ToSlice())
 		results = append(results, names...)
 	}

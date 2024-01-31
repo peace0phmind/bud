@@ -188,10 +188,11 @@ func AnnotationParamsTo[T any](val *T, a *Annotation) (t *T, err error) {
 	}
 
 	if a.Params != nil {
-		err = structure.WalkField(t, func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type) error {
+		err = structure.WalkField(t, func(fieldValue reflect.Value, structField reflect.StructField, rootValues []reflect.Value) error {
 			switch fieldValue.Kind() {
 			case reflect.Ptr, reflect.Struct:
 				return nil
+			default:
 			}
 
 			var ap *AnnotationParam = nil
@@ -212,7 +213,11 @@ func AnnotationParamsTo[T any](val *T, a *Annotation) (t *T, err error) {
 			}
 
 			if ap.Value != nil {
-				return structure.MapToValue(ap.Value.Value(), fieldValue)
+				value := structure.MustConvertToType(ap.Value.Value(), fieldValue.Type())
+				if structure.SetFieldBySetMethod(fieldValue, value, structField, rootValues[len(rootValues)-1]) {
+					return nil
+				}
+				return structure.SetField(fieldValue, value)
 			}
 
 			return nil

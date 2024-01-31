@@ -42,7 +42,7 @@ func (eg *EnumGenerator) GetImports() []string {
 
 func NewGenerator(fileNode *goast.File, fileSet *token.FileSet) (ast.Generator, error) {
 	// get global enum config
-	var ec *EnumConfig = nil
+	var ec *Config = nil
 	for _, cg := range fileNode.Comments {
 		if strings.HasPrefix(cg.List[len(cg.List)-1].Text, "//go:generate") {
 			ag, err := ast.ParseAnnotation(fileNode.Name.Name, cg.Text())
@@ -60,7 +60,7 @@ func NewGenerator(fileNode *goast.File, fileSet *token.FileSet) (ast.Generator, 
 	}
 
 	if ec == nil {
-		ec = factory.New[EnumConfig]()
+		ec = factory.New[Config]()
 	}
 
 	// get all enums

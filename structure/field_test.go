@@ -288,9 +288,9 @@ func TestWalkSliceStruct(t *testing.T) {
 	wk.SlicePPointStructInit = append(wk.SlicePPointStructInit, &PointStruct{})
 
 	count := 0
-	err := WalkField(wk, func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type) error {
+	err := WalkField(wk, func(fieldValue reflect.Value, structField reflect.StructField, rootValues []reflect.Value) error {
 		count++
-		println(count, GetFieldPath(structField, rootTypes), fieldValue.Kind().String())
+		println(count, GetFieldPath(structField, rootValues), fieldValue.Kind().String())
 		return nil
 	})
 
@@ -307,9 +307,9 @@ func TestWalk(t *testing.T) {
 		StringPtrInited: &hello,
 		PPS:             &PointStruct{},
 	}
-	err := WalkField(wk, func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type) error {
+	err := WalkField(wk, func(fieldValue reflect.Value, structField reflect.StructField, rootValues []reflect.Value) error {
 		count++
-		println(count, GetFieldPath(structField, rootTypes), fieldValue.Kind().String())
+		println(count, GetFieldPath(structField, rootValues), fieldValue.Kind().String())
 		return nil
 	})
 
@@ -327,9 +327,9 @@ func TestWalkWithTag(t *testing.T) {
 		PPS:             &PointStruct{},
 	}
 
-	err := WalkWithTagNames(wk, []string{"env"}, func(fieldValue reflect.Value, structField reflect.StructField, rootTypes []reflect.Type, tags map[string]string) error {
+	err := WalkWithTagNames(wk, []string{"env"}, func(fieldValue reflect.Value, structField reflect.StructField, rootValues []reflect.Value, tags map[string]string) error {
 		count++
-		println(count, GetFieldPath(structField, rootTypes), fieldValue.Kind().String(), tags)
+		println(count, GetFieldPath(structField, rootValues), fieldValue.Kind().String(), tags)
 		return nil
 	})
 

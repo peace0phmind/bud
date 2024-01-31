@@ -58,7 +58,7 @@ func (x DiffBase) String() string {
 	if v, ok := _DiffBaseMapName[x]; ok {
 		return v
 	}
-	return fmt.Sprintf("DiffBase(%d)Name", x)
+	return fmt.Sprintf("DiffBase(%d)", x)
 }
 
 var _DiffBaseNameMap = map[string]DiffBase{

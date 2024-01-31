@@ -9,11 +9,11 @@ import (
 )
 
 const (
-	EnumItemName  = "Name"
-	EnumItemValue = "Value"
+	ItemName  = "Name"
+	ItemValue = "Value"
 )
 
-type EnumItem struct {
+type Item struct {
 	enum              *Enum
 	idx               int
 	Name              string
@@ -25,7 +25,7 @@ type EnumItem struct {
 }
 
 // GetCodeName return the item name used in code
-func (ei *EnumItem) GetCodeName() string {
+func (ei *Item) GetCodeName() string {
 	if ei.IsBlankIdentifier {
 		return BlankIdentifier
 	}
@@ -45,14 +45,19 @@ func (ei *EnumItem) GetCodeName() string {
 }
 
 // GetName return the item real name, default equals with the code name, or an extent named `Name`
-func (ei *EnumItem) GetName() string {
+func (ei *Item) GetName() string {
+	if ei.enum.Config.ForceUpper {
+		return strings.ToUpper(ei.ExtendData[0].(string))
+	}
+
 	if ei.enum.Config.ForceLower {
 		return strings.ToLower(ei.ExtendData[0].(string))
 	}
+
 	return ei.ExtendData[0].(string)
 }
 
-func (ei *EnumItem) GetConstLine() string {
+func (ei *Item) GetConstLine() string {
 	if ei.Value == nil {
 		if ei.idx == 0 {
 			return fmt.Sprintf("%s %s = iota", ei.GetCodeName(), ei.enum.Name)

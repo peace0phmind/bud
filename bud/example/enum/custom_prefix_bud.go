@@ -40,7 +40,7 @@ func (x Product) String() string {
 	if v, ok := _ProductMapName[x]; ok {
 		return v
 	}
-	return fmt.Sprintf("Product(%d)Name", x)
+	return fmt.Sprintf("Product(%d)", x)
 }
 
 var _ProductNameMap = map[string]Product{
