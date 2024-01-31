@@ -133,31 +133,20 @@ func SetField(fieldValue reflect.Value, v any) error {
 	return nil
 }
 
-func _SetFieldBySetMethod(fieldValue reflect.Value, v any, setFunName string, structValue reflect.Value) bool {
-	if method, ok := structValue.Type().MethodByName(setFunName); ok {
-		// Check if the method has the correct signature
-		if method.Type.NumOut() == 0 && method.Type.NumIn() == 2 && method.Type.In(1).AssignableTo(fieldValue.Type()) {
-			method.Func.Call([]reflect.Value{structValue, reflect.ValueOf(v)})
-			return true
-		}
-	}
-	return false
-}
-
 func SetFieldBySetMethod(fieldValue reflect.Value, v any, fieldStruct reflect.StructField, structValue reflect.Value) bool {
 	setFunName := "Set" + util.Capitalize(fieldStruct.Name)
 
+	if structValue.Kind() == reflect.Struct && structValue.CanAddr() {
+		structValue = structValue.Addr()
+	}
+
 	if structValue.Kind() == reflect.Ptr && structValue.Elem().Kind() == reflect.Struct {
-		if set := _SetFieldBySetMethod(fieldValue, v, setFunName, structValue); set {
-			return true
-		}
-		return _SetFieldBySetMethod(fieldValue, v, setFunName, structValue.Elem())
-	} else if structValue.Kind() == reflect.Struct {
-		if set := _SetFieldBySetMethod(fieldValue, v, setFunName, structValue); set {
-			return true
-		}
-		if structValue.CanAddr() {
-			return _SetFieldBySetMethod(fieldValue, v, setFunName, structValue.Addr())
+		if method, ok := structValue.Type().MethodByName(setFunName); ok {
+			// Check if the method has the correct signature
+			if method.Type.NumOut() == 0 && method.Type.NumIn() == 2 && method.Type.In(1).AssignableTo(fieldValue.Type()) {
+				method.Func.Call([]reflect.Value{structValue, reflect.ValueOf(v)})
+				return true
+			}
 		}
 	}
 

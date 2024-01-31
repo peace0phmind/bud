@@ -69,8 +69,8 @@ func New[T any]() *T {
 	return NewWithOption[T](newDefaultOption)
 }
 
-func _getInitParams[T any](self any, initMethod reflect.Method, t *T, option *Option) ([]reflect.Value, error) {
-	params := []reflect.Value{reflect.ValueOf(t)}
+func _getInitParams(self any, initMethod reflect.Method, option *Option) ([]reflect.Value, error) {
+	var params []reflect.Value
 
 	if len(option.initParams) == 0 {
 		for i := 1; i < initMethod.Type.NumIn(); i++ {
@@ -78,7 +78,7 @@ func _getInitParams[T any](self any, initMethod reflect.Method, t *T, option *Op
 			if (paramType.Kind() == reflect.Ptr && paramType.Elem().Kind() == reflect.Struct) || paramType.Kind() == reflect.Interface {
 				params = append(params, reflect.ValueOf(_context.getByType(paramType)))
 			} else {
-				return nil, errors.New(fmt.Sprintf("Method %s's %d argument must be a struct point or an interface", initMethod.Name, i-1))
+				return nil, errors.New(fmt.Sprintf("Method %s's %d argument must be a struct point or an interface", initMethod.Name, i))
 			}
 		}
 	} else if len(option.initParams)+1 == initMethod.Type.NumIn() {
@@ -87,12 +87,12 @@ func _getInitParams[T any](self any, initMethod reflect.Method, t *T, option *Op
 
 			tagValue, err := ParseTagValue(option.initParams[i], nil)
 			if err != nil {
-				return nil, errors.New(fmt.Sprintf("Method %s's %d argument tag is err: %v", initMethod.Name, i, err))
+				return nil, errors.New(fmt.Sprintf("Method %s's %d argument tag is err: %v", initMethod.Name, i+1, err))
 			}
 
 			v, err := getValueByWireTag(self, tagValue, paramType)
 			if err != nil {
-				return nil, errors.New(fmt.Sprintf("Method %s's %d argument get value from tag err: %v", initMethod.Name, i, err))
+				return nil, errors.New(fmt.Sprintf("Method %s's %d argument get value from tag err: %v", initMethod.Name, i+1, err))
 			}
 
 			params = append(params, reflect.ValueOf(v))
@@ -135,9 +135,9 @@ func NewWithOption[T any](option *Option) *T {
 				panic(fmt.Sprintf("Init method '%s' must not have return values", initMethodName))
 			}
 
-			params, err := _getInitParams(t, initMethod, t, option)
+			params, err := _getInitParams(t, initMethod, option)
 			if err == nil {
-				defer initMethod.Func.Call(params)
+				defer initMethod.Func.Call(append([]reflect.Value{reflect.ValueOf(t)}, params...))
 			} else {
 				panic(fmt.Sprintf("Create %s error: %v", vte.Name(), err))
 			}

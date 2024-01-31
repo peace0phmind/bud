@@ -27,7 +27,7 @@ func (ts *testStruct) InitWithReturn() error {
 	return nil
 }
 
-func (ts *testStruct) MyInit(tp *testRepo) {
+func (ts testStruct) MyInit(tp *testRepo) {
 	if tp != nil {
 		tp.Hello()
 	}
@@ -75,7 +75,7 @@ func TestNewWithOption(t *testing.T) {
 		{
 			name:          "OptionWithMyInitMethodWithWareObjErrorParams",
 			option:        &Option{useConstructor: false, initMethodName: "MyErrorInit"},
-			expectedPanic: "Create testStruct error, the method MyErrorInit's 1 argument must be a struct point or an interface",
+			expectedPanic: "Create testStruct error: Method MyErrorInit's 1 argument must be a struct point or an interface",
 			expectError:   true,
 		},
 	}
