@@ -1,7 +1,6 @@
 package enum
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 )
@@ -66,7 +65,7 @@ const (
 	NoZerosPpps NoZeros = 25
 )
 
-var ErrInvalidMake = errors.New("not a valid Make")
+var ErrInvalidMake = fmt.Errorf("not a valid Make, try [%s]", strings.Join(_MakeNames, ", "))
 
 var _MakeName = "ToyotaChevyFordTeslaHyundaiNissanJaguarAudiBMWMercedes_BenzVolkswagon"
 
@@ -92,21 +91,42 @@ func (x Make) Name() string {
 	panic(ErrInvalidMake)
 }
 
+var _MakeValues = []Make{
+	MakeToyota,
+	MakeChevy,
+	MakeFord,
+	MakeTesla,
+	MakeHyundai,
+	MakeNissan,
+	MakeJaguar,
+	MakeAudi,
+	MakeBmw,
+	MakeMercedesBenz,
+	MakeVolkswagon,
+}
+
 // MakeValues returns a list of the values of Make
 func MakeValues() []Make {
-	return []Make{
-		MakeToyota,
-		MakeChevy,
-		MakeFord,
-		MakeTesla,
-		MakeHyundai,
-		MakeNissan,
-		MakeJaguar,
-		MakeAudi,
-		MakeBmw,
-		MakeMercedesBenz,
-		MakeVolkswagon,
-	}
+	return _MakeValues
+}
+
+var _MakeNames = []string{
+	_MakeName[0:6],
+	_MakeName[6:11],
+	_MakeName[11:15],
+	_MakeName[15:20],
+	_MakeName[20:27],
+	_MakeName[27:33],
+	_MakeName[33:39],
+	_MakeName[39:43],
+	_MakeName[43:46],
+	_MakeName[46:59],
+	_MakeName[59:69],
+}
+
+// MakeNames returns a list of the names of Make
+func MakeNames() []string {
+	return _MakeNames
 }
 
 // IsValid provides a quick way to determine if the typed value is
@@ -187,7 +207,7 @@ func (x *Make) UnmarshalText(text []byte) error {
 	return nil
 }
 
-var ErrInvalidNoZeros = errors.New("not a valid NoZeros")
+var ErrInvalidNoZeros = fmt.Errorf("not a valid NoZeros, try [%s]", strings.Join(_NoZerosNames, ", "))
 
 var _NoZerosName = "startmiddleendpsppsppps"
 
@@ -208,16 +228,32 @@ func (x NoZeros) Name() string {
 	panic(ErrInvalidNoZeros)
 }
 
+var _NoZerosValues = []NoZeros{
+	NoZerosStart,
+	NoZerosMiddle,
+	NoZerosEnd,
+	NoZerosPs,
+	NoZerosPps,
+	NoZerosPpps,
+}
+
 // NoZerosValues returns a list of the values of NoZeros
 func NoZerosValues() []NoZeros {
-	return []NoZeros{
-		NoZerosStart,
-		NoZerosMiddle,
-		NoZerosEnd,
-		NoZerosPs,
-		NoZerosPps,
-		NoZerosPpps,
-	}
+	return _NoZerosValues
+}
+
+var _NoZerosNames = []string{
+	_NoZerosName[0:5],
+	_NoZerosName[5:11],
+	_NoZerosName[11:14],
+	_NoZerosName[14:16],
+	_NoZerosName[16:19],
+	_NoZerosName[19:23],
+}
+
+// NoZerosNames returns a list of the names of NoZeros
+func NoZerosNames() []string {
+	return _NoZerosNames
 }
 
 // IsValid provides a quick way to determine if the typed value is

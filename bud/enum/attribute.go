@@ -42,7 +42,7 @@ func (ea *Attribute) Enum2AttributeMap() string {
 		index := 0
 		for _, item := range ea.enum.GetItems() {
 			nextIndex := index + len(item.GetName())
-			buf.WriteString(fmt.Sprintf("	%s: _%s%s[%d:%d],\n", item.GetCodeName(), ea.enum.Name, ea.Name, index, nextIndex))
+			buf.WriteString(fmt.Sprintf("	%s: _%sName[%d:%d],\n", item.GetCodeName(), ea.enum.Name, index, nextIndex))
 			index = nextIndex
 		}
 	} else {

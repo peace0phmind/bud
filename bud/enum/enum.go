@@ -1,6 +1,7 @@
 package enum
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/peace0phmind/bud/bud/ast"
@@ -202,6 +203,23 @@ func (e *Enum) CheckValid() error {
 	}
 
 	return nil
+}
+
+func (e *Enum) Names() string {
+	buf := bytes.NewBuffer([]byte{})
+	buf.WriteString(fmt.Sprintf("var _%sNames = []string{\n", e.Name))
+	index := 0
+	for _, item := range e.GetItems() {
+		if e.Type == reflect.String {
+			buf.WriteString(fmt.Sprintf("\t\"%s\",\n", item.GetName()))
+		} else {
+			nextIndex := index + len(item.GetName())
+			buf.WriteString(fmt.Sprintf("\t_%sName[%d:%d],\n", e.Name, index, nextIndex))
+			index = nextIndex
+		}
+	}
+	buf.WriteString("}")
+	return buf.String()
 }
 
 func isBlankIdentifier(value any) bool {

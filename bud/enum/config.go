@@ -11,6 +11,7 @@ type Config struct {
 	MarshalName      string `value:"Name"`
 	Sql              bool   `value:"false"`
 	SqlName          string `value:"Value"`
+	Names            bool   `value:"false"` // enum item list
 	Values           bool   `value:"false"` // enum item list
 	NoCase           bool   `value:"false"` // case insensitivity
 	UseCamelCaseName bool   `value:"true"`

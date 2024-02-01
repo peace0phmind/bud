@@ -19,7 +19,11 @@ const (
 {{- $enumName := .Name -}}
 {{- $validEe := .FindAttributeByName "Name" -}}
 
+{{ if .Config.Names -}}
+var ErrInvalid{{.Name}} = fmt.Errorf("not a valid {{.Name}}, try [%s]", strings.Join(_{{.Name}}Names, ", "))
+{{- else -}}
 var ErrInvalid{{.Name}} = errors.New("not a valid {{.Name}}")
+{{- end}}
 
 {{ if ne .Type.String "string" -}}
 var _{{.Name}}Name = "{{- range $ei, $item := .GetItems -}}{{$item.GetName}}{{- end -}}"
@@ -46,11 +50,23 @@ func (x {{$enumName}}) {{$attr.Name}}() {{$attr.Type.String}} {
 
 {{/* ---------  values  --------- */}}
 {{ if .Config.Values }}
+var _{{.Name}}Values = []{{.Name}} { {{ range $ei, $item := .GetItems }}
+    {{$item.GetCodeName}},{{ end }}
+}
+
 // {{.Name}}Values returns a list of the values of {{.Name}}
 func {{.Name}}Values() []{{.Name}} {
-    return []{{.Name}}{ {{ range $ei, $item := .GetItems }}
-        {{$item.GetCodeName}},{{ end }}
-    }
+    return _{{.Name}}Values
+}
+{{ end -}}
+
+{{/* ---------  names  --------- */}}
+{{ if .Config.Names }}
+{{.Names}}
+
+// {{.Name}}Names returns a list of the names of {{.Name}}
+func {{.Name}}Names() []string {
+    return _{{.Name}}Names
 }
 {{ end -}}
 
