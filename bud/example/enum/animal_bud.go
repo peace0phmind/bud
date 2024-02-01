@@ -30,11 +30,7 @@ var _AnimalMapName = map[Animal]string{
 	AnimalFishSharp:    _AnimalName[16:21],
 }
 
-func (x Animal) IsValid() bool {
-	_, ok := _AnimalMapName[x]
-	return ok
-}
-
+// Name is the attribute of Animal
 func (x Animal) Name() string {
 	if v, ok := _AnimalMapName[x]; ok {
 		return v
@@ -42,6 +38,14 @@ func (x Animal) Name() string {
 	panic(ErrInvalidAnimal)
 }
 
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x Animal) IsValid() bool {
+	_, ok := _AnimalMapName[x]
+	return ok
+}
+
+// String implements the Stringer interface.
 func (x Animal) String() string {
 	if v, ok := _AnimalMapName[x]; ok {
 		return v

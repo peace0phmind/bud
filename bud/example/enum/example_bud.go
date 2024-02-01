@@ -3,6 +3,7 @@ package enum
 import (
 	"errors"
 	"fmt"
+	"strings"
 )
 
 const (
@@ -88,6 +89,22 @@ func (x Make) IsValid() bool {
 	return ok
 }
 
+func MakeValues() []Make {
+	return []Make{
+		MakeToyota,
+		MakeChevy,
+		MakeFord,
+		MakeTesla,
+		MakeHyundai,
+		MakeNissan,
+		MakeJaguar,
+		MakeAudi,
+		MakeBmw,
+		MakeMercedesBenz,
+		MakeVolkswagon,
+	}
+}
+
 func (x Make) Name() string {
 	if v, ok := _MakeMapName[x]; ok {
 		return v
@@ -99,28 +116,67 @@ func (x Make) String() string {
 	if v, ok := _MakeMapName[x]; ok {
 		return v
 	}
-	return fmt.Sprintf("Make(%d)Name", x)
+	return fmt.Sprintf("Make(%d)", x)
 }
 
 var _MakeNameMap = map[string]Make{
-	_MakeName[0:6]:   MakeToyota,
-	_MakeName[6:11]:  MakeChevy,
-	_MakeName[11:15]: MakeFord,
-	_MakeName[15:20]: MakeTesla,
-	_MakeName[20:27]: MakeHyundai,
-	_MakeName[27:33]: MakeNissan,
-	_MakeName[33:39]: MakeJaguar,
-	_MakeName[39:43]: MakeAudi,
-	_MakeName[43:46]: MakeBmw,
-	_MakeName[46:59]: MakeMercedesBenz,
-	_MakeName[59:69]: MakeVolkswagon,
+	_MakeName[0:6]:                    MakeToyota,
+	strings.ToLower(_MakeName[0:6]):   MakeToyota,
+	_MakeName[6:11]:                   MakeChevy,
+	strings.ToLower(_MakeName[6:11]):  MakeChevy,
+	_MakeName[11:15]:                  MakeFord,
+	strings.ToLower(_MakeName[11:15]): MakeFord,
+	_MakeName[15:20]:                  MakeTesla,
+	strings.ToLower(_MakeName[15:20]): MakeTesla,
+	_MakeName[20:27]:                  MakeHyundai,
+	strings.ToLower(_MakeName[20:27]): MakeHyundai,
+	_MakeName[27:33]:                  MakeNissan,
+	strings.ToLower(_MakeName[27:33]): MakeNissan,
+	_MakeName[33:39]:                  MakeJaguar,
+	strings.ToLower(_MakeName[33:39]): MakeJaguar,
+	_MakeName[39:43]:                  MakeAudi,
+	strings.ToLower(_MakeName[39:43]): MakeAudi,
+	_MakeName[43:46]:                  MakeBmw,
+	strings.ToLower(_MakeName[43:46]): MakeBmw,
+	_MakeName[46:59]:                  MakeMercedesBenz,
+	strings.ToLower(_MakeName[46:59]): MakeMercedesBenz,
+	_MakeName[59:69]:                  MakeVolkswagon,
+	strings.ToLower(_MakeName[59:69]): MakeVolkswagon,
 }
 
 func ParseMake(value string) (Make, error) {
 	if x, ok := _MakeNameMap[value]; ok {
 		return x, nil
 	}
+	if x, ok := _MakeNameMap[strings.ToLower(value)]; ok {
+		return x, nil
+	}
 	return Make(0), fmt.Errorf("%s is %w", value, ErrInvalidMake)
+}
+
+// Set implements the Golang flag.Value interface func.
+func (x *Make) Set(value string) error {
+	v, err := ParseMake(value)
+	*x = v
+	return err
+}
+
+// Get implements the Golang flag.Getter interface func.
+func (x Make) Get() any {
+	return x
+}
+
+func (x Make) MarshalText() ([]byte, error) {
+	return []byte(x.String()), nil
+}
+
+func (x *Make) UnmarshalText(text []byte) error {
+	val, err := ParseMake(string(text))
+	if err != nil {
+		return err
+	}
+	*x = val
+	return nil
 }
 
 var ErrInvalidNoZeros = errors.New("not a valid NoZeros")
@@ -141,6 +197,17 @@ func (x NoZeros) IsValid() bool {
 	return ok
 }
 
+func NoZerosValues() []NoZeros {
+	return []NoZeros{
+		NoZerosStart,
+		NoZerosMiddle,
+		NoZerosEnd,
+		NoZerosPs,
+		NoZerosPps,
+		NoZerosPpps,
+	}
+}
+
 func (x NoZeros) Name() string {
 	if v, ok := _NoZerosMapName[x]; ok {
 		return v
@@ -152,7 +219,7 @@ func (x NoZeros) String() string {
 	if v, ok := _NoZerosMapName[x]; ok {
 		return v
 	}
-	return fmt.Sprintf("NoZeros(%d)Name", x)
+	return fmt.Sprintf("NoZeros(%d)", x)
 }
 
 var _NoZerosNameMap = map[string]NoZeros{
@@ -168,5 +235,33 @@ func ParseNoZeros(value string) (NoZeros, error) {
 	if x, ok := _NoZerosNameMap[value]; ok {
 		return x, nil
 	}
+	if x, ok := _NoZerosNameMap[strings.ToLower(value)]; ok {
+		return x, nil
+	}
 	return NoZeros(0), fmt.Errorf("%s is %w", value, ErrInvalidNoZeros)
+}
+
+// Set implements the Golang flag.Value interface func.
+func (x *NoZeros) Set(value string) error {
+	v, err := ParseNoZeros(value)
+	*x = v
+	return err
+}
+
+// Get implements the Golang flag.Getter interface func.
+func (x NoZeros) Get() any {
+	return x
+}
+
+func (x NoZeros) MarshalText() ([]byte, error) {
+	return []byte(x.String()), nil
+}
+
+func (x *NoZeros) UnmarshalText(text []byte) error {
+	val, err := ParseNoZeros(string(text))
+	if err != nil {
+		return err
+	}
+	*x = val
+	return nil
 }

@@ -17,40 +17,19 @@ const (
 
 {{- define "body"}}
 {{- $enumName := .Name -}}
+{{- $validEe := .FindExtendByName "Name" -}}
 
 var ErrInvalid{{.Name}} = errors.New("not a valid {{.Name}}")
 
-{{/* ---------  valid  --------- */}}
-{{- $validEe := .FindExtendByName "Name" -}}
-{{ if eq .Type.String "string" }}
-{{ $validEe.Extend2EnumMap }}
-{{ else }}
+{{ if ne .Type.String "string" -}}
 var _{{.Name}}Name = "{{- range $ei, $item := .GetItems -}}{{$item.GetName}}{{- end -}}"
-
-{{ $validEe.Enum2ExtendMap }}
-{{ end }}
-func (x {{.Name}}) IsValid() bool {
-    {{ if eq .Type.String "string" -}}
-    _, ok := {{$validEe.Extend2EnumVarName}}[string(x)]
-    {{- else -}}
-	_, ok := {{$validEe.Enum2ExtendVarName}}[x]
-	{{- end}}
-	return ok
-}
-
-{{/* ---------  values  --------- */}}
-{{ if .Config.Values }}
-func {{.Name}}Values() []{{.Name}} {
-    return []{{.Name}}{ {{ range $ei, $item := .GetItems }}
-        {{$item.GetCodeName}},{{ end }}
-    }
-}
-{{ end -}}
+{{- end}}
 
 {{/* ---------  extend values  --------- */}}
 {{ range $ei, $extend := .Extends -}}
 {{$extend.Enum2ExtendMap}}
 
+// {{$extend.Name}} is the attribute of {{$enumName}}
 func (x {{$enumName}}) {{$extend.Name}}() {{$extend.Type.String}} {
     {{ if and (eq $extend.Name "Name") (eq $extend.Enum.Type.String "string") -}}
     if v, ok := {{$validEe.Extend2EnumVarName}}[string(x)]; ok {
@@ -65,6 +44,32 @@ func (x {{$enumName}}) {{$extend.Name}}() {{$extend.Type.String}} {
 }
 {{end}}
 
+{{/* ---------  values  --------- */}}
+{{ if .Config.Values }}
+// {{.Name}}Values returns a list of the values of {{.Name}}
+func {{.Name}}Values() []{{.Name}} {
+    return []{{.Name}}{ {{ range $ei, $item := .GetItems }}
+        {{$item.GetCodeName}},{{ end }}
+    }
+}
+{{ end -}}
+
+{{/* ---------  valid  --------- */}}
+{{ if ne .Type.String "string" -}}
+{{ $validEe.Enum2ExtendMap }}
+{{- end }}
+
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x {{.Name}}) IsValid() bool {
+    {{ if eq .Type.String "string" -}}
+    _, ok := {{$validEe.Extend2EnumVarName}}[string(x)]
+    {{- else -}}
+	_, ok := {{$validEe.Enum2ExtendVarName}}[x]
+	{{- end}}
+	return ok
+}
+
 {{/* ---------  stringer and parse  --------- */}}
 {{ if .Config.StringParse }}
 {{- $stringParseEe := .FindExtendByName .Config.StringParseName -}}
@@ -73,6 +78,7 @@ func (x {{$enumName}}) {{$extend.Name}}() {{$extend.Type.String}} {
 {{ $stringParseEe.Enum2ExtendMap }}
 {{ end }}
 
+// String implements the Stringer interface.
 func (x {{.Name}}) String() string {
 {{ if and (eq $stringParseEe.Name "Name") (eq .Type.String "string") -}}
     if v, ok := {{$stringParseEe.Extend2EnumVarName}}[string(x)]; ok {
@@ -141,13 +147,30 @@ func (x {{.Name}}) Ptr() *{{.Name}} {
 }
 {{end}}
 
+{{/* ---------  flag  --------- */}}
+{{ if .Config.Flag }}
+// Set implements the Golang flag.Value interface func.
+func (x *{{.Name}}) Set(value string) error {
+	v, err := Parse{{.Name}}(value)
+	*x = v
+	return err
+}
+
+// Get implements the Golang flag.Getter interface func.
+func (x {{.Name}}) Get() any {
+	return x
+}
+{{end}}
+
 {{/* ---------  marshal  --------- */}}
 {{ if .Config.Marshal }}
 {{ if and .Config.StringParse (eq .Config.StringParseName .Config.MarshalName) }}
+// MarshalText implements the text marshaller method.
 func (x {{.Name}}) MarshalText() ([]byte, error) {
 	return []byte(x.String()), nil
 }
 
+// UnmarshalText implements the text unmarshaller method.
 func (x *{{.Name}}) UnmarshalText(text []byte) error {
 	val, err := Parse{{.Name}}(string(text))
 	if err != nil {
@@ -163,6 +186,7 @@ func (x *{{.Name}}) UnmarshalText(text []byte) error {
 {{ $mEe.Enum2ExtendMap }}
 {{ end }}
 
+// MarshalText implements the text marshaller method.
 func (x {{.Name}}) MarshalText() ([]byte, error) {
 {{ if and (eq $mEe.Name "Name") (eq .Type.String "string") -}}
     if v, ok := {{$mEe.Extend2EnumVarName}}[string(x)]; ok {
@@ -183,6 +207,7 @@ func (x {{.Name}}) MarshalText() ([]byte, error) {
 
 {{ $mEe.Extend2EnumMap }}
 
+// UnmarshalText implements the text unmarshaller method.
 func (x *{{.Name}}) UnmarshalText(text []byte) error {
 {{ if eq $mEe.Type.String "string" -}}
 	if val, ok := {{$mEe.Extend2EnumVarName}}[string(text)]; ok {

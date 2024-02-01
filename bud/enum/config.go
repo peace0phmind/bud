@@ -5,6 +5,7 @@ type Config struct {
 	NoPrefix         bool   `value:"false"` // 所有生成的枚举不携带类型名称前缀
 	StringParse      bool   `value:"true"`
 	StringParseName  string `value:"Name"`
+	Flag             bool   `value:"false"`
 	MustParse        bool   `value:"false"`
 	Marshal          bool   `value:"false"`
 	MarshalName      string `value:"Name"`
@@ -17,6 +18,22 @@ type Config struct {
 	Ptr              bool   `value:"false"`
 	ForceUpper       bool   `value:"false"`
 	ForceLower       bool   `value:"false"`
+}
+
+func (ec *Config) SetStringParse(stringParse bool) {
+	// if stringParse set to false, flag must be set to false
+	if !stringParse {
+		ec.Flag = false
+	}
+	ec.StringParse = stringParse
+}
+
+func (ec *Config) SetFlag(flag bool) {
+	// if set flag true, the stringParse must be set to true
+	if flag {
+		ec.StringParse = true
+	}
+	ec.Flag = flag
 }
 
 func (ec *Config) SetForceLower(lower bool) {

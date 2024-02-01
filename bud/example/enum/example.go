@@ -1,5 +1,6 @@
 package enum
 
+// @EnumConfig(marshal, nocase, flag, values)
 //go:generate go run ../../../main.go
 
 // X is doc'ed
