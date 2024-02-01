@@ -31,10 +31,10 @@ func (ei *Item) GetCodeName() string {
 	}
 
 	casedName := ei.Name
-	if ei.enum.Config.UseCamelCaseName {
-		casedName = strcase.ToCamel(ei.Name)
-	} else {
+	if ei.enum.Config.NoCamel {
 		casedName = util.Capitalize(ei.Name)
+	} else {
+		casedName = strcase.ToCamel(ei.Name)
 	}
 
 	if ei.enum.Config.NoPrefix {

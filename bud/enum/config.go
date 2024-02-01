@@ -1,24 +1,24 @@
 package enum
 
 type Config struct {
-	Prefix           string
-	NoPrefix         bool   `value:"false"` // 所有生成的枚举不携带类型名称前缀
-	StringParse      bool   `value:"true"`
-	StringParseName  string `value:"Name"`
-	Flag             bool   `value:"false"`
-	MustParse        bool   `value:"false"`
-	Marshal          bool   `value:"false"`
-	MarshalName      string `value:"Name"`
-	Sql              bool   `value:"false"`
-	SqlName          string `value:"Value"`
-	Names            bool   `value:"false"` // enum item list
-	Values           bool   `value:"false"` // enum item list
-	NoCase           bool   `value:"false"` // case insensitivity
-	UseCamelCaseName bool   `value:"true"`
-	NoComments       bool   `value:"false"`
-	Ptr              bool   `value:"false"`
-	ForceUpper       bool   `value:"false"`
-	ForceLower       bool   `value:"false"`
+	Prefix          string
+	NoPrefix        bool   `value:"false"` // 所有生成的枚举不携带类型名称前缀
+	StringParse     bool   `value:"true"`
+	StringParseName string `value:"Name"`
+	Flag            bool   `value:"false"`
+	MustParse       bool   `value:"false"`
+	Marshal         bool   `value:"false"`
+	MarshalName     string `value:"Name"`
+	Sql             bool   `value:"false"`
+	SqlName         string `value:"Value"`
+	Names           bool   `value:"false"` // enum name list
+	Values          bool   `value:"false"` // enum item list
+	NoCase          bool   `value:"false"` // case insensitivity
+	NoCamel         bool   `value:"false"`
+	NoComments      bool   `value:"false"`
+	Ptr             bool   `value:"false"`
+	ForceUpper      bool   `value:"false"`
+	ForceLower      bool   `value:"false"`
 }
 
 func (ec *Config) SetStringParse(stringParse bool) {
