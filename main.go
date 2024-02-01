@@ -9,8 +9,10 @@ import (
 
 func main() {
 	var filename string
+	var fileSuffix string
 
 	flag.StringVar(&filename, "file", "", "The file to generate bud file.")
+	flag.StringVar(&fileSuffix, "file-suffix", "_bud", "Changes the default filename suffix of _bud to something else.")
 
 	flag.Parse()
 
@@ -24,5 +26,5 @@ func main() {
 		}
 	}
 
-	bud.GenerateFile(filename, "_bud")
+	bud.GenerateFile(filename, fileSuffix)
 }
