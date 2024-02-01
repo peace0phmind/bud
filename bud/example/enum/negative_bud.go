@@ -37,11 +37,7 @@ var _AllNegativeMapName = map[AllNegative]string{
 	AllNegativeUgly:    _AllNegativeName[14:18],
 }
 
-func (x AllNegative) IsValid() bool {
-	_, ok := _AllNegativeMapName[x]
-	return ok
-}
-
+// Name is the attribute of AllNegative.
 func (x AllNegative) Name() string {
 	if v, ok := _AllNegativeMapName[x]; ok {
 		return v
@@ -49,6 +45,14 @@ func (x AllNegative) Name() string {
 	panic(ErrInvalidAllNegative)
 }
 
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x AllNegative) IsValid() bool {
+	_, ok := _AllNegativeMapName[x]
+	return ok
+}
+
+// String implements the Stringer interface.
 func (x AllNegative) String() string {
 	if v, ok := _AllNegativeMapName[x]; ok {
 		return v
@@ -67,6 +71,7 @@ var _AllNegativeNameMap = map[string]AllNegative{
 	strings.ToLower(_AllNegativeName[14:18]): AllNegativeUgly,
 }
 
+// ParseAllNegative converts a string to an AllNegative.
 func ParseAllNegative(value string) (AllNegative, error) {
 	if x, ok := _AllNegativeNameMap[value]; ok {
 		return x, nil
@@ -87,11 +92,7 @@ var _StatusMapName = map[Status]string{
 	StatusBad:     _StatusName[11:14],
 }
 
-func (x Status) IsValid() bool {
-	_, ok := _StatusMapName[x]
-	return ok
-}
-
+// Name is the attribute of Status.
 func (x Status) Name() string {
 	if v, ok := _StatusMapName[x]; ok {
 		return v
@@ -99,6 +100,14 @@ func (x Status) Name() string {
 	panic(ErrInvalidStatus)
 }
 
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x Status) IsValid() bool {
+	_, ok := _StatusMapName[x]
+	return ok
+}
+
+// String implements the Stringer interface.
 func (x Status) String() string {
 	if v, ok := _StatusMapName[x]; ok {
 		return v
@@ -115,6 +124,7 @@ var _StatusNameMap = map[string]Status{
 	strings.ToLower(_StatusName[11:14]): StatusBad,
 }
 
+// ParseStatus converts a string to a Status.
 func ParseStatus(value string) (Status, error) {
 	if x, ok := _StatusNameMap[value]; ok {
 		return x, nil

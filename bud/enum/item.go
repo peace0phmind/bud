@@ -20,7 +20,7 @@ type Item struct {
 	Value             any
 	DocComment        string
 	LineComment       string
-	ExtendData        []any
+	AttributeData     []any
 	IsBlankIdentifier bool
 }
 
@@ -44,17 +44,17 @@ func (ei *Item) GetCodeName() string {
 	}
 }
 
-// GetName return the item real name, default equals with the code name, or an extent named `Name`
+// GetName return the item real name, default equals with the code name, or an attribute named `Name`
 func (ei *Item) GetName() string {
 	if ei.enum.Config.ForceUpper {
-		return strings.ToUpper(ei.ExtendData[0].(string))
+		return strings.ToUpper(ei.AttributeData[0].(string))
 	}
 
 	if ei.enum.Config.ForceLower {
-		return strings.ToLower(ei.ExtendData[0].(string))
+		return strings.ToLower(ei.AttributeData[0].(string))
 	}
 
-	return ei.ExtendData[0].(string)
+	return ei.AttributeData[0].(string)
 }
 
 func (ei *Item) GetConstLine() string {

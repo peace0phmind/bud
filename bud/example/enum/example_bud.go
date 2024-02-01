@@ -84,11 +84,15 @@ var _MakeMapName = map[Make]string{
 	MakeVolkswagon:   _MakeName[59:69],
 }
 
-func (x Make) IsValid() bool {
-	_, ok := _MakeMapName[x]
-	return ok
+// Name is the attribute of Make.
+func (x Make) Name() string {
+	if v, ok := _MakeMapName[x]; ok {
+		return v
+	}
+	panic(ErrInvalidMake)
 }
 
+// MakeValues returns a list of the values of Make
 func MakeValues() []Make {
 	return []Make{
 		MakeToyota,
@@ -105,13 +109,14 @@ func MakeValues() []Make {
 	}
 }
 
-func (x Make) Name() string {
-	if v, ok := _MakeMapName[x]; ok {
-		return v
-	}
-	panic(ErrInvalidMake)
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x Make) IsValid() bool {
+	_, ok := _MakeMapName[x]
+	return ok
 }
 
+// String implements the Stringer interface.
 func (x Make) String() string {
 	if v, ok := _MakeMapName[x]; ok {
 		return v
@@ -144,6 +149,7 @@ var _MakeNameMap = map[string]Make{
 	strings.ToLower(_MakeName[59:69]): MakeVolkswagon,
 }
 
+// ParseMake converts a string to a Make.
 func ParseMake(value string) (Make, error) {
 	if x, ok := _MakeNameMap[value]; ok {
 		return x, nil
@@ -166,10 +172,12 @@ func (x Make) Get() any {
 	return x
 }
 
+// MarshalText implements the text marshaller method.
 func (x Make) MarshalText() ([]byte, error) {
 	return []byte(x.String()), nil
 }
 
+// UnmarshalText implements the text unmarshaller method.
 func (x *Make) UnmarshalText(text []byte) error {
 	val, err := ParseMake(string(text))
 	if err != nil {
@@ -192,11 +200,15 @@ var _NoZerosMapName = map[NoZeros]string{
 	NoZerosPpps:   _NoZerosName[19:23],
 }
 
-func (x NoZeros) IsValid() bool {
-	_, ok := _NoZerosMapName[x]
-	return ok
+// Name is the attribute of NoZeros.
+func (x NoZeros) Name() string {
+	if v, ok := _NoZerosMapName[x]; ok {
+		return v
+	}
+	panic(ErrInvalidNoZeros)
 }
 
+// NoZerosValues returns a list of the values of NoZeros
 func NoZerosValues() []NoZeros {
 	return []NoZeros{
 		NoZerosStart,
@@ -208,13 +220,14 @@ func NoZerosValues() []NoZeros {
 	}
 }
 
-func (x NoZeros) Name() string {
-	if v, ok := _NoZerosMapName[x]; ok {
-		return v
-	}
-	panic(ErrInvalidNoZeros)
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x NoZeros) IsValid() bool {
+	_, ok := _NoZerosMapName[x]
+	return ok
 }
 
+// String implements the Stringer interface.
 func (x NoZeros) String() string {
 	if v, ok := _NoZerosMapName[x]; ok {
 		return v
@@ -231,6 +244,7 @@ var _NoZerosNameMap = map[string]NoZeros{
 	_NoZerosName[19:23]: NoZerosPpps,
 }
 
+// ParseNoZeros converts a string to a NoZeros.
 func ParseNoZeros(value string) (NoZeros, error) {
 	if x, ok := _NoZerosNameMap[value]; ok {
 		return x, nil
@@ -253,10 +267,12 @@ func (x NoZeros) Get() any {
 	return x
 }
 
+// MarshalText implements the text marshaller method.
 func (x NoZeros) MarshalText() ([]byte, error) {
 	return []byte(x.String()), nil
 }
 
+// UnmarshalText implements the text unmarshaller method.
 func (x *NoZeros) UnmarshalText(text []byte) error {
 	val, err := ParseNoZeros(string(text))
 	if err != nil {

@@ -20,7 +20,7 @@ var enumTypes = []reflect.Kind{
 	reflect.String,
 }
 
-var enumExtendTypes = append(enumTypes,
+var enumAttributeTypes = append(enumTypes,
 	reflect.Bool,
 	reflect.Float32,
 	reflect.Float64,
@@ -36,12 +36,12 @@ func getEnumKindByName(name string) (reflect.Kind, error) {
 	return reflect.Invalid, errors.New(fmt.Sprintf("unknown reflect.kind name %s for enum type", name))
 }
 
-func getEnumExtendKindByName(name string) (reflect.Kind, error) {
-	for _, k := range enumExtendTypes {
+func getEnumAttributeKindByName(name string) (reflect.Kind, error) {
+	for _, k := range enumAttributeTypes {
 		if k.String() == name {
 			return k, nil
 		}
 	}
 
-	return reflect.Invalid, errors.New(fmt.Sprintf("unknown reflect.kind name %s for enum extend type", name))
+	return reflect.Invalid, errors.New(fmt.Sprintf("unknown reflect.kind name %s for enum attribute type", name))
 }

@@ -21,11 +21,7 @@ var _ForceUpperTypeMapName = map[ForceUpperType]string{
 	ForceUpperTypeBootNode: _ForceUpperTypeName[8:16],
 }
 
-func (x ForceUpperType) IsValid() bool {
-	_, ok := _ForceUpperTypeMapName[x]
-	return ok
-}
-
+// Name is the attribute of ForceUpperType.
 func (x ForceUpperType) Name() string {
 	if v, ok := _ForceUpperTypeMapName[x]; ok {
 		return v
@@ -33,6 +29,14 @@ func (x ForceUpperType) Name() string {
 	panic(ErrInvalidForceUpperType)
 }
 
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x ForceUpperType) IsValid() bool {
+	_, ok := _ForceUpperTypeMapName[x]
+	return ok
+}
+
+// String implements the Stringer interface.
 func (x ForceUpperType) String() string {
 	if v, ok := _ForceUpperTypeMapName[x]; ok {
 		return v
@@ -45,6 +49,7 @@ var _ForceUpperTypeNameMap = map[string]ForceUpperType{
 	_ForceUpperTypeName[8:16]: ForceUpperTypeBootNode,
 }
 
+// ParseForceUpperType converts a string to a ForceUpperType.
 func ParseForceUpperType(value string) (ForceUpperType, error) {
 	if x, ok := _ForceUpperTypeNameMap[value]; ok {
 		return x, nil

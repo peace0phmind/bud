@@ -51,11 +51,15 @@ var _Enum32bitMapName = map[Enum32bit]string{
 	Enum32bitE2P30: _Enum32bitName[55:60],
 }
 
-func (x Enum32bit) IsValid() bool {
-	_, ok := _Enum32bitMapName[x]
-	return ok
+// Name is the attribute of Enum32bit.
+func (x Enum32bit) Name() string {
+	if v, ok := _Enum32bitMapName[x]; ok {
+		return v
+	}
+	panic(ErrInvalidEnum32bit)
 }
 
+// Enum32bitValues returns a list of the values of Enum32bit
 func Enum32bitValues() []Enum32bit {
 	return []Enum32bit{
 		Enum32bitUnkno,
@@ -73,13 +77,14 @@ func Enum32bitValues() []Enum32bit {
 	}
 }
 
-func (x Enum32bit) Name() string {
-	if v, ok := _Enum32bitMapName[x]; ok {
-		return v
-	}
-	panic(ErrInvalidEnum32bit)
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x Enum32bit) IsValid() bool {
+	_, ok := _Enum32bitMapName[x]
+	return ok
 }
 
+// String implements the Stringer interface.
 func (x Enum32bit) String() string {
 	if v, ok := _Enum32bitMapName[x]; ok {
 		return v
@@ -102,6 +107,7 @@ var _Enum32bitNameMap = map[string]Enum32bit{
 	_Enum32bitName[55:60]: Enum32bitE2P30,
 }
 
+// ParseEnum32bit converts a string to an Enum32bit.
 func ParseEnum32bit(value string) (Enum32bit, error) {
 	if x, ok := _Enum32bitNameMap[value]; ok {
 		return x, nil

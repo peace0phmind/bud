@@ -40,11 +40,7 @@ var _CommentedMapName = map[Commented]string{
 	CommentedValue3: _CommentedName[12:18],
 }
 
-func (x Commented) IsValid() bool {
-	_, ok := _CommentedMapName[x]
-	return ok
-}
-
+// Name is the attribute of Commented.
 func (x Commented) Name() string {
 	if v, ok := _CommentedMapName[x]; ok {
 		return v
@@ -52,6 +48,14 @@ func (x Commented) Name() string {
 	panic(ErrInvalidCommented)
 }
 
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x Commented) IsValid() bool {
+	_, ok := _CommentedMapName[x]
+	return ok
+}
+
+// String implements the Stringer interface.
 func (x Commented) String() string {
 	if v, ok := _CommentedMapName[x]; ok {
 		return v
@@ -65,6 +69,7 @@ var _CommentedNameMap = map[string]Commented{
 	_CommentedName[12:18]: CommentedValue3,
 }
 
+// ParseCommented converts a string to a Commented.
 func ParseCommented(value string) (Commented, error) {
 	if x, ok := _CommentedNameMap[value]; ok {
 		return x, nil
@@ -75,10 +80,12 @@ func ParseCommented(value string) (Commented, error) {
 	return Commented(0), fmt.Errorf("%s is %w", value, ErrInvalidCommented)
 }
 
+// MarshalText implements the text marshaller method.
 func (x Commented) MarshalText() ([]byte, error) {
 	return []byte(x.String()), nil
 }
 
+// UnmarshalText implements the text unmarshaller method.
 func (x *Commented) UnmarshalText(text []byte) error {
 	val, err := ParseCommented(string(text))
 	if err != nil {
@@ -98,11 +105,7 @@ var _ComplexCommentedMapName = map[ComplexCommented]string{
 	ComplexCommentedValue3: _ComplexCommentedName[12:18],
 }
 
-func (x ComplexCommented) IsValid() bool {
-	_, ok := _ComplexCommentedMapName[x]
-	return ok
-}
-
+// Name is the attribute of ComplexCommented.
 func (x ComplexCommented) Name() string {
 	if v, ok := _ComplexCommentedMapName[x]; ok {
 		return v
@@ -110,6 +113,14 @@ func (x ComplexCommented) Name() string {
 	panic(ErrInvalidComplexCommented)
 }
 
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x ComplexCommented) IsValid() bool {
+	_, ok := _ComplexCommentedMapName[x]
+	return ok
+}
+
+// String implements the Stringer interface.
 func (x ComplexCommented) String() string {
 	if v, ok := _ComplexCommentedMapName[x]; ok {
 		return v
@@ -123,6 +134,7 @@ var _ComplexCommentedNameMap = map[string]ComplexCommented{
 	_ComplexCommentedName[12:18]: ComplexCommentedValue3,
 }
 
+// ParseComplexCommented converts a string to a ComplexCommented.
 func ParseComplexCommented(value string) (ComplexCommented, error) {
 	if x, ok := _ComplexCommentedNameMap[value]; ok {
 		return x, nil
@@ -133,10 +145,12 @@ func ParseComplexCommented(value string) (ComplexCommented, error) {
 	return ComplexCommented(0), fmt.Errorf("%s is %w", value, ErrInvalidComplexCommented)
 }
 
+// MarshalText implements the text marshaller method.
 func (x ComplexCommented) MarshalText() ([]byte, error) {
 	return []byte(x.String()), nil
 }
 
+// UnmarshalText implements the text unmarshaller method.
 func (x *ComplexCommented) UnmarshalText(text []byte) error {
 	val, err := ParseComplexCommented(string(text))
 	if err != nil {

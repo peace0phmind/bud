@@ -49,11 +49,7 @@ var _ColorMapName = map[Color]string{
 	ColorRedOrangeBlue: _ColorName[64:79],
 }
 
-func (x Color) IsValid() bool {
-	_, ok := _ColorMapName[x]
-	return ok
-}
-
+// Name is the attribute of Color.
 func (x Color) Name() string {
 	if v, ok := _ColorMapName[x]; ok {
 		return v
@@ -61,6 +57,14 @@ func (x Color) Name() string {
 	panic(ErrInvalidColor)
 }
 
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x Color) IsValid() bool {
+	_, ok := _ColorMapName[x]
+	return ok
+}
+
+// String implements the Stringer interface.
 func (x Color) String() string {
 	if v, ok := _ColorMapName[x]; ok {
 		return v
@@ -87,6 +91,7 @@ var _ColorNameMap = map[string]Color{
 	_ColorName[64:79]:                  ColorRedOrangeBlue,
 }
 
+// ParseColor converts a string to a Color.
 func ParseColor(value string) (Color, error) {
 	if x, ok := _ColorNameMap[value]; ok {
 		return x, nil
@@ -97,6 +102,7 @@ func ParseColor(value string) (Color, error) {
 	return Color(0), fmt.Errorf("%s is %w", value, ErrInvalidColor)
 }
 
+// MustParseColor converts a string to a Color, and panics if is not valid.
 func MustParseColor(value string) Color {
 	val, err := ParseColor(value)
 	if err != nil {
@@ -109,10 +115,12 @@ func (x Color) Ptr() *Color {
 	return &x
 }
 
+// MarshalText implements the text marshaller method.
 func (x Color) MarshalText() ([]byte, error) {
 	return []byte(x.String()), nil
 }
 
+// UnmarshalText implements the text unmarshaller method.
 func (x *Color) UnmarshalText(text []byte) error {
 	val, err := ParseColor(string(text))
 	if err != nil {

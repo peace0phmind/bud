@@ -19,22 +19,22 @@ type Enum struct {
 	Name    string
 	Type    reflect.Kind
 	Comment string
-	Extends []*Extend
+	Attrs   []*Attribute
 	Items   []*Item
 	Config  *Config
 }
 
-func (e *Enum) UpdateExtends(a *ast.Annotation) error {
+func (e *Enum) UpdateAttributes(a *ast.Annotation) error {
 	if a.Params != nil && len(a.Params.List) > 0 {
 		for idx, p := range a.Params.List {
 			if p.Value == nil {
-				return errors.New(fmt.Sprintf("Enum %s's extend field %s's type is empty", e.Name, p.Key.Text))
+				return errors.New(fmt.Sprintf("Enum %s's attribute %s's type is empty", e.Name, p.Key.Text))
 			}
 			typeName, err := structure.ConvertTo[string](p.Value.Value())
 			if err != nil {
-				return errors.New(fmt.Sprintf("Enum %s's extend field %s's type parse error: %v", e.Name, p.Key.Text, err))
+				return errors.New(fmt.Sprintf("Enum %s's attribute %s's type parse error: %v", e.Name, p.Key.Text, err))
 			}
-			t, err := getEnumExtendKindByName(typeName)
+			t, err := getEnumAttributeKindByName(typeName)
 			if err != nil {
 				return errors.New(fmt.Sprintf("enum type err: %v", err))
 			}
@@ -44,7 +44,7 @@ func (e *Enum) UpdateExtends(a *ast.Annotation) error {
 				comment = ast.GetCommentText(p.Comment)
 			}
 
-			e.Extends = append(e.Extends, &Extend{
+			e.Attrs = append(e.Attrs, &Attribute{
 				enum:    e,
 				idx:     idx,
 				Name:    util.Capitalize(p.Key.Text),
@@ -57,11 +57,11 @@ func (e *Enum) UpdateExtends(a *ast.Annotation) error {
 	return nil
 }
 
-func (e *Enum) UpdateEnumItem(a *ast.Annotation) error {
+func (e *Enum) UpdateItems(a *ast.Annotation) error {
 	if a.Extends != nil && len(a.Extends.List) > 0 {
 		for idx, ex := range a.Extends.List {
-			if len(e.Extends) != len(ex.Values) {
-				return errors.New("enum data number not equals with extend type")
+			if len(e.Attrs) != len(ex.Values) {
+				return errors.New("enum data number not equals with enum attribute type")
 			}
 
 			var value any
@@ -83,7 +83,7 @@ func (e *Enum) UpdateEnumItem(a *ast.Annotation) error {
 			}
 
 			if !ei.IsBlankIdentifier {
-				ei.ExtendData = stream.Must(stream.Map[ast.Value, any](stream.Of(ex.Values), func(value ast.Value) (any, error) {
+				ei.AttributeData = stream.Must(stream.Map[ast.Value, any](stream.Of(ex.Values), func(value ast.Value) (any, error) {
 					return value.Value(), nil
 				}).ToSlice())
 			}
@@ -97,20 +97,20 @@ func (e *Enum) UpdateEnumItem(a *ast.Annotation) error {
 }
 
 func (e *Enum) CheckValid() error {
-	// check e.Extend exist name equals "Name" and type is string
-	for _, ex := range e.Extends {
+	// check e.Attribute exist name equals "Name" and type is string
+	for _, ex := range e.Attrs {
 		if ex.Name == ItemName && ex.Type != reflect.String {
-			return errors.New("enum extend field 'Name' must have type string")
+			return errors.New("enum attribute 'Name' must have type string")
 		}
 	}
 
-	// check e.Extend name is unique
-	extendNames := make(map[string]bool)
-	for _, ex := range e.Extends {
-		if extendNames[ex.Name] {
-			return fmt.Errorf("enum extend field names must be unique, %s", ex.Name)
+	// check e.Attribute name is unique
+	attributeNames := make(map[string]bool)
+	for _, ex := range e.Attrs {
+		if attributeNames[ex.Name] {
+			return fmt.Errorf("enum attribute names must be unique, %s", ex.Name)
 		}
-		extendNames[ex.Name] = true
+		attributeNames[ex.Name] = true
 	}
 
 	// check e.Items name is unique
@@ -122,54 +122,54 @@ func (e *Enum) CheckValid() error {
 		itemNames[item.Name] = true
 	}
 
-	// if e.Extend is empty or e.Extend haven't a ItemName item, then use item's name to create it
-	if fee := e.FindExtendByName(ItemName); fee == nil {
-		for _, ee := range e.Extends {
+	// if e.Attribute is empty or e.Attribute haven't a ItemName item, then use item's name to create it
+	if fee := e.FindAttributeByName(ItemName); fee == nil {
+		for _, ee := range e.Attrs {
 			ee.idx += 1
 		}
 
-		ee := &Extend{
+		ee := &Attribute{
 			enum:    e,
 			idx:     0,
 			Name:    ItemName,
 			Type:    reflect.String,
 			Comment: "",
 		}
-		e.Extends = append([]*Extend{ee}, e.Extends...)
+		e.Attrs = append([]*Attribute{ee}, e.Attrs...)
 
 		for _, ei := range e.GetItems() {
-			ei.ExtendData = append([]any{ei.Name}, ei.ExtendData...)
+			ei.AttributeData = append([]any{ei.Name}, ei.AttributeData...)
 		}
 	} else {
 		for _, ei := range e.GetItems() {
-			if isBlankIdentifier(ei.ExtendData[fee.idx]) {
-				ei.ExtendData[fee.idx] = ei.Name
+			if isBlankIdentifier(ei.AttributeData[fee.idx]) {
+				ei.AttributeData[fee.idx] = ei.Name
 			}
 		}
 	}
 
 	// check config names and type
-	spee := e.FindExtendByName(e.Config.StringParseName)
+	spee := e.FindAttributeByName(e.Config.StringParseName)
 	if spee == nil {
-		return errors.New("enum config string parse name must exist in enum extends")
+		return errors.New("enum config string parse name must exist in enum attributes")
 	} else {
 		if !stream.Must(stream.Of(enumTypes).Contains(spee.Type, func(x, y reflect.Kind) (bool, error) { return x == y, nil })) {
 			return errors.New("StringParseName's type muse be number or string")
 		}
 	}
 
-	mee := e.FindExtendByName(e.Config.MarshalName)
+	mee := e.FindAttributeByName(e.Config.MarshalName)
 	if mee == nil {
-		return errors.New("enum config marshal name must exist in enum extends")
+		return errors.New("enum config marshal name must exist in enum attributes")
 	} else {
 		if !stream.Must(stream.Of(enumTypes).Contains(mee.Type, func(x, y reflect.Kind) (bool, error) { return x == y, nil })) {
 			return errors.New("MarshalName's type muse be number or string")
 		}
 	}
 
-	//see := e.FindExtendByName(e.Config.SqlName)
+	//see := e.FindAttributeByName(e.Config.SqlName)
 	//if see == nil {
-	//	return errors.New("enum config sql name must exist in enum extends")
+	//	return errors.New("enum config sql name must exist in enum attributes")
 	//} else {
 	//	if !stream.Must(stream.Of(enumTypes).Contains(see.Type, func(x, y reflect.Kind) (bool, error) { return x == y, nil })) {
 	//		return errors.New("SqlName's type muse be number or string")
@@ -211,9 +211,9 @@ func isBlankIdentifier(value any) bool {
 	return false
 }
 
-func (e *Enum) FindExtendByName(name string) *Extend {
-	if len(e.Extends) > 0 {
-		for _, ee := range e.Extends {
+func (e *Enum) FindAttributeByName(name string) *Attribute {
+	if len(e.Attrs) > 0 {
+		for _, ee := range e.Attrs {
 			if ee.Name == name {
 				return ee
 			}
@@ -275,12 +275,12 @@ func annotationGroupToEnum(ag *ast.AnnotationGroup, ts *goast.TypeSpec, globalCo
 		enum.Comment = ast.GetCommentText(enumAnnotation.Comment)
 	}
 
-	err = enum.UpdateExtends(enumAnnotation)
+	err = enum.UpdateAttributes(enumAnnotation)
 	if err != nil {
 		return nil, err
 	}
 
-	err = enum.UpdateEnumItem(enumAnnotation)
+	err = enum.UpdateItems(enumAnnotation)
 	if err != nil {
 		return nil, err
 	}

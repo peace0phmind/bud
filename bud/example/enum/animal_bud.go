@@ -30,7 +30,7 @@ var _AnimalMapName = map[Animal]string{
 	AnimalFishSharp:    _AnimalName[16:21],
 }
 
-// Name is the attribute of Animal
+// Name is the attribute of Animal.
 func (x Animal) Name() string {
 	if v, ok := _AnimalMapName[x]; ok {
 		return v
@@ -61,6 +61,7 @@ var _AnimalNameMap = map[string]Animal{
 	_AnimalName[16:21]: AnimalFishSharp,
 }
 
+// ParseAnimal converts a string to an Animal.
 func ParseAnimal(value string) (Animal, error) {
 	if x, ok := _AnimalNameMap[value]; ok {
 		return x, nil

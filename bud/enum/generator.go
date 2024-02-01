@@ -81,7 +81,7 @@ func NewGenerator(fileNode *goast.File, fileSet *token.FileSet) (ast.Generator, 
 
 			enum, err := annotationGroupToEnum(ag, ts, ec)
 			if err != nil {
-				panic(fmt.Sprintf("update extends err: %v", err))
+				panic(fmt.Sprintf("get enum err: %v", err))
 			}
 
 			return enum

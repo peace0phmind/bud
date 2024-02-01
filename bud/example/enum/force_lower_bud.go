@@ -21,11 +21,7 @@ var _ForceLowerTypeMapName = map[ForceLowerType]string{
 	ForceLowerTypeBootNode: _ForceLowerTypeName[8:16],
 }
 
-func (x ForceLowerType) IsValid() bool {
-	_, ok := _ForceLowerTypeMapName[x]
-	return ok
-}
-
+// Name is the attribute of ForceLowerType.
 func (x ForceLowerType) Name() string {
 	if v, ok := _ForceLowerTypeMapName[x]; ok {
 		return v
@@ -33,6 +29,14 @@ func (x ForceLowerType) Name() string {
 	panic(ErrInvalidForceLowerType)
 }
 
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x ForceLowerType) IsValid() bool {
+	_, ok := _ForceLowerTypeMapName[x]
+	return ok
+}
+
+// String implements the Stringer interface.
 func (x ForceLowerType) String() string {
 	if v, ok := _ForceLowerTypeMapName[x]; ok {
 		return v
@@ -45,6 +49,7 @@ var _ForceLowerTypeNameMap = map[string]ForceLowerType{
 	_ForceLowerTypeName[8:16]: ForceLowerTypeBootNode,
 }
 
+// ParseForceLowerType converts a string to a ForceLowerType.
 func ParseForceLowerType(value string) (ForceLowerType, error) {
 	if x, ok := _ForceLowerTypeNameMap[value]; ok {
 		return x, nil

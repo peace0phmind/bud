@@ -14,16 +14,7 @@ const (
 
 var ErrInvalidTestOnlyEnum = errors.New("not a valid TestOnlyEnum")
 
-var _TestOnlyEnumNameMap = map[string]TestOnlyEnum{
-	"ABCD (x)": TestOnlyEnumAbcdx,
-	"EFGH (y)": TestOnlyEnumEfghy,
-}
-
-func (x TestOnlyEnum) IsValid() bool {
-	_, ok := _TestOnlyEnumNameMap[string(x)]
-	return ok
-}
-
+// Name is the attribute of TestOnlyEnum.
 func (x TestOnlyEnum) Name() string {
 	if v, ok := _TestOnlyEnumNameMap[string(x)]; ok {
 		return string(v)
@@ -31,6 +22,14 @@ func (x TestOnlyEnum) Name() string {
 	panic(ErrInvalidTestOnlyEnum)
 }
 
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x TestOnlyEnum) IsValid() bool {
+	_, ok := _TestOnlyEnumNameMap[string(x)]
+	return ok
+}
+
+// String implements the Stringer interface.
 func (x TestOnlyEnum) String() string {
 	if v, ok := _TestOnlyEnumNameMap[string(x)]; ok {
 		return string(v)
@@ -38,6 +37,12 @@ func (x TestOnlyEnum) String() string {
 	return fmt.Sprintf("TestOnlyEnum(%s)", string(x))
 }
 
+var _TestOnlyEnumNameMap = map[string]TestOnlyEnum{
+	"ABCD (x)": TestOnlyEnumAbcdx,
+	"EFGH (y)": TestOnlyEnumEfghy,
+}
+
+// ParseTestOnlyEnum converts a string to a TestOnlyEnum.
 func ParseTestOnlyEnum(value string) (TestOnlyEnum, error) {
 	if x, ok := _TestOnlyEnumNameMap[value]; ok {
 		return x, nil

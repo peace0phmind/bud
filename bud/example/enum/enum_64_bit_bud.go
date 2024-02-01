@@ -63,11 +63,15 @@ var _Enum64bitMapName = map[Enum64bit]string{
 	Enum64bitE2P63: _Enum64bitName[75:80],
 }
 
-func (x Enum64bit) IsValid() bool {
-	_, ok := _Enum64bitMapName[x]
-	return ok
+// Name is the attribute of Enum64bit.
+func (x Enum64bit) Name() string {
+	if v, ok := _Enum64bitMapName[x]; ok {
+		return v
+	}
+	panic(ErrInvalidEnum64bit)
 }
 
+// Enum64bitValues returns a list of the values of Enum64bit
 func Enum64bitValues() []Enum64bit {
 	return []Enum64bit{
 		Enum64bitUnkno,
@@ -89,13 +93,14 @@ func Enum64bitValues() []Enum64bit {
 	}
 }
 
-func (x Enum64bit) Name() string {
-	if v, ok := _Enum64bitMapName[x]; ok {
-		return v
-	}
-	panic(ErrInvalidEnum64bit)
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x Enum64bit) IsValid() bool {
+	_, ok := _Enum64bitMapName[x]
+	return ok
 }
 
+// String implements the Stringer interface.
 func (x Enum64bit) String() string {
 	if v, ok := _Enum64bitMapName[x]; ok {
 		return v
@@ -122,6 +127,7 @@ var _Enum64bitNameMap = map[string]Enum64bit{
 	_Enum64bitName[75:80]: Enum64bitE2P63,
 }
 
+// ParseEnum64bit converts a string to an Enum64bit.
 func ParseEnum64bit(value string) (Enum64bit, error) {
 	if x, ok := _Enum64bitNameMap[value]; ok {
 		return x, nil

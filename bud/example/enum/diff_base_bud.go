@@ -42,11 +42,7 @@ var _DiffBaseMapName = map[DiffBase]string{
 	DiffBaseB11: _DiffBaseName[17:20],
 }
 
-func (x DiffBase) IsValid() bool {
-	_, ok := _DiffBaseMapName[x]
-	return ok
-}
-
+// Name is the attribute of DiffBase.
 func (x DiffBase) Name() string {
 	if v, ok := _DiffBaseMapName[x]; ok {
 		return v
@@ -54,6 +50,14 @@ func (x DiffBase) Name() string {
 	panic(ErrInvalidDiffBase)
 }
 
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x DiffBase) IsValid() bool {
+	_, ok := _DiffBaseMapName[x]
+	return ok
+}
+
+// String implements the Stringer interface.
 func (x DiffBase) String() string {
 	if v, ok := _DiffBaseMapName[x]; ok {
 		return v
@@ -73,6 +77,7 @@ var _DiffBaseNameMap = map[string]DiffBase{
 	_DiffBaseName[17:20]: DiffBaseB11,
 }
 
+// ParseDiffBase converts a string to a DiffBase.
 func ParseDiffBase(value string) (DiffBase, error) {
 	if x, ok := _DiffBaseNameMap[value]; ok {
 		return x, nil
