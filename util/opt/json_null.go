@@ -24,16 +24,9 @@ func (jn *JsonNull[T]) MarshalJSON() ([]byte, error) {
 }
 
 func (jn *JsonNull[T]) UnmarshalJSON(b []byte) error {
+	jn.Set = true
 	if strings.EqualFold(string(b), JsonNullValue) {
-		jn.Set = false
 		return nil
 	}
-
-	err := json.Unmarshal(b, &jn.JsonV)
-	if err == nil {
-		jn.Set = true
-		return nil
-	}
-
-	return err
+	return json.Unmarshal(b, &jn.JsonV)
 }
