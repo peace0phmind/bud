@@ -19,16 +19,20 @@ const (
 	ColorBlue Color = 34
 	// ColorGrey is a Color of type grey.
 	ColorGrey Color = 45
+	// Skipped value.
+	_
+	// Skipped value.
+	_
 	// ColorYellow is a Color of type yellow.
-	ColorYellow Color = 46
+	ColorYellow Color = 48
 	// ColorBlueGreen is a Color of type blue-green.
-	ColorBlueGreen Color = 47
+	ColorBlueGreen Color = 49
 	// ColorRedOrange is a Color of type red-orange.
-	ColorRedOrange Color = 48
+	ColorRedOrange Color = 50
 	// ColorYellowGreen is a Color of type yellow_green.
-	ColorYellowGreen Color = 49
+	ColorYellowGreen Color = 51
 	// ColorRedOrangeBlue is a Color of type red-orange-blue.
-	ColorRedOrangeBlue Color = 50
+	ColorRedOrangeBlue Color = 52
 )
 
 var ErrInvalidColor = errors.New("not a valid Color")
@@ -57,6 +61,14 @@ func (x Color) Name() string {
 	panic(ErrInvalidColor)
 }
 
+// Value is the attribute of Color.
+func (x Color) Value() int {
+	if x.IsValid() {
+		return int(x)
+	}
+	panic(ErrInvalidColor)
+}
+
 // IsValid provides a quick way to determine if the typed value is
 // part of the allowed enumerated values
 func (x Color) IsValid() bool {
@@ -66,10 +78,7 @@ func (x Color) IsValid() bool {
 
 // String implements the Stringer interface.
 func (x Color) String() string {
-	if v, ok := _ColorMapName[x]; ok {
-		return v
-	}
-	return fmt.Sprintf("Color(%d)", x)
+	return x.Name()
 }
 
 var _ColorNameMap = map[string]Color{

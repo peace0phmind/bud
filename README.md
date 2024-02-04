@@ -6,9 +6,10 @@ Feature List
 
 - [x] wire: Runtime Dynamic Auto-Wiring Using Dependency Injection
 - [x] stream: stream api like java to deal with slice
-- [ ] trace-log: TODO
 - [ ] enum: TODO
+- [ ] trace-log: TODO
 - [ ] config: TODO
+- [ ] plugin: TODO
 - [ ] util: TODO
 - [ ] remote: TODO:
 

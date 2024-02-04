@@ -20,6 +20,14 @@ func (x SuffixTest) Name() string {
 	panic(ErrInvalidSuffixTest)
 }
 
+// Value is the attribute of SuffixTest.
+func (x SuffixTest) Value() string {
+	if x.IsValid() {
+		return string(x)
+	}
+	panic(ErrInvalidSuffixTest)
+}
+
 // IsValid provides a quick way to determine if the typed value is
 // part of the allowed enumerated values
 func (x SuffixTest) IsValid() bool {
@@ -29,10 +37,7 @@ func (x SuffixTest) IsValid() bool {
 
 // String implements the Stringer interface.
 func (x SuffixTest) String() string {
-	if v, ok := _SuffixTestNameMap[string(x)]; ok {
-		return string(v)
-	}
-	return fmt.Sprintf("SuffixTest(%s)", string(x))
+	return x.Name()
 }
 
 var _SuffixTestNameMap = map[string]SuffixTest{

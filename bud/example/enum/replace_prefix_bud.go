@@ -24,6 +24,14 @@ func (x Shop) Name() string {
 	panic(ErrInvalidShop)
 }
 
+// Value is the attribute of Shop.
+func (x Shop) Value() string {
+	if x.IsValid() {
+		return string(x)
+	}
+	panic(ErrInvalidShop)
+}
+
 var _ShopNames = []string{
 	"SOME_PLACE_AWESOME",
 	"SomewhereElse",
@@ -44,10 +52,7 @@ func (x Shop) IsValid() bool {
 
 // String implements the Stringer interface.
 func (x Shop) String() string {
-	if v, ok := _ShopNameMap[string(x)]; ok {
-		return string(v)
-	}
-	return fmt.Sprintf("Shop(%s)", string(x))
+	return x.Name()
 }
 
 var _ShopNameMap = map[string]Shop{

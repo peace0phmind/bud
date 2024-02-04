@@ -20,6 +20,14 @@ func (x Suffix) Name() string {
 	panic(ErrInvalidSuffix)
 }
 
+// Value is the attribute of Suffix.
+func (x Suffix) Value() string {
+	if x.IsValid() {
+		return string(x)
+	}
+	panic(ErrInvalidSuffix)
+}
+
 // IsValid provides a quick way to determine if the typed value is
 // part of the allowed enumerated values
 func (x Suffix) IsValid() bool {
@@ -29,10 +37,7 @@ func (x Suffix) IsValid() bool {
 
 // String implements the Stringer interface.
 func (x Suffix) String() string {
-	if v, ok := _SuffixNameMap[string(x)]; ok {
-		return string(v)
-	}
-	return fmt.Sprintf("Suffix(%s)", string(x))
+	return x.Name()
 }
 
 var _SuffixNameMap = map[string]Suffix{

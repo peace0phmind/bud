@@ -1,6 +1,13 @@
 package enum
 
+import (
+	"fmt"
+	"github.com/peace0phmind/bud/stream"
+	"reflect"
+)
+
 type Config struct {
+	enum            *Enum
 	Prefix          string
 	NoPrefix        bool   `value:"false"` // 所有生成的枚举不携带类型名称前缀
 	StringParse     bool   `value:"true"`
@@ -19,6 +26,7 @@ type Config struct {
 	Ptr             bool   `value:"false"`
 	ForceUpper      bool   `value:"false"`
 	ForceLower      bool   `value:"false"`
+	PanicIfInvalid  bool   `value:"true"`
 }
 
 func (ec *Config) SetStringParse(stringParse bool) {
@@ -53,4 +61,32 @@ func (ec *Config) SetForceUpper(upper bool) {
 		}
 	}
 	ec.ForceUpper = upper
+}
+
+func (ec *Config) checkConfigAttributeName(paramName, errName string) error {
+	if attr := ec.enum.FindAttributeByName(paramName); attr == nil {
+		return fmt.Errorf("enum config %s must exist in enum attributes", errName)
+	} else {
+		if !stream.Must(stream.Of(enumAttributeTypes).Contains(attr.Type, func(x, y reflect.Kind) (bool, error) { return x == y, nil })) {
+			return fmt.Errorf("%s 's type muse be number , bool, float or string", errName)
+		}
+	}
+
+	return nil
+}
+
+func (ec *Config) CheckValid() (err error) {
+	if err = ec.checkConfigAttributeName(ec.StringParseName, "StringParseName"); err != nil {
+		return err
+	}
+
+	if err = ec.checkConfigAttributeName(ec.MarshalName, "MarshalName"); err != nil {
+		return err
+	}
+
+	if err = ec.checkConfigAttributeName(ec.SqlName, "SqlName"); err != nil {
+		return err
+	}
+
+	return nil
 }

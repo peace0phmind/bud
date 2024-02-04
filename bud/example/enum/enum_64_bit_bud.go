@@ -71,26 +71,36 @@ func (x Enum64bit) Name() string {
 	panic(ErrInvalidEnum64bit)
 }
 
+// Value is the attribute of Enum64bit.
+func (x Enum64bit) Value() uint64 {
+	if x.IsValid() {
+		return uint64(x)
+	}
+	panic(ErrInvalidEnum64bit)
+}
+
+var _Enum64bitValues = []Enum64bit{
+	Enum64bitUnkno,
+	Enum64bitE2P15,
+	Enum64bitE2P16,
+	Enum64bitE2P17,
+	Enum64bitE2P18,
+	Enum64bitE2P19,
+	Enum64bitE2P20,
+	Enum64bitE2P21,
+	Enum64bitE2P22,
+	Enum64bitE2P23,
+	Enum64bitE2P28,
+	Enum64bitE2P30,
+	Enum64bitE2P31,
+	Enum64bitE2P32,
+	Enum64bitE2P33,
+	Enum64bitE2P63,
+}
+
 // Enum64bitValues returns a list of the values of Enum64bit
 func Enum64bitValues() []Enum64bit {
-	return []Enum64bit{
-		Enum64bitUnkno,
-		Enum64bitE2P15,
-		Enum64bitE2P16,
-		Enum64bitE2P17,
-		Enum64bitE2P18,
-		Enum64bitE2P19,
-		Enum64bitE2P20,
-		Enum64bitE2P21,
-		Enum64bitE2P22,
-		Enum64bitE2P23,
-		Enum64bitE2P28,
-		Enum64bitE2P30,
-		Enum64bitE2P31,
-		Enum64bitE2P32,
-		Enum64bitE2P33,
-		Enum64bitE2P63,
-	}
+	return _Enum64bitValues
 }
 
 // IsValid provides a quick way to determine if the typed value is
@@ -102,10 +112,7 @@ func (x Enum64bit) IsValid() bool {
 
 // String implements the Stringer interface.
 func (x Enum64bit) String() string {
-	if v, ok := _Enum64bitMapName[x]; ok {
-		return v
-	}
-	return fmt.Sprintf("Enum64bit(%d)", x)
+	return x.Name()
 }
 
 var _Enum64bitNameMap = map[string]Enum64bit{

@@ -46,15 +46,22 @@ func (ei *Item) GetCodeName() string {
 
 // GetName return the item real name, default equals with the code name, or an attribute named `Name`
 func (ei *Item) GetName() string {
+	nameAttr := ei.enum.FindAttributeByName(ItemName)
+	if nameAttr == nil {
+		panic("Name attribute is not set")
+	}
+
+	name := ei.AttributeData[nameAttr.idx].(string)
+
 	if ei.enum.Config.ForceUpper {
-		return strings.ToUpper(ei.AttributeData[0].(string))
+		return strings.ToUpper(name)
 	}
 
 	if ei.enum.Config.ForceLower {
-		return strings.ToLower(ei.AttributeData[0].(string))
+		return strings.ToLower(name)
 	}
 
-	return ei.AttributeData[0].(string)
+	return name
 }
 
 func (ei *Item) GetConstLine() string {
@@ -65,10 +72,14 @@ func (ei *Item) GetConstLine() string {
 			return ei.GetCodeName()
 		}
 	} else {
-		if ei.enum.Type == reflect.String {
-			return fmt.Sprintf("%s %s = \"%s\"", ei.GetCodeName(), ei.enum.Name, ei.Value)
+		if ei.IsBlankIdentifier {
+			return BlankIdentifier
 		} else {
-			return fmt.Sprintf("%s %s = %v", ei.GetCodeName(), ei.enum.Name, ei.Value)
+			if ei.enum.Type == reflect.String {
+				return fmt.Sprintf("%s %s = \"%s\"", ei.GetCodeName(), ei.enum.Name, ei.Value)
+			} else {
+				return fmt.Sprintf("%s %s = %v", ei.GetCodeName(), ei.enum.Name, ei.Value)
+			}
 		}
 	}
 }

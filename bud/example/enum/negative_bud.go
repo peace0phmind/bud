@@ -45,6 +45,14 @@ func (x AllNegative) Name() string {
 	panic(ErrInvalidAllNegative)
 }
 
+// Value is the attribute of AllNegative.
+func (x AllNegative) Value() int {
+	if x.IsValid() {
+		return int(x)
+	}
+	panic(ErrInvalidAllNegative)
+}
+
 // IsValid provides a quick way to determine if the typed value is
 // part of the allowed enumerated values
 func (x AllNegative) IsValid() bool {
@@ -54,10 +62,7 @@ func (x AllNegative) IsValid() bool {
 
 // String implements the Stringer interface.
 func (x AllNegative) String() string {
-	if v, ok := _AllNegativeMapName[x]; ok {
-		return v
-	}
-	return fmt.Sprintf("AllNegative(%d)", x)
+	return x.Name()
 }
 
 var _AllNegativeNameMap = map[string]AllNegative{
@@ -100,6 +105,14 @@ func (x Status) Name() string {
 	panic(ErrInvalidStatus)
 }
 
+// Value is the attribute of Status.
+func (x Status) Value() int {
+	if x.IsValid() {
+		return int(x)
+	}
+	panic(ErrInvalidStatus)
+}
+
 // IsValid provides a quick way to determine if the typed value is
 // part of the allowed enumerated values
 func (x Status) IsValid() bool {
@@ -109,10 +122,7 @@ func (x Status) IsValid() bool {
 
 // String implements the Stringer interface.
 func (x Status) String() string {
-	if v, ok := _StatusMapName[x]; ok {
-		return v
-	}
-	return fmt.Sprintf("Status(%d)", x)
+	return x.Name()
 }
 
 var _StatusNameMap = map[string]Status{

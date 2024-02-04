@@ -50,6 +50,14 @@ func (x DiffBase) Name() string {
 	panic(ErrInvalidDiffBase)
 }
 
+// Value is the attribute of DiffBase.
+func (x DiffBase) Value() int {
+	if x.IsValid() {
+		return int(x)
+	}
+	panic(ErrInvalidDiffBase)
+}
+
 // IsValid provides a quick way to determine if the typed value is
 // part of the allowed enumerated values
 func (x DiffBase) IsValid() bool {
@@ -59,10 +67,7 @@ func (x DiffBase) IsValid() bool {
 
 // String implements the Stringer interface.
 func (x DiffBase) String() string {
-	if v, ok := _DiffBaseMapName[x]; ok {
-		return v
-	}
-	return fmt.Sprintf("DiffBase(%d)", x)
+	return x.Name()
 }
 
 var _DiffBaseNameMap = map[string]DiffBase{

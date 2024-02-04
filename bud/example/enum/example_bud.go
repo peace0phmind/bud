@@ -91,6 +91,14 @@ func (x Make) Name() string {
 	panic(ErrInvalidMake)
 }
 
+// Value is the attribute of Make.
+func (x Make) Value() int32 {
+	if x.IsValid() {
+		return int32(x)
+	}
+	panic(ErrInvalidMake)
+}
+
 var _MakeValues = []Make{
 	MakeToyota,
 	MakeChevy,
@@ -138,10 +146,7 @@ func (x Make) IsValid() bool {
 
 // String implements the Stringer interface.
 func (x Make) String() string {
-	if v, ok := _MakeMapName[x]; ok {
-		return v
-	}
-	return fmt.Sprintf("Make(%d)", x)
+	return x.Name()
 }
 
 var _MakeNameMap = map[string]Make{
@@ -228,6 +233,14 @@ func (x NoZeros) Name() string {
 	panic(ErrInvalidNoZeros)
 }
 
+// Value is the attribute of NoZeros.
+func (x NoZeros) Value() int32 {
+	if x.IsValid() {
+		return int32(x)
+	}
+	panic(ErrInvalidNoZeros)
+}
+
 var _NoZerosValues = []NoZeros{
 	NoZerosStart,
 	NoZerosMiddle,
@@ -265,10 +278,7 @@ func (x NoZeros) IsValid() bool {
 
 // String implements the Stringer interface.
 func (x NoZeros) String() string {
-	if v, ok := _NoZerosMapName[x]; ok {
-		return v
-	}
-	return fmt.Sprintf("NoZeros(%d)", x)
+	return x.Name()
 }
 
 var _NoZerosNameMap = map[string]NoZeros{

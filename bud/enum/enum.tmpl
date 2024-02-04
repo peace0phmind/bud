@@ -17,7 +17,9 @@ const (
 
 {{- define "body"}}
 {{- $enumName := .Name -}}
-{{- $validEe := .FindAttributeByName "Name" -}}
+{{- $enumType := .Type -}}
+{{- $cfg := .Config -}}
+{{- $validAttr := .FindAttributeByName "Name" -}}
 
 {{ if .Config.Names -}}
 var ErrInvalid{{.Name}} = fmt.Errorf("not a valid {{.Name}}, try [%s]", strings.Join(_{{.Name}}Names, ", "))
@@ -31,12 +33,25 @@ var _{{.Name}}Name = "{{- range $ei, $item := .GetItems -}}{{$item.GetName}}{{- 
 
 {{/* ---------  attributes  --------- */}}
 {{ range $ai, $attr := .Attrs -}}
+{{- if $attr.IsValue -}}
+// Value is the attribute of {{$enumName}}.
+func (x {{$enumName}}) Value() {{$enumType.String}} {
+{{ if $cfg.PanicIfInvalid -}}
+    if x.IsValid() {
+        return {{$enumType.String}}(x)
+    }
+    panic(ErrInvalid{{$enumName}})
+{{- else -}}
+    return {{$enumType.String}}(x)
+{{- end}}
+}
+{{ else }}
 {{$attr.Enum2AttributeMap}}
 
 // {{$attr.Name}} is the attribute of {{$enumName}}.
 func (x {{$enumName}}) {{$attr.Name}}() {{$attr.Type.String}} {
     {{ if and (eq $attr.Name "Name") (eq $attr.Enum.Type.String "string") -}}
-    if v, ok := {{$validEe.Attribute2EnumVarName}}[string(x)]; ok {
+    if v, ok := {{$validAttr.Attribute2EnumVarName}}[string(x)]; ok {
         return string(v)
     }
     {{- else -}}
@@ -44,8 +59,21 @@ func (x {{$enumName}}) {{$attr.Name}}() {{$attr.Type.String}} {
         return v
     }
     {{- end}}
+{{ if $cfg.PanicIfInvalid -}}
     panic(ErrInvalid{{$enumName}})
+{{- else -}}
+    {{ if eq $attr.Type.String "string" -}}
+        {{ if eq .Type.String "string" -}}
+    return fmt.Sprintf("{{$enumName}}(%s).{{$attr.Name}}", string(x))
+        {{- else -}}
+    return fmt.Sprintf("{{$enumName}}(%d).{{$attr.Name}}", x)
+        {{- end}}
+    {{- else -}}
+    return 0
+    {{- end }}
+{{- end}}
 }
+{{end}}
 {{end}}
 
 {{/* ---------  values  --------- */}}
@@ -72,61 +100,51 @@ func {{.Name}}Names() []string {
 
 {{/* ---------  valid  --------- */}}
 {{ if ne .Type.String "string" -}}
-{{ $validEe.Enum2AttributeMap }}
+{{ $validAttr.Enum2AttributeMap }}
 {{- end }}
 
 // IsValid provides a quick way to determine if the typed value is
 // part of the allowed enumerated values
 func (x {{.Name}}) IsValid() bool {
     {{ if eq .Type.String "string" -}}
-    _, ok := {{$validEe.Attribute2EnumVarName}}[string(x)]
+    _, ok := {{$validAttr.Attribute2EnumVarName}}[string(x)]
     {{- else -}}
-	_, ok := {{$validEe.Enum2AttributeVarName}}[x]
+	_, ok := {{$validAttr.Enum2AttributeVarName}}[x]
 	{{- end}}
 	return ok
 }
 
 {{/* ---------  stringer and parse  --------- */}}
 {{ if .Config.StringParse }}
-{{- $stringParseEe := .FindAttributeByName .Config.StringParseName -}}
+{{- $stringParseAttr := .FindAttributeByName .Config.StringParseName -}}
 
-{{ if not (and (eq $stringParseEe.Name "Name") (eq .Type.String "string")) }}
-{{ $stringParseEe.Enum2AttributeMap }}
+{{ if not (and (eq $stringParseAttr.Name "Name") (eq .Type.String "string")) }}
+{{ $stringParseAttr.Enum2AttributeMap }}
 {{ end }}
 
 // String implements the Stringer interface.
 func (x {{.Name}}) String() string {
-{{ if and (eq $stringParseEe.Name "Name") (eq .Type.String "string") -}}
-    if v, ok := {{$stringParseEe.Attribute2EnumVarName}}[string(x)]; ok {
-        return string(v)
-    }
-    return fmt.Sprintf("{{.Name}}(%s)", string(x))
-{{- else -}}
-    if v, ok := {{$stringParseEe.Enum2AttributeVarName}}[x]; ok {
-        {{ if eq $stringParseEe.Type.String "string" -}}
-        return v
-        {{- else -}}
-        return fmt.Sprintf("%v", v)
-        {{- end }}
-    }
-    return fmt.Sprintf("{{.Name}}(%d)", x)
-{{- end}}
+    {{ if eq $stringParseAttr.Type.String "string" -}}
+    return x.{{$stringParseAttr.Name}}()
+    {{- else -}}
+    return fmt.Sprintf("%v", x.{{$stringParseAttr.Name}}())
+    {{- end }}
 }
 
-{{ $stringParseEe.Attribute2EnumMap }}
+{{ $stringParseAttr.Attribute2EnumMap }}
 
 // Parse{{.Name}} converts a string to {{ IA .Name }}.
 func Parse{{.Name}}(value string) ({{.Name}}, error) {
-{{ if eq $stringParseEe.Type.String "string" -}}
-	if x, ok := {{$stringParseEe.Attribute2EnumVarName}}[value]; ok {
+{{ if eq $stringParseAttr.Type.String "string" -}}
+	if x, ok := {{$stringParseAttr.Attribute2EnumVarName}}[value]; ok {
 		return x, nil
 	}{{ if .Config.NoCase }}
-    if x, ok := {{$stringParseEe.Attribute2EnumVarName}}[strings.ToLower(value)]; ok {
+    if x, ok := {{$stringParseAttr.Attribute2EnumVarName}}[strings.ToLower(value)]; ok {
         return x, nil
     }
     {{- end }}
 {{- else -}}
-    if v, err := {{ $stringParseEe.ParseNumberFuncString }}
+    if v, err := {{ $stringParseAttr.ParseNumberFuncString }}
     if err != nil {
         {{ if eq .Type.String "string" -}}
         return "", fmt.Errorf("%s is %w, %w", value, ErrInvalid{{.Name}}, err)
@@ -134,7 +152,7 @@ func Parse{{.Name}}(value string) ({{.Name}}, error) {
         return {{.Name}}(0), fmt.Errorf("%s is %w, %w", value, ErrInvalid{{.Name}}, err)
         {{- end }}
     }
-    if x, ok := {{$stringParseEe.Attribute2EnumVarName}}[v]; ok {
+    if x, ok := {{$stringParseAttr.Attribute2EnumVarName}}[v]; ok {
         return x, nil
     }
 {{- end }}
@@ -198,48 +216,48 @@ func (x *{{.Name}}) UnmarshalText(text []byte) error {
 	return nil
 }
 {{- else -}}
-{{- $mEe := .FindAttributeByName .Config.MarshalName -}}
+{{- $mAttr := .FindAttributeByName .Config.MarshalName -}}
 
-{{ if not (and (eq $mEe.Name "Name") (eq .Type.String "string")) }}
-{{ $mEe.Enum2AttributeMap }}
+{{ if not (and (eq $mAttr.Name "Name") (eq .Type.String "string")) }}
+{{ $mAttr.Enum2AttributeMap }}
 {{ end }}
 
 // MarshalText implements the text marshaller method.
 func (x {{.Name}}) MarshalText() ([]byte, error) {
-{{ if and (eq $mEe.Name "Name") (eq .Type.String "string") -}}
-    if v, ok := {{$mEe.Attribute2EnumVarName}}[string(x)]; ok {
+{{ if and (eq $mAttr.Name "Name") (eq .Type.String "string") -}}
+    if v, ok := {{$mAttr.Attribute2EnumVarName}}[string(x)]; ok {
         return []byte(string(v)), nil
     }
-    return nil, fmt.Sprintf("{{.Name}}(%s){{$mEe.Name}}", string(x))
+    return nil, fmt.Sprintf("{{.Name}}(%s){{$mAttr.Name}}", string(x))
 {{- else -}}
-    if v, ok := {{$mEe.Enum2AttributeVarName}}[x]; ok {
-        {{ if eq $mEe.Type.String "string" -}}
+    if v, ok := {{$mAttr.Enum2AttributeVarName}}[x]; ok {
+        {{ if eq $mAttr.Type.String "string" -}}
         return []byte(v), nil
         {{- else -}}
         return []byte(fmt.Sprintf("%v", v)), nil
         {{- end }}
     }
-    return nil, fmt.Sprintf("{{.Name}}(%d){{$mEe.Name}}", x)
+    return nil, fmt.Sprintf("{{.Name}}(%d){{$mAttr.Name}}", x)
 {{- end}}
 }
 
-{{ $mEe.Attribute2EnumMap }}
+{{ $mAttr.Attribute2EnumMap }}
 
 // UnmarshalText implements the text unmarshaller method.
 func (x *{{.Name}}) UnmarshalText(text []byte) error {
-{{ if eq $mEe.Type.String "string" -}}
-	if val, ok := {{$mEe.Attribute2EnumVarName}}[string(text)]; ok {
+{{ if eq $mAttr.Type.String "string" -}}
+	if val, ok := {{$mAttr.Attribute2EnumVarName}}[string(text)]; ok {
 	    *x = val
 		return nil
 	}
 	{{ if .Config.NoCase -}}
-    if val, ok := {{$mEe.Attribute2EnumVarName}}[strings.ToLower(string(text))]; ok {
+    if val, ok := {{$mAttr.Attribute2EnumVarName}}[strings.ToLower(string(text))]; ok {
         *x = val
         return nil
     }
     {{- end -}}
 {{- else -}}
-    if v, err := {{ $mEe.ParseNumberFuncString }}
+    if v, err := {{ $mAttr.ParseNumberFuncString }}
     if err != nil {
         {{ if eq .Type.String "string" }}
         return fmt.Errorf("%s is %w, %w", value, ErrInvalid{{.Name}}, err)
@@ -247,7 +265,7 @@ func (x *{{.Name}}) UnmarshalText(text []byte) error {
         return fmt.Errorf("%s is %w, %w", value, ErrInvalid{{.Name}}, err)
         {{- end }}
     }
-    if val, ok := {{$mEe.Attribute2EnumVarName}}[v]; ok {
+    if val, ok := {{$mAttr.Attribute2EnumVarName}}[v]; ok {
         *x = val
         return nil
     }
@@ -260,6 +278,13 @@ func (x *{{.Name}}) UnmarshalText(text []byte) error {
 }
 {{- end }}
 {{end}}
+
+{{/* ---------  sql  --------- */}}
+{{ if .Config.Sql }}
+var err{{.Name}}NilPtr = errors.New("value pointer is nil")
+
+
+{{ end }}
 
 {{end -}}
 

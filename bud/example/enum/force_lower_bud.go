@@ -29,6 +29,14 @@ func (x ForceLowerType) Name() string {
 	panic(ErrInvalidForceLowerType)
 }
 
+// Value is the attribute of ForceLowerType.
+func (x ForceLowerType) Value() int {
+	if x.IsValid() {
+		return int(x)
+	}
+	panic(ErrInvalidForceLowerType)
+}
+
 // IsValid provides a quick way to determine if the typed value is
 // part of the allowed enumerated values
 func (x ForceLowerType) IsValid() bool {
@@ -38,10 +46,7 @@ func (x ForceLowerType) IsValid() bool {
 
 // String implements the Stringer interface.
 func (x ForceLowerType) String() string {
-	if v, ok := _ForceLowerTypeMapName[x]; ok {
-		return v
-	}
-	return fmt.Sprintf("ForceLowerType(%d)", x)
+	return x.Name()
 }
 
 var _ForceLowerTypeNameMap = map[string]ForceLowerType{

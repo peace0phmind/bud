@@ -11,6 +11,7 @@ import (
 type Attribute struct {
 	enum                   *Enum
 	idx                    int
+	isValue                bool
 	enum2AttributeRendered bool
 	attribute2EnumRendered bool
 	Name                   string
@@ -22,12 +23,23 @@ func (ea *Attribute) Enum() *Enum {
 	return ea.enum
 }
 
+func (ea *Attribute) IsValue() bool {
+	return ea.isValue
+}
+
 func (ea *Attribute) Enum2AttributeVarName() string {
+	if ea.isValue {
+		return ""
+	}
 	return fmt.Sprintf("_%sMap%s", ea.enum.Name, ea.Name)
 }
 
 func (ea *Attribute) Enum2AttributeMap() string {
 	if ea.enum2AttributeRendered == true {
+		return ""
+	}
+
+	if ea.isValue {
 		return ""
 	}
 
@@ -63,11 +75,18 @@ func (ea *Attribute) Enum2AttributeMap() string {
 }
 
 func (ea *Attribute) Attribute2EnumVarName() string {
+	if ea.isValue {
+		return ""
+	}
 	return fmt.Sprintf("_%s%sMap", ea.enum.Name, ea.Name)
 }
 
 func (ea *Attribute) Attribute2EnumMap() string {
 	if ea.attribute2EnumRendered == true {
+		return ""
+	}
+
+	if ea.isValue {
 		return ""
 	}
 

@@ -22,6 +22,14 @@ func (x TestOnlyEnum) Name() string {
 	panic(ErrInvalidTestOnlyEnum)
 }
 
+// Value is the attribute of TestOnlyEnum.
+func (x TestOnlyEnum) Value() string {
+	if x.IsValid() {
+		return string(x)
+	}
+	panic(ErrInvalidTestOnlyEnum)
+}
+
 // IsValid provides a quick way to determine if the typed value is
 // part of the allowed enumerated values
 func (x TestOnlyEnum) IsValid() bool {
@@ -31,10 +39,7 @@ func (x TestOnlyEnum) IsValid() bool {
 
 // String implements the Stringer interface.
 func (x TestOnlyEnum) String() string {
-	if v, ok := _TestOnlyEnumNameMap[string(x)]; ok {
-		return string(v)
-	}
-	return fmt.Sprintf("TestOnlyEnum(%s)", string(x))
+	return x.Name()
 }
 
 var _TestOnlyEnumNameMap = map[string]TestOnlyEnum{

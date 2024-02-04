@@ -48,6 +48,14 @@ func (x Commented) Name() string {
 	panic(ErrInvalidCommented)
 }
 
+// Value is the attribute of Commented.
+func (x Commented) Value() int {
+	if x.IsValid() {
+		return int(x)
+	}
+	panic(ErrInvalidCommented)
+}
+
 // IsValid provides a quick way to determine if the typed value is
 // part of the allowed enumerated values
 func (x Commented) IsValid() bool {
@@ -57,10 +65,7 @@ func (x Commented) IsValid() bool {
 
 // String implements the Stringer interface.
 func (x Commented) String() string {
-	if v, ok := _CommentedMapName[x]; ok {
-		return v
-	}
-	return fmt.Sprintf("Commented(%d)", x)
+	return x.Name()
 }
 
 var _CommentedNameMap = map[string]Commented{
@@ -113,6 +118,14 @@ func (x ComplexCommented) Name() string {
 	panic(ErrInvalidComplexCommented)
 }
 
+// Value is the attribute of ComplexCommented.
+func (x ComplexCommented) Value() int {
+	if x.IsValid() {
+		return int(x)
+	}
+	panic(ErrInvalidComplexCommented)
+}
+
 // IsValid provides a quick way to determine if the typed value is
 // part of the allowed enumerated values
 func (x ComplexCommented) IsValid() bool {
@@ -122,10 +135,7 @@ func (x ComplexCommented) IsValid() bool {
 
 // String implements the Stringer interface.
 func (x ComplexCommented) String() string {
-	if v, ok := _ComplexCommentedMapName[x]; ok {
-		return v
-	}
-	return fmt.Sprintf("ComplexCommented(%d)", x)
+	return x.Name()
 }
 
 var _ComplexCommentedNameMap = map[string]ComplexCommented{

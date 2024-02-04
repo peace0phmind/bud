@@ -59,22 +59,32 @@ func (x Enum32bit) Name() string {
 	panic(ErrInvalidEnum32bit)
 }
 
+// Value is the attribute of Enum32bit.
+func (x Enum32bit) Value() uint32 {
+	if x.IsValid() {
+		return uint32(x)
+	}
+	panic(ErrInvalidEnum32bit)
+}
+
+var _Enum32bitValues = []Enum32bit{
+	Enum32bitUnkno,
+	Enum32bitE2P15,
+	Enum32bitE2P16,
+	Enum32bitE2P17,
+	Enum32bitE2P18,
+	Enum32bitE2P19,
+	Enum32bitE2P20,
+	Enum32bitE2P21,
+	Enum32bitE2P22,
+	Enum32bitE2P23,
+	Enum32bitE2P28,
+	Enum32bitE2P30,
+}
+
 // Enum32bitValues returns a list of the values of Enum32bit
 func Enum32bitValues() []Enum32bit {
-	return []Enum32bit{
-		Enum32bitUnkno,
-		Enum32bitE2P15,
-		Enum32bitE2P16,
-		Enum32bitE2P17,
-		Enum32bitE2P18,
-		Enum32bitE2P19,
-		Enum32bitE2P20,
-		Enum32bitE2P21,
-		Enum32bitE2P22,
-		Enum32bitE2P23,
-		Enum32bitE2P28,
-		Enum32bitE2P30,
-	}
+	return _Enum32bitValues
 }
 
 // IsValid provides a quick way to determine if the typed value is
@@ -86,10 +96,7 @@ func (x Enum32bit) IsValid() bool {
 
 // String implements the Stringer interface.
 func (x Enum32bit) String() string {
-	if v, ok := _Enum32bitMapName[x]; ok {
-		return v
-	}
-	return fmt.Sprintf("Enum32bit(%d)", x)
+	return x.Name()
 }
 
 var _Enum32bitNameMap = map[string]Enum32bit{

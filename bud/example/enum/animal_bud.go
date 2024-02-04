@@ -38,6 +38,14 @@ func (x Animal) Name() string {
 	panic(ErrInvalidAnimal)
 }
 
+// Value is the attribute of Animal.
+func (x Animal) Value() int32 {
+	if x.IsValid() {
+		return int32(x)
+	}
+	panic(ErrInvalidAnimal)
+}
+
 // IsValid provides a quick way to determine if the typed value is
 // part of the allowed enumerated values
 func (x Animal) IsValid() bool {
@@ -47,10 +55,7 @@ func (x Animal) IsValid() bool {
 
 // String implements the Stringer interface.
 func (x Animal) String() string {
-	if v, ok := _AnimalMapName[x]; ok {
-		return v
-	}
-	return fmt.Sprintf("Animal(%d)", x)
+	return x.Name()
 }
 
 var _AnimalNameMap = map[string]Animal{

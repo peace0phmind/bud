@@ -48,6 +48,7 @@ func (e *Enum) UpdateAttributes(a *ast.Annotation) error {
 			e.Attrs = append(e.Attrs, &Attribute{
 				enum:    e,
 				idx:     idx,
+				isValue: false,
 				Name:    util.Capitalize(p.Key.Text),
 				Type:    t,
 				Comment: comment,
@@ -61,10 +62,6 @@ func (e *Enum) UpdateAttributes(a *ast.Annotation) error {
 func (e *Enum) UpdateItems(a *ast.Annotation) error {
 	if a.Extends != nil && len(a.Extends.List) > 0 {
 		for idx, ex := range a.Extends.List {
-			if len(e.Attrs) != len(ex.Values) {
-				return errors.New("enum data number not equals with enum attribute type")
-			}
-
 			var value any
 			if ex.Value != nil {
 				value = ex.Value.Value()
@@ -81,6 +78,10 @@ func (e *Enum) UpdateItems(a *ast.Annotation) error {
 
 			if ei.Name == BlankIdentifier {
 				ei.IsBlankIdentifier = true
+			} else {
+				if len(e.Attrs) != len(ex.Values) {
+					return errors.New("enum data number not equals with enum attribute type")
+				}
 			}
 
 			if !ei.IsBlankIdentifier {
@@ -97,14 +98,46 @@ func (e *Enum) UpdateItems(a *ast.Annotation) error {
 	return errors.New("Enum must have some items")
 }
 
-func (e *Enum) CheckValid() error {
-	// check e.Attribute exist name equals "Name" and type is string
-	for _, ex := range e.Attrs {
-		if ex.Name == ItemName && ex.Type != reflect.String {
-			return errors.New("enum attribute 'Name' must have type string")
-		}
+func (e *Enum) CheckValid() (err error) {
+	if err = e.checkAttributeNameUnique(); err != nil {
+		return err
 	}
 
+	if err = e.checkItemNameUnique(); err != nil {
+		return err
+	}
+
+	if err = e.checkAndUpdateNameAttribute(); err != nil {
+		return err
+	}
+
+	if err = e.checkAndUpdateValueAttribute(); err != nil {
+		return err
+	}
+
+	if err = e.Config.CheckValid(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// checkItemNameUnique checks if the item names in the Enum are unique.
+// It returns an error if a duplicate name is found.
+func (e *Enum) checkItemNameUnique() error {
+	itemNames := make(map[string]bool)
+	for _, item := range e.GetItems() {
+		if itemNames[item.Name] {
+			return fmt.Errorf("enum item names must be unique, %s", item.Name)
+		}
+		itemNames[item.Name] = true
+	}
+	return nil
+}
+
+// checkAttributeNameUnique checks if the attribute names in the Enum are unique.
+// It returns an error if a duplicate name is found.
+func (e *Enum) checkAttributeNameUnique() error {
 	// check e.Attribute name is unique
 	attributeNames := make(map[string]bool)
 	for _, ex := range e.Attrs {
@@ -113,69 +146,61 @@ func (e *Enum) CheckValid() error {
 		}
 		attributeNames[ex.Name] = true
 	}
+	return nil
+}
 
-	// check e.Items name is unique
-	itemNames := make(map[string]bool)
-	for _, item := range e.GetItems() {
-		if itemNames[item.Name] {
-			return fmt.Errorf("enum item names must be unique, %s", item.Name)
-		}
-		itemNames[item.Name] = true
-	}
-
-	// if e.Attribute is empty or e.Attribute haven't a ItemName item, then use item's name to create it
-	if fee := e.FindAttributeByName(ItemName); fee == nil {
+// checkAndUpdateNameAttribute checks if the attribute 'Name' exists in the enum.
+// If it doesn't exist, it adds the attribute 'Name' to the enum and updates the item data.
+// If the attribute 'Name' exists, it checks if its type is string and updates the item data accordingly.
+// It returns an error if the attribute 'Name' exists and its type is not string.
+func (e *Enum) checkAndUpdateNameAttribute() error {
+	if nameAttr := e.FindAttributeByName(ItemName); nameAttr == nil {
 		for _, ee := range e.Attrs {
 			ee.idx += 1
 		}
 
-		ee := &Attribute{
+		nameAttr = &Attribute{
 			enum:    e,
 			idx:     0,
+			isValue: false,
 			Name:    ItemName,
 			Type:    reflect.String,
 			Comment: "",
 		}
-		e.Attrs = append([]*Attribute{ee}, e.Attrs...)
+		e.Attrs = append([]*Attribute{nameAttr}, e.Attrs...)
 
 		for _, ei := range e.GetItems() {
 			ei.AttributeData = append([]any{ei.Name}, ei.AttributeData...)
 		}
 	} else {
+		if nameAttr.Type != reflect.String {
+			return errors.New("enum attribute 'Name' must have type string")
+		}
+
 		for _, ei := range e.GetItems() {
-			if isBlankIdentifier(ei.AttributeData[fee.idx]) {
-				ei.AttributeData[fee.idx] = ei.Name
+			if isBlankIdentifier(ei.AttributeData[nameAttr.idx]) {
+				ei.AttributeData[nameAttr.idx] = ei.Name
 			}
 		}
 	}
 
-	// check config names and type
-	spee := e.FindAttributeByName(e.Config.StringParseName)
-	if spee == nil {
-		return errors.New("enum config string parse name must exist in enum attributes")
-	} else {
-		if !stream.Must(stream.Of(enumTypes).Contains(spee.Type, func(x, y reflect.Kind) (bool, error) { return x == y, nil })) {
-			return errors.New("StringParseName's type muse be number or string")
-		}
+	return nil
+}
+
+func (e *Enum) checkAndUpdateValueAttribute() error {
+	if valueAttr := e.FindAttributeByName(ItemValue); valueAttr != nil {
+		return errors.New("\"Value\" is a reserved attribute in enum and cannot appear in named parameters. However, it can be directly specified after \"=\".")
 	}
 
-	mee := e.FindAttributeByName(e.Config.MarshalName)
-	if mee == nil {
-		return errors.New("enum config marshal name must exist in enum attributes")
-	} else {
-		if !stream.Must(stream.Of(enumTypes).Contains(mee.Type, func(x, y reflect.Kind) (bool, error) { return x == y, nil })) {
-			return errors.New("MarshalName's type muse be number or string")
-		}
+	valueAttr := &Attribute{
+		enum:    e,
+		idx:     -1,
+		isValue: true,
+		Name:    ItemValue,
+		Type:    e.Type,
+		Comment: "",
 	}
-
-	//see := e.FindAttributeByName(e.Config.SqlName)
-	//if see == nil {
-	//	return errors.New("enum config sql name must exist in enum attributes")
-	//} else {
-	//	if !stream.Must(stream.Of(enumTypes).Contains(see.Type, func(x, y reflect.Kind) (bool, error) { return x == y, nil })) {
-	//		return errors.New("SqlName's type muse be number or string")
-	//	}
-	//}
+	e.Attrs = append(e.Attrs, valueAttr)
 
 	// check and set item value
 	if e.Type == reflect.String {
@@ -188,14 +213,14 @@ func (e *Enum) CheckValid() error {
 		}
 	} else {
 		if stream.Must(stream.Of(e.GetItems()).AnyMatch(func(item *Item) (bool, error) { return item.Value != nil, nil })) {
-			value := 0
-			for _, item := range e.GetItems() {
+			nextValue := 0
+			for _, item := range e.Items {
 				if item.Value == nil {
-					item.Value = value
-					value += 1
+					item.Value = nextValue
+					nextValue += 1
 				} else {
 					item.Value = structure.MustConvertTo[int](item.Value)
-					value = item.Value.(int) + 1
+					nextValue = item.Value.(int) + 1
 				}
 				item.Value = structure.MustConvertToKind(item.Value, e.Type)
 			}
@@ -279,6 +304,7 @@ func annotationGroupToEnum(ag *ast.AnnotationGroup, ts *goast.TypeSpec, globalCo
 	enum := &Enum{
 		Config: ec,
 	}
+	ec.enum = enum
 
 	t, err := getEnumKindByName(fmt.Sprintf("%s", ts.Type))
 	if err != nil {

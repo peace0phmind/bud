@@ -32,6 +32,14 @@ func (x Product) Name() string {
 	panic(ErrInvalidProduct)
 }
 
+// Value is the attribute of Product.
+func (x Product) Value() int32 {
+	if x.IsValid() {
+		return int32(x)
+	}
+	panic(ErrInvalidProduct)
+}
+
 // IsValid provides a quick way to determine if the typed value is
 // part of the allowed enumerated values
 func (x Product) IsValid() bool {
@@ -41,10 +49,7 @@ func (x Product) IsValid() bool {
 
 // String implements the Stringer interface.
 func (x Product) String() string {
-	if v, ok := _ProductMapName[x]; ok {
-		return v
-	}
-	return fmt.Sprintf("Product(%d)", x)
+	return x.Name()
 }
 
 var _ProductNameMap = map[string]Product{
