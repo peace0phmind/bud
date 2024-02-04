@@ -67,8 +67,9 @@ func (ec *Config) checkConfigAttributeName(paramName, errName string) error {
 	if attr := ec.enum.FindAttributeByName(paramName); attr == nil {
 		return fmt.Errorf("enum config %s must exist in enum attributes", errName)
 	} else {
-		if !stream.Must(stream.Of(enumAttributeTypes).Contains(attr.Type, func(x, y reflect.Kind) (bool, error) { return x == y, nil })) {
-			return fmt.Errorf("%s 's type muse be number , bool, float or string", errName)
+		// all enumTypes is number or string, bool and float not suitable as a map key
+		if !stream.Must(stream.Of(enumTypes).Contains(attr.Type, func(x, y reflect.Kind) (bool, error) { return x == y, nil })) {
+			return fmt.Errorf("%s 's type muse be number or string", errName)
 		}
 	}
 
