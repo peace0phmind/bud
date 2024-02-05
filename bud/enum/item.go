@@ -10,7 +10,7 @@ import (
 
 const (
 	ItemName  = "Name"
-	ItemValue = "Value"
+	ItemValue = "Val"
 )
 
 type Item struct {

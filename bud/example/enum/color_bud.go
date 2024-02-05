@@ -61,8 +61,8 @@ func (x Color) Name() string {
 	panic(ErrInvalidColor)
 }
 
-// Value is the attribute of Color.
-func (x Color) Value() int {
+// Val is the attribute of Color.
+func (x Color) Val() int {
 	if x.IsValid() {
 		return int(x)
 	}

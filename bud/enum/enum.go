@@ -247,6 +247,14 @@ func (e *Enum) Names() string {
 	return buf.String()
 }
 
+func (e *Enum) EmptyEnumValue() string {
+	if e.Type == reflect.String {
+		return "\"\""
+	} else {
+		return fmt.Sprintf("%s(0)", e.Name)
+	}
+}
+
 func isBlankIdentifier(value any) bool {
 	if bi, ok := value.(string); ok {
 		return bi == BlankIdentifier

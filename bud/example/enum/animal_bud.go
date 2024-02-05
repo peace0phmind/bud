@@ -38,8 +38,8 @@ func (x Animal) Name() string {
 	panic(ErrInvalidAnimal)
 }
 
-// Value is the attribute of Animal.
-func (x Animal) Value() int32 {
+// Val is the attribute of Animal.
+func (x Animal) Val() int32 {
 	if x.IsValid() {
 		return int32(x)
 	}

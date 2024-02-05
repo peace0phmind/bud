@@ -48,8 +48,8 @@ func (x Commented) Name() string {
 	panic(ErrInvalidCommented)
 }
 
-// Value is the attribute of Commented.
-func (x Commented) Value() int {
+// Val is the attribute of Commented.
+func (x Commented) Val() int {
 	if x.IsValid() {
 		return int(x)
 	}
@@ -118,8 +118,8 @@ func (x ComplexCommented) Name() string {
 	panic(ErrInvalidComplexCommented)
 }
 
-// Value is the attribute of ComplexCommented.
-func (x ComplexCommented) Value() int {
+// Val is the attribute of ComplexCommented.
+func (x ComplexCommented) Val() int {
 	if x.IsValid() {
 		return int(x)
 	}

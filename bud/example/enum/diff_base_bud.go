@@ -50,8 +50,8 @@ func (x DiffBase) Name() string {
 	panic(ErrInvalidDiffBase)
 }
 
-// Value is the attribute of DiffBase.
-func (x DiffBase) Value() int {
+// Val is the attribute of DiffBase.
+func (x DiffBase) Val() int {
 	if x.IsValid() {
 		return int(x)
 	}

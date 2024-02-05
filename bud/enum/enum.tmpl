@@ -19,7 +19,7 @@ const (
 {{- $enumName := .Name -}}
 {{- $enumType := .Type -}}
 {{- $cfg := .Config -}}
-{{- $validAttr := .FindAttributeByName "Name" -}}
+{{- $nameAttr := .FindAttributeByName "Name" -}}
 
 {{ if .Config.Names -}}
 var ErrInvalid{{.Name}} = fmt.Errorf("not a valid {{.Name}}, try [%s]", strings.Join(_{{.Name}}Names, ", "))
@@ -34,8 +34,8 @@ var _{{.Name}}Name = "{{- range $ei, $item := .GetItems -}}{{$item.GetName}}{{- 
 {{/* ---------  attributes  --------- */}}
 {{ range $ai, $attr := .Attrs -}}
 {{- if $attr.IsValue -}}
-// Value is the attribute of {{$enumName}}.
-func (x {{$enumName}}) Value() {{$enumType.String}} {
+// Val is the attribute of {{$enumName}}.
+func (x {{$enumName}}) Val() {{$enumType.String}} {
 {{ if $cfg.PanicIfInvalid -}}
     if x.IsValid() {
         return {{$enumType.String}}(x)
@@ -46,12 +46,16 @@ func (x {{$enumName}}) Value() {{$enumType.String}} {
 {{- end}}
 }
 {{ else }}
+{{ if eq $attr.Name "Name" -}}
+{{$attr.Attribute2EnumMap}}
+{{- else -}}
 {{$attr.Enum2AttributeMap}}
+{{- end }}
 
 // {{$attr.Name}} is the attribute of {{$enumName}}.
 func (x {{$enumName}}) {{$attr.Name}}() {{$attr.Type.String}} {
-    {{ if and (eq $attr.Name "Name") (eq $attr.Enum.Type.String "string") -}}
-    if v, ok := {{$validAttr.Attribute2EnumVarName}}[string(x)]; ok {
+    {{ if eq $attr.Name "Name" -}}
+    if v, ok := {{$attr.Attribute2EnumVarName}}[string(x)]; ok {
         return string(v)
     }
     {{- else -}}
@@ -100,16 +104,16 @@ func {{.Name}}Names() []string {
 
 {{/* ---------  valid  --------- */}}
 {{ if ne .Type.String "string" -}}
-{{ $validAttr.Enum2AttributeMap }}
+{{ $nameAttr.Enum2AttributeMap }}
 {{- end }}
 
 // IsValid provides a quick way to determine if the typed value is
 // part of the allowed enumerated values
 func (x {{.Name}}) IsValid() bool {
     {{ if eq .Type.String "string" -}}
-    _, ok := {{$validAttr.Attribute2EnumVarName}}[string(x)]
+    _, ok := {{$nameAttr.Attribute2EnumVarName}}[string(x)]
     {{- else -}}
-	_, ok := {{$validAttr.Enum2AttributeVarName}}[x]
+	_, ok := {{$nameAttr.Enum2AttributeVarName}}[x]
 	{{- end}}
 	return ok
 }
@@ -118,7 +122,7 @@ func (x {{.Name}}) IsValid() bool {
 {{ if .Config.StringParse }}
 {{- $stringParseAttr := .FindAttributeByName .Config.StringParseName -}}
 
-{{ if not (and (eq $stringParseAttr.Name "Name") (eq .Type.String "string")) }}
+{{ if ne $stringParseAttr.Name "Name" }}
 {{ $stringParseAttr.Enum2AttributeMap }}
 {{ end }}
 
@@ -146,21 +150,13 @@ func Parse{{.Name}}(value string) ({{.Name}}, error) {
 {{- else -}}
     if v, err := {{ $stringParseAttr.ParseNumberFuncString }}
     if err != nil {
-        {{ if eq .Type.String "string" -}}
-        return "", fmt.Errorf("%s is %w, %w", value, ErrInvalid{{.Name}}, err)
-        {{- else -}}
-        return {{.Name}}(0), fmt.Errorf("%s is %w, %w", value, ErrInvalid{{.Name}}, err)
-        {{- end }}
+        return {{.EmptyEnumValue}}, fmt.Errorf("%s is %w, %w", value, ErrInvalid{{.Name}}, err)
     }
     if x, ok := {{$stringParseAttr.Attribute2EnumVarName}}[v]; ok {
         return x, nil
     }
 {{- end }}
-    {{ if eq .Type.String "string" -}}
-    return "", fmt.Errorf("%s is %w", value, ErrInvalid{{.Name}})
-    {{- else -}}
-	return {{.Name}}(0), fmt.Errorf("%s is %w", value, ErrInvalid{{.Name}})
-	{{- end }}
+    return {{.EmptyEnumValue}}, fmt.Errorf("%s is %w", value, ErrInvalid{{.Name}})
 }
 {{ end }}
 
@@ -218,13 +214,13 @@ func (x *{{.Name}}) UnmarshalText(text []byte) error {
 {{- else -}}
 {{- $mAttr := .FindAttributeByName .Config.MarshalName -}}
 
-{{ if not (and (eq $mAttr.Name "Name") (eq .Type.String "string")) }}
+{{ if ne $mAttr.Name "Name" }}
 {{ $mAttr.Enum2AttributeMap }}
 {{ end }}
 
 // MarshalText implements the text marshaller method.
 func (x {{.Name}}) MarshalText() ([]byte, error) {
-{{ if and (eq $mAttr.Name "Name") (eq .Type.String "string") -}}
+{{ if eq $mAttr.Name "Name" -}}
     if v, ok := {{$mAttr.Attribute2EnumVarName}}[string(x)]; ok {
         return []byte(string(v)), nil
     }
@@ -259,32 +255,151 @@ func (x *{{.Name}}) UnmarshalText(text []byte) error {
 {{- else -}}
     if v, err := {{ $mAttr.ParseNumberFuncString }}
     if err != nil {
-        {{ if eq .Type.String "string" }}
         return fmt.Errorf("%s is %w, %w", value, ErrInvalid{{.Name}}, err)
-        {{- else -}}
-        return fmt.Errorf("%s is %w, %w", value, ErrInvalid{{.Name}}, err)
-        {{- end }}
     }
     if val, ok := {{$mAttr.Attribute2EnumVarName}}[v]; ok {
         *x = val
         return nil
     }
 {{- end -}}
-    {{- if eq .Type.String "string" -}}
     return fmt.Errorf("%s is %w", value, ErrInvalid{{.Name}})
-    {{- else -}}
-	return fmt.Errorf("%s is %w", value, ErrInvalid{{.Name}})
-	{{- end }}
 }
 {{- end }}
 {{end}}
 
 {{/* ---------  sql  --------- */}}
 {{ if .Config.Sql }}
+{{- $sqlAttr := .FindAttributeByName .Config.SqlName -}}
+
 var err{{.Name}}NilPtr = errors.New("value pointer is nil")
 
+{{ $sqlAttr.Attribute2EnumMap }}
 
+// Scan implements the Scanner interface.
+func (x *{{.Name}}) Scan(value any) (err error) {
+	if value == nil {
+		*x = {{.EmptyEnumValue}}
+		return
+	}
+
+{{ if eq $sqlAttr.Name "Val" }}
+    switch v := value.(type) {
+    {{if eq $sqlAttr.Type.String "string" -}}
+    case string:
+        *x = {{.Name}}(v)
+    case []byte:
+        *x = {{.Name}}(string(v))
+    case *string:
+        if v == nil {
+            return errProjectStatusNilPtr
+        }
+        *x = {{.Name}}(*v)
+    {{- else -}}
+    case int:
+        *x = {{.Name}}(v)
+    case int64:
+        *x = {{.Name}}(v)
+    case uint:
+        *x = {{.Name}}(v)
+    case uint64:
+        *x = {{.Name}}(v)
+    case float64:
+        *x = {{.Name}}(v)
+    case *int:
+        if v == nil {
+            return errProjectStatusNilPtr
+        }
+        *x = {{.Name}}(*v)
+    case *int64:
+        if v == nil {
+            return errProjectStatusNilPtr
+        }
+        *x = {{.Name}}(*v)
+    case *uint:
+        if v == nil {
+            return errProjectStatusNilPtr
+        }
+        *x = {{.Name}}(*v)
+    case *uint64:
+        if v == nil {
+            return errProjectStatusNilPtr
+        }
+        *x = {{.Name}}(*v)
+    case *float64:
+        if v == nil {
+            return errProjectStatusNilPtr
+        }
+        *x = {{.Name}}(*v)
+    {{- end }}
+    }
+
+    if !x.IsValid() {
+        return ErrInvalid{{.Name}}
+    }
+    return
+{{- else -}}
+	var ok bool
+	switch v := value.(type) {
+	{{if eq $sqlAttr.Type.String "string" -}}
+	case string:
+    	*x, ok = {{$sqlAttr.Attribute2EnumVarName}}[v]
+    case []byte:
+        *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[string(v)]
+    case *string:
+        if v == nil {
+            return errProjectStatusNilPtr
+        }
+        *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[*v]
+	{{- else -}}
+	case int:
+        *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[v]
+    case int64:
+        *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[v]
+    case uint:
+        *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[v]
+    case uint64:
+        *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[v]
+    case float64:
+        *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[v]
+    case *int:
+        if v == nil {
+            return err{{.Name}}NilPtr
+        }
+        *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[*v]
+    case *int64:
+        if v == nil {
+            return err{{.Name}}NilPtr
+        }
+        *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[*v]
+    case *uint:
+        if v == nil {
+            return err{{.Name}}NilPtr
+        }
+        *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[*v]
+    case *uint64:
+        if v == nil {
+            return err{{.Name}}NilPtr
+        }
+        *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[*v]
+    case *float64:
+        if v == nil {
+            return err{{.Name}}NilPtr
+        }
+        *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[*v]
+	{{- end }}
+    }
+
+    if !ok {
+        return ErrInvalid{{.Name}}
+    }
+    return
+{{ end -}}
+}
+
+// Value implements the driver Valuer interface.
+func (x {{.Name}}) Value() (driver.Value, error) {
+	return x.{{$sqlAttr.Name}}(), nil
+}
 {{ end }}
-
 {{end -}}
 

@@ -71,8 +71,8 @@ func (x Enum64bit) Name() string {
 	panic(ErrInvalidEnum64bit)
 }
 
-// Value is the attribute of Enum64bit.
-func (x Enum64bit) Value() uint64 {
+// Val is the attribute of Enum64bit.
+func (x Enum64bit) Val() uint64 {
 	if x.IsValid() {
 		return uint64(x)
 	}

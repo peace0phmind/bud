@@ -59,8 +59,8 @@ func (x Enum32bit) Name() string {
 	panic(ErrInvalidEnum32bit)
 }
 
-// Value is the attribute of Enum32bit.
-func (x Enum32bit) Value() uint32 {
+// Val is the attribute of Enum32bit.
+func (x Enum32bit) Val() uint32 {
 	if x.IsValid() {
 		return uint32(x)
 	}

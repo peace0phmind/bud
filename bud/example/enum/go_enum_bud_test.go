@@ -14,6 +14,11 @@ const (
 
 var ErrInvalidTestOnlyEnum = errors.New("not a valid TestOnlyEnum")
 
+var _TestOnlyEnumNameMap = map[string]TestOnlyEnum{
+	"ABCD (x)": TestOnlyEnumAbcdx,
+	"EFGH (y)": TestOnlyEnumEfghy,
+}
+
 // Name is the attribute of TestOnlyEnum.
 func (x TestOnlyEnum) Name() string {
 	if v, ok := _TestOnlyEnumNameMap[string(x)]; ok {
@@ -22,8 +27,8 @@ func (x TestOnlyEnum) Name() string {
 	panic(ErrInvalidTestOnlyEnum)
 }
 
-// Value is the attribute of TestOnlyEnum.
-func (x TestOnlyEnum) Value() string {
+// Val is the attribute of TestOnlyEnum.
+func (x TestOnlyEnum) Val() string {
 	if x.IsValid() {
 		return string(x)
 	}
@@ -40,11 +45,6 @@ func (x TestOnlyEnum) IsValid() bool {
 // String implements the Stringer interface.
 func (x TestOnlyEnum) String() string {
 	return x.Name()
-}
-
-var _TestOnlyEnumNameMap = map[string]TestOnlyEnum{
-	"ABCD (x)": TestOnlyEnumAbcdx,
-	"EFGH (y)": TestOnlyEnumEfghy,
 }
 
 // ParseTestOnlyEnum converts a string to a TestOnlyEnum.

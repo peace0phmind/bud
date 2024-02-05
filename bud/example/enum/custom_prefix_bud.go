@@ -32,8 +32,8 @@ func (x Product) Name() string {
 	panic(ErrInvalidProduct)
 }
 
-// Value is the attribute of Product.
-func (x Product) Value() int32 {
+// Val is the attribute of Product.
+func (x Product) Val() int32 {
 	if x.IsValid() {
 		return int32(x)
 	}
