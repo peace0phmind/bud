@@ -17,17 +17,17 @@ var ErrInvalidProjectStatus = errors.New("not a valid ProjectStatus")
 
 var _ProjectStatusName = "pendinginWorkcompletedrejected"
 
-var _ProjectStatusNameMap = map[string]ProjectStatus{
-	_ProjectStatusName[0:7]:   ProjectStatusPending,
-	_ProjectStatusName[7:13]:  ProjectStatusInWork,
-	_ProjectStatusName[13:22]: ProjectStatusCompleted,
-	_ProjectStatusName[22:30]: ProjectStatusRejected,
+var _ProjectStatusMapName = map[ProjectStatus]string{
+	ProjectStatusPending:   _ProjectStatusName[0:7],
+	ProjectStatusInWork:    _ProjectStatusName[7:13],
+	ProjectStatusCompleted: _ProjectStatusName[13:22],
+	ProjectStatusRejected:  _ProjectStatusName[22:30],
 }
 
 // Name is the attribute of ProjectStatus.
 func (x ProjectStatus) Name() string {
-	if v, ok := _ProjectStatusNameMap[string(x)]; ok {
-		return string(v)
+	if v, ok := _ProjectStatusMapName[x]; ok {
+		return v
 	}
 	panic(ErrInvalidProjectStatus)
 }
@@ -40,13 +40,6 @@ func (x ProjectStatus) Val() int {
 	panic(ErrInvalidProjectStatus)
 }
 
-var _ProjectStatusMapName = map[ProjectStatus]string{
-	ProjectStatusPending:   _ProjectStatusName[0:7],
-	ProjectStatusInWork:    _ProjectStatusName[7:13],
-	ProjectStatusCompleted: _ProjectStatusName[13:22],
-	ProjectStatusRejected:  _ProjectStatusName[22:30],
-}
-
 // IsValid provides a quick way to determine if the typed value is
 // part of the allowed enumerated values
 func (x ProjectStatus) IsValid() bool {
@@ -57,6 +50,13 @@ func (x ProjectStatus) IsValid() bool {
 // String implements the Stringer interface.
 func (x ProjectStatus) String() string {
 	return x.Name()
+}
+
+var _ProjectStatusNameMap = map[string]ProjectStatus{
+	_ProjectStatusName[0:7]:   ProjectStatusPending,
+	_ProjectStatusName[7:13]:  ProjectStatusInWork,
+	_ProjectStatusName[13:22]: ProjectStatusCompleted,
+	_ProjectStatusName[22:30]: ProjectStatusRejected,
 }
 
 // ParseProjectStatus converts a string to a ProjectStatus.
