@@ -29,15 +29,12 @@ func (x Product) Name() string {
 	if v, ok := _ProductMapName[x]; ok {
 		return v
 	}
-	panic(ErrInvalidProduct)
+	return fmt.Sprintf("Product(%d).Name", x)
 }
 
 // Val is the attribute of Product.
 func (x Product) Val() int32 {
-	if x.IsValid() {
-		return int32(x)
-	}
-	panic(ErrInvalidProduct)
+	return int32(x)
 }
 
 // IsValid provides a quick way to determine if the typed value is

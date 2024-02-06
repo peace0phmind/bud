@@ -16,20 +16,23 @@ const (
 
 var ErrInvalidShop = fmt.Errorf("not a valid Shop, try [%s]", strings.Join(_ShopNames, ", "))
 
+var _ShopNameMap = map[string]Shop{
+	"SOME_PLACE_AWESOME": AcmeInc_SOME_PLACE_AWESOME,
+	"SomewhereElse":      AcmeInc_SomewhereElse,
+	"LocationUnknown":    AcmeInc_LocationUnknown,
+}
+
 // Name is the attribute of Shop.
 func (x Shop) Name() string {
 	if v, ok := _ShopNameMap[string(x)]; ok {
 		return string(v)
 	}
-	panic(ErrInvalidShop)
+	return fmt.Sprintf("Shop(%s).Name", string(x))
 }
 
-// Value is the attribute of Shop.
-func (x Shop) Value() string {
-	if x.IsValid() {
-		return string(x)
-	}
-	panic(ErrInvalidShop)
+// Val is the attribute of Shop.
+func (x Shop) Val() string {
+	return string(x)
 }
 
 var _ShopNames = []string{
@@ -53,12 +56,6 @@ func (x Shop) IsValid() bool {
 // String implements the Stringer interface.
 func (x Shop) String() string {
 	return x.Name()
-}
-
-var _ShopNameMap = map[string]Shop{
-	"SOME_PLACE_AWESOME": AcmeInc_SOME_PLACE_AWESOME,
-	"SomewhereElse":      AcmeInc_SomewhereElse,
-	"LocationUnknown":    AcmeInc_LocationUnknown,
 }
 
 // ParseShop converts a string to a Shop.

@@ -35,15 +35,12 @@ func (x Animal) Name() string {
 	if v, ok := _AnimalMapName[x]; ok {
 		return v
 	}
-	panic(ErrInvalidAnimal)
+	return fmt.Sprintf("Animal(%d).Name", x)
 }
 
 // Val is the attribute of Animal.
 func (x Animal) Val() int32 {
-	if x.IsValid() {
-		return int32(x)
-	}
-	panic(ErrInvalidAnimal)
+	return int32(x)
 }
 
 // IsValid provides a quick way to determine if the typed value is

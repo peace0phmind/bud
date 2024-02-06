@@ -29,15 +29,12 @@ func (x ProjectStatus) Name() string {
 	if v, ok := _ProjectStatusMapName[x]; ok {
 		return v
 	}
-	panic(ErrInvalidProjectStatus)
+	return fmt.Sprintf("ProjectStatus(%d).Name", x)
 }
 
 // Val is the attribute of ProjectStatus.
 func (x ProjectStatus) Val() int {
-	if x.IsValid() {
-		return int(x)
-	}
-	panic(ErrInvalidProjectStatus)
+	return int(x)
 }
 
 // IsValid provides a quick way to determine if the typed value is
@@ -86,7 +83,7 @@ func (x *ProjectStatus) UnmarshalText(text []byte) error {
 	return nil
 }
 
-var errProjectStatusNilPtr = errors.New("value pointer is nil")
+var ErrProjectStatusNilPtr = errors.New("value pointer is nil")
 
 // Scan implements the Scanner interface.
 func (x *ProjectStatus) Scan(value any) (err error) {
@@ -108,27 +105,27 @@ func (x *ProjectStatus) Scan(value any) (err error) {
 		*x = ProjectStatus(v)
 	case *int:
 		if v == nil {
-			return errProjectStatusNilPtr
+			return ErrProjectStatusNilPtr
 		}
 		*x = ProjectStatus(*v)
 	case *int64:
 		if v == nil {
-			return errProjectStatusNilPtr
+			return ErrProjectStatusNilPtr
 		}
 		*x = ProjectStatus(*v)
 	case *uint:
 		if v == nil {
-			return errProjectStatusNilPtr
+			return ErrProjectStatusNilPtr
 		}
 		*x = ProjectStatus(*v)
 	case *uint64:
 		if v == nil {
-			return errProjectStatusNilPtr
+			return ErrProjectStatusNilPtr
 		}
 		*x = ProjectStatus(*v)
 	case *float64:
 		if v == nil {
-			return errProjectStatusNilPtr
+			return ErrProjectStatusNilPtr
 		}
 		*x = ProjectStatus(*v)
 	}

@@ -26,15 +26,12 @@ func (x ForceUpperType) Name() string {
 	if v, ok := _ForceUpperTypeMapName[x]; ok {
 		return v
 	}
-	panic(ErrInvalidForceUpperType)
+	return fmt.Sprintf("ForceUpperType(%d).Name", x)
 }
 
-// Value is the attribute of ForceUpperType.
-func (x ForceUpperType) Value() int {
-	if x.IsValid() {
-		return int(x)
-	}
-	panic(ErrInvalidForceUpperType)
+// Val is the attribute of ForceUpperType.
+func (x ForceUpperType) Val() int {
+	return int(x)
 }
 
 // IsValid provides a quick way to determine if the typed value is

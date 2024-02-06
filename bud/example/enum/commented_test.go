@@ -15,7 +15,7 @@ type commentedData struct {
 
 func TestCommentedEnumString(t *testing.T) {
 	x := Commented(109)
-	assert.Equal(t, "Commented(109)", x.String())
+	assert.Equal(t, "Commented(109).Name", x.String())
 	x = Commented(1)
 	assert.Equal(t, "value2", x.String())
 
@@ -90,7 +90,7 @@ type complexCommentedData struct {
 
 func TestComplexCommentedEnumString(t *testing.T) {
 	x := ComplexCommented(109)
-	assert.Equal(t, "ComplexCommented(109)", x.String())
+	assert.Equal(t, "ComplexCommented(109).Name", x.String())
 	x = ComplexCommented(1)
 	assert.Equal(t, "value1", x.String())
 

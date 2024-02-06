@@ -26,7 +26,7 @@ type Config struct {
 	Ptr             bool   `value:"false"`
 	ForceUpper      bool   `value:"false"`
 	ForceLower      bool   `value:"false"`
-	PanicIfInvalid  bool   `value:"true"`
+	PanicIfInvalid  bool   `value:"false"`
 }
 
 func (ec *Config) SetStringParse(stringParse bool) {

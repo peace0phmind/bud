@@ -32,7 +32,7 @@ func TestForceUpperString(t *testing.T) {
 	}
 
 	t.Run("failures", func(t *testing.T) {
-		assert.Equal(t, "ForceUpperType(99)", ForceUpperType(99).String())
+		assert.Equal(t, "ForceUpperType(99).Name", ForceUpperType(99).String())
 		_, err := ParseForceUpperType("-1")
 		assert.Error(t, err)
 	})

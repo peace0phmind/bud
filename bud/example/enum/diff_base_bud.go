@@ -47,15 +47,12 @@ func (x DiffBase) Name() string {
 	if v, ok := _DiffBaseMapName[x]; ok {
 		return v
 	}
-	panic(ErrInvalidDiffBase)
+	return fmt.Sprintf("DiffBase(%d).Name", x)
 }
 
 // Val is the attribute of DiffBase.
 func (x DiffBase) Val() int {
-	if x.IsValid() {
-		return int(x)
-	}
-	panic(ErrInvalidDiffBase)
+	return int(x)
 }
 
 // IsValid provides a quick way to determine if the typed value is

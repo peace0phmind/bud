@@ -42,15 +42,12 @@ func (x AllNegative) Name() string {
 	if v, ok := _AllNegativeMapName[x]; ok {
 		return v
 	}
-	panic(ErrInvalidAllNegative)
+	return fmt.Sprintf("AllNegative(%d).Name", x)
 }
 
-// Value is the attribute of AllNegative.
-func (x AllNegative) Value() int {
-	if x.IsValid() {
-		return int(x)
-	}
-	panic(ErrInvalidAllNegative)
+// Val is the attribute of AllNegative.
+func (x AllNegative) Val() int {
+	return int(x)
 }
 
 // IsValid provides a quick way to determine if the typed value is
@@ -102,15 +99,12 @@ func (x Status) Name() string {
 	if v, ok := _StatusMapName[x]; ok {
 		return v
 	}
-	panic(ErrInvalidStatus)
+	return fmt.Sprintf("Status(%d).Name", x)
 }
 
-// Value is the attribute of Status.
-func (x Status) Value() int {
-	if x.IsValid() {
-		return int(x)
-	}
-	panic(ErrInvalidStatus)
+// Val is the attribute of Status.
+func (x Status) Val() int {
+	return int(x)
 }
 
 // IsValid provides a quick way to determine if the typed value is

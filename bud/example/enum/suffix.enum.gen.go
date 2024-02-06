@@ -12,20 +12,21 @@ const (
 
 var ErrInvalidSuffix = errors.New("not a valid Suffix")
 
+var _SuffixNameMap = map[string]Suffix{
+	"gen": SuffixGen,
+}
+
 // Name is the attribute of Suffix.
 func (x Suffix) Name() string {
 	if v, ok := _SuffixNameMap[string(x)]; ok {
 		return string(v)
 	}
-	panic(ErrInvalidSuffix)
+	return fmt.Sprintf("Suffix(%s).Name", string(x))
 }
 
-// Value is the attribute of Suffix.
-func (x Suffix) Value() string {
-	if x.IsValid() {
-		return string(x)
-	}
-	panic(ErrInvalidSuffix)
+// Val is the attribute of Suffix.
+func (x Suffix) Val() string {
+	return string(x)
 }
 
 // IsValid provides a quick way to determine if the typed value is
@@ -38,10 +39,6 @@ func (x Suffix) IsValid() bool {
 // String implements the Stringer interface.
 func (x Suffix) String() string {
 	return x.Name()
-}
-
-var _SuffixNameMap = map[string]Suffix{
-	"gen": SuffixGen,
 }
 
 // ParseSuffix converts a string to a Suffix.

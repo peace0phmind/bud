@@ -24,15 +24,12 @@ func (x TestOnlyEnum) Name() string {
 	if v, ok := _TestOnlyEnumNameMap[string(x)]; ok {
 		return string(v)
 	}
-	panic(ErrInvalidTestOnlyEnum)
+	return fmt.Sprintf("TestOnlyEnum(%s).Name", string(x))
 }
 
 // Val is the attribute of TestOnlyEnum.
 func (x TestOnlyEnum) Val() string {
-	if x.IsValid() {
-		return string(x)
-	}
-	panic(ErrInvalidTestOnlyEnum)
+	return string(x)
 }
 
 // IsValid provides a quick way to determine if the typed value is

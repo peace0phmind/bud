@@ -36,7 +36,7 @@ func TestStatusString(t *testing.T) {
 	}
 
 	t.Run("failures", func(t *testing.T) {
-		assert.Equal(t, "Status(99)", Status(99).String())
+		assert.Equal(t, "Status(99).Name", Status(99).String())
 		failedStatus, err := ParseStatus("")
 		assert.Error(t, err)
 
@@ -83,7 +83,7 @@ func TestNegativeString(t *testing.T) {
 	}
 
 	t.Run("failures", func(t *testing.T) {
-		assert.Equal(t, "AllNegative(99)", AllNegative(99).String())
+		assert.Equal(t, "AllNegative(99).Name", AllNegative(99).String())
 		allN, err := ParseAllNegative("")
 		assert.Error(t, err)
 

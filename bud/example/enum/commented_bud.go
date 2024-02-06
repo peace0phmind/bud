@@ -45,15 +45,12 @@ func (x Commented) Name() string {
 	if v, ok := _CommentedMapName[x]; ok {
 		return v
 	}
-	panic(ErrInvalidCommented)
+	return fmt.Sprintf("Commented(%d).Name", x)
 }
 
 // Val is the attribute of Commented.
 func (x Commented) Val() int {
-	if x.IsValid() {
-		return int(x)
-	}
-	panic(ErrInvalidCommented)
+	return int(x)
 }
 
 // IsValid provides a quick way to determine if the typed value is
@@ -115,15 +112,12 @@ func (x ComplexCommented) Name() string {
 	if v, ok := _ComplexCommentedMapName[x]; ok {
 		return v
 	}
-	panic(ErrInvalidComplexCommented)
+	return fmt.Sprintf("ComplexCommented(%d).Name", x)
 }
 
 // Val is the attribute of ComplexCommented.
 func (x ComplexCommented) Val() int {
-	if x.IsValid() {
-		return int(x)
-	}
-	panic(ErrInvalidComplexCommented)
+	return int(x)
 }
 
 // IsValid provides a quick way to determine if the typed value is

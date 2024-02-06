@@ -68,15 +68,12 @@ func (x Enum64bit) Name() string {
 	if v, ok := _Enum64bitMapName[x]; ok {
 		return v
 	}
-	panic(ErrInvalidEnum64bit)
+	return fmt.Sprintf("Enum64bit(%d).Name", x)
 }
 
 // Val is the attribute of Enum64bit.
 func (x Enum64bit) Val() uint64 {
-	if x.IsValid() {
-		return uint64(x)
-	}
-	panic(ErrInvalidEnum64bit)
+	return uint64(x)
 }
 
 var _Enum64bitValues = []Enum64bit{

@@ -67,7 +67,7 @@ func (x {{$enumName}}) {{$attr.Name}}() {{$attr.Type.String}} {
     panic(ErrInvalid{{$enumName}})
 {{- else -}}
     {{ if eq $attr.Type.String "string" -}}
-        {{ if eq .Type.String "string" -}}
+        {{ if eq $enumType.String "string" -}}
     return fmt.Sprintf("{{$enumName}}(%s).{{$attr.Name}}", string(x))
         {{- else -}}
     return fmt.Sprintf("{{$enumName}}(%d).{{$attr.Name}}", x)
@@ -291,7 +291,7 @@ func (x *{{.Name}}) Scan(value any) (err error) {
         *x = {{.Name}}(string(v))
     case *string:
         if v == nil {
-            return errProjectStatusNilPtr
+            return Err{{.Name}}NilPtr
         }
         *x = {{.Name}}(*v)
     {{- else -}}
@@ -307,27 +307,27 @@ func (x *{{.Name}}) Scan(value any) (err error) {
         *x = {{.Name}}(v)
     case *int:
         if v == nil {
-            return errProjectStatusNilPtr
+            return Err{{.Name}}NilPtr
         }
         *x = {{.Name}}(*v)
     case *int64:
         if v == nil {
-            return errProjectStatusNilPtr
+            return Err{{.Name}}NilPtr
         }
         *x = {{.Name}}(*v)
     case *uint:
         if v == nil {
-            return errProjectStatusNilPtr
+            return Err{{.Name}}NilPtr
         }
         *x = {{.Name}}(*v)
     case *uint64:
         if v == nil {
-            return errProjectStatusNilPtr
+            return Err{{.Name}}NilPtr
         }
         *x = {{.Name}}(*v)
     case *float64:
         if v == nil {
-            return errProjectStatusNilPtr
+            return Err{{.Name}}NilPtr
         }
         *x = {{.Name}}(*v)
     {{- end }}
@@ -347,7 +347,7 @@ func (x *{{.Name}}) Scan(value any) (err error) {
         *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[string(v)]
     case *string:
         if v == nil {
-            return errProjectStatusNilPtr
+            return Err{{.Name}}NilPtr
         }
         *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[*v]
 	{{- else -}}

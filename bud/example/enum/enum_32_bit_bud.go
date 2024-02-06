@@ -56,15 +56,12 @@ func (x Enum32bit) Name() string {
 	if v, ok := _Enum32bitMapName[x]; ok {
 		return v
 	}
-	panic(ErrInvalidEnum32bit)
+	return fmt.Sprintf("Enum32bit(%d).Name", x)
 }
 
 // Val is the attribute of Enum32bit.
 func (x Enum32bit) Val() uint32 {
-	if x.IsValid() {
-		return uint32(x)
-	}
-	panic(ErrInvalidEnum32bit)
+	return uint32(x)
 }
 
 var _Enum32bitValues = []Enum32bit{

@@ -18,7 +18,7 @@ type makeTest struct {
 
 func TestMake(t *testing.T) {
 	assert.Equal(t, "Ford", MakeFord.String())
-	assert.Equal(t, "Make(99)", Make(99).String())
+	assert.Equal(t, "Make(99).Name", Make(99).String())
 	ford := MakeFord
 	assert.Implements(t, (*flag.Value)(nil), &ford)
 	assert.Implements(t, (*flag.Getter)(nil), &ford)
@@ -175,7 +175,7 @@ func TestNoZeroValues(t *testing.T) {
 		assert.Equal(tt, 24, int(NoZerosPps))
 		assert.Equal(tt, 25, int(NoZerosPpps))
 		assert.Equal(tt, "ppps", NoZerosPpps.String())
-		assert.Equal(tt, "NoZeros(4)", NoZeros(4).String())
+		assert.Equal(tt, "NoZeros(4).Name", NoZeros(4).String())
 
 		assert.Len(tt, NoZerosValues(), 6)
 

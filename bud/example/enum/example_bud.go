@@ -88,15 +88,12 @@ func (x Make) Name() string {
 	if v, ok := _MakeMapName[x]; ok {
 		return v
 	}
-	panic(ErrInvalidMake)
+	return fmt.Sprintf("Make(%d).Name", x)
 }
 
-// Value is the attribute of Make.
-func (x Make) Value() int32 {
-	if x.IsValid() {
-		return int32(x)
-	}
-	panic(ErrInvalidMake)
+// Val is the attribute of Make.
+func (x Make) Val() int32 {
+	return int32(x)
 }
 
 var _MakeValues = []Make{
@@ -230,15 +227,12 @@ func (x NoZeros) Name() string {
 	if v, ok := _NoZerosMapName[x]; ok {
 		return v
 	}
-	panic(ErrInvalidNoZeros)
+	return fmt.Sprintf("NoZeros(%d).Name", x)
 }
 
-// Value is the attribute of NoZeros.
-func (x NoZeros) Value() int32 {
-	if x.IsValid() {
-		return int32(x)
-	}
-	panic(ErrInvalidNoZeros)
+// Val is the attribute of NoZeros.
+func (x NoZeros) Val() int32 {
+	return int32(x)
 }
 
 var _NoZerosValues = []NoZeros{

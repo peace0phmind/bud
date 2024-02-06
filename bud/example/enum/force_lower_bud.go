@@ -26,15 +26,12 @@ func (x ForceLowerType) Name() string {
 	if v, ok := _ForceLowerTypeMapName[x]; ok {
 		return v
 	}
-	panic(ErrInvalidForceLowerType)
+	return fmt.Sprintf("ForceLowerType(%d).Name", x)
 }
 
-// Value is the attribute of ForceLowerType.
-func (x ForceLowerType) Value() int {
-	if x.IsValid() {
-		return int(x)
-	}
-	panic(ErrInvalidForceLowerType)
+// Val is the attribute of ForceLowerType.
+func (x ForceLowerType) Val() int {
+	return int(x)
 }
 
 // IsValid provides a quick way to determine if the typed value is

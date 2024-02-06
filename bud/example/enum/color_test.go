@@ -16,7 +16,7 @@ type testData struct {
 
 func TestColorString(t *testing.T) {
 	x := Color(109)
-	assert.Equal(t, "Color(109)", x.String())
+	assert.Equal(t, "Color(109).Name", x.String())
 
 	assert.Equal(t, Color(33), ColorGreen)
 	assert.Equal(t, Color(34), ColorBlue)
@@ -298,7 +298,7 @@ func TestColorName(t *testing.T) {
 		{
 			desc: "Invalid Color",
 			in:   Color(100),
-			out:  "",
+			out:  "Color(100).Name",
 		},
 	}
 

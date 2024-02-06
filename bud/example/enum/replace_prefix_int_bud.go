@@ -29,15 +29,12 @@ func (x IntShop) Name() string {
 	if v, ok := _IntShopMapName[x]; ok {
 		return v
 	}
-	panic(ErrInvalidIntShop)
+	return fmt.Sprintf("IntShop(%d).Name", x)
 }
 
-// Value is the attribute of IntShop.
-func (x IntShop) Value() int {
-	if x.IsValid() {
-		return int(x)
-	}
-	panic(ErrInvalidIntShop)
+// Val is the attribute of IntShop.
+func (x IntShop) Val() int {
+	return int(x)
 }
 
 var _IntShopNames = []string{

@@ -58,15 +58,12 @@ func (x Color) Name() string {
 	if v, ok := _ColorMapName[x]; ok {
 		return v
 	}
-	panic(ErrInvalidColor)
+	return fmt.Sprintf("Color(%d).Name", x)
 }
 
 // Val is the attribute of Color.
 func (x Color) Val() int {
-	if x.IsValid() {
-		return int(x)
-	}
-	panic(ErrInvalidColor)
+	return int(x)
 }
 
 // IsValid provides a quick way to determine if the typed value is

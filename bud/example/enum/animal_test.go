@@ -14,7 +14,7 @@ type animalData struct {
 
 func TestAnimalString(t *testing.T) {
 	x := Animal(109)
-	assert.Equal(t, "Animal(109)", x.String())
+	assert.Equal(t, "Animal(109).Name", x.String())
 	x = Animal(1)
 	assert.Equal(t, "Dog", x.String())
 
@@ -166,7 +166,7 @@ func TestAnimalName(t *testing.T) {
 		{
 			desc: "Invalid Animal",
 			in:   Animal(100),
-			out:  "",
+			out:  "Animal(100).Name",
 		},
 	}
 
