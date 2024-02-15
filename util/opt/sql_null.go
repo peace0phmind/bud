@@ -10,13 +10,13 @@ type SqlNullInf interface {
 	driver.Valuer
 }
 
-type SqlNull[T SqlNullInf] struct {
+type SqlNull[T any] struct {
 	SqlV  T
 	Valid bool
 }
 
-func NewSqlNull[T SqlNullInf](t T) *SqlNull[T] {
-	return &SqlNull[T]{SqlV: t}
+func NewSqlNull[T any](t T) *SqlNull[T] {
+	return &SqlNull[T]{SqlV: t, Valid: true}
 }
 
 func (sn *SqlNull[T]) Scan(value any) error {
@@ -26,13 +26,16 @@ func (sn *SqlNull[T]) Scan(value any) error {
 		return nil
 	}
 
-	err := sn.SqlV.Scan(value)
-	if err == nil {
-		sn.Valid = true
-		return nil
+	if scanner, ok := any(&sn.SqlV).(sql.Scanner); ok {
+		err := scanner.Scan(value)
+		if err == nil {
+			sn.Valid = true
+			return nil
+		}
+		return err
 	}
 
-	return err
+	return nil
 }
 
 func (sn *SqlNull[T]) Value() (driver.Value, error) {
@@ -40,5 +43,9 @@ func (sn *SqlNull[T]) Value() (driver.Value, error) {
 		return nil, nil
 	}
 
-	return sn.SqlV.Value()
+	if valuer, ok := any(sn.SqlV).(driver.Valuer); ok {
+		return valuer.Value()
+	}
+
+	return nil, nil
 }

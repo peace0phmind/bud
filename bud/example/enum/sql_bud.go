@@ -128,6 +128,10 @@ func (x *ProjectStatus) Scan(value any) (err error) {
 			return ErrProjectStatusNilPtr
 		}
 		*x = ProjectStatus(*v)
+	case ProjectStatus:
+		*x = v
+	case *ProjectStatus:
+		*x = *v
 	}
 
 	if !x.IsValid() {

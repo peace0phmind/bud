@@ -8,6 +8,6 @@ type JsonSqlNull[T SqlNullInf] struct {
 func NewJsonSqlNull[T SqlNullInf](t T) *JsonSqlNull[T] {
 	result := &JsonSqlNull[T]{}
 	result.JsonV = t
-	result.SqlV = t
+	result.SqlV.Scan(t)
 	return result
 }

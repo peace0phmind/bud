@@ -331,6 +331,10 @@ func (x *{{.Name}}) Scan(value any) (err error) {
         }
         *x = {{.Name}}(*v)
     {{- end }}
+    case {{.Name}}:
+        *x = v
+    case *{{.Name}}:
+        *x = *v
     }
 
     if !x.IsValid() {
@@ -387,6 +391,10 @@ func (x *{{.Name}}) Scan(value any) (err error) {
         }
         *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[*v]
 	{{- end }}
+    case {{.Name}}:
+        *x = v
+    case *{{.Name}}:
+        *x = *v
     }
 
     if !ok {
