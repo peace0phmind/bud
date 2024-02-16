@@ -279,16 +279,16 @@ func (x ProjectStrStatusIntCode) Name() string {
 	return fmt.Sprintf("ProjectStrStatusIntCode(%s).Name", string(x))
 }
 
-var _ProjectStrStatusIntCodeMapCode = map[ProjectStrStatusIntCode]int{
+var _ProjectStrStatusIntCodeMapDbCode = map[ProjectStrStatusIntCode]int{
 	ProjectStrStatusIntCodePending:   0,
 	ProjectStrStatusIntCodeInWork:    10,
 	ProjectStrStatusIntCodeCompleted: 20,
 	ProjectStrStatusIntCodeRejected:  30,
 }
 
-// Code is the attribute of ProjectStrStatusIntCode.
-func (x ProjectStrStatusIntCode) Code() int {
-	if v, ok := _ProjectStrStatusIntCodeMapCode[x]; ok {
+// DbCode is the attribute of ProjectStrStatusIntCode.
+func (x ProjectStrStatusIntCode) DbCode() int {
+	if v, ok := _ProjectStrStatusIntCodeMapDbCode[x]; ok {
 		return v
 	}
 	return 0
@@ -340,7 +340,7 @@ func (x *ProjectStrStatusIntCode) UnmarshalText(text []byte) error {
 
 var ErrProjectStrStatusIntCodeNilPtr = errors.New("value pointer is nil")
 
-var _ProjectStrStatusIntCodeCodeMap = map[int]ProjectStrStatusIntCode{
+var _ProjectStrStatusIntCodeDbCodeMap = map[int]ProjectStrStatusIntCode{
 	0:  ProjectStrStatusIntCodePending,
 	10: ProjectStrStatusIntCodeInWork,
 	20: ProjectStrStatusIntCodeCompleted,
@@ -357,40 +357,40 @@ func (x *ProjectStrStatusIntCode) Scan(value any) (err error) {
 	var ok bool
 	switch v := value.(type) {
 	case int:
-		*x, ok = _ProjectStrStatusIntCodeCodeMap[v]
+		*x, ok = _ProjectStrStatusIntCodeDbCodeMap[v]
 	case int64:
-		*x, ok = _ProjectStrStatusIntCodeCodeMap[int(v)]
+		*x, ok = _ProjectStrStatusIntCodeDbCodeMap[int(v)]
 	case uint:
-		*x, ok = _ProjectStrStatusIntCodeCodeMap[int(v)]
+		*x, ok = _ProjectStrStatusIntCodeDbCodeMap[int(v)]
 	case uint64:
-		*x, ok = _ProjectStrStatusIntCodeCodeMap[int(v)]
+		*x, ok = _ProjectStrStatusIntCodeDbCodeMap[int(v)]
 	case float64:
-		*x, ok = _ProjectStrStatusIntCodeCodeMap[int(v)]
+		*x, ok = _ProjectStrStatusIntCodeDbCodeMap[int(v)]
 	case *int:
 		if v == nil {
 			return ErrProjectStrStatusIntCodeNilPtr
 		}
-		*x, ok = _ProjectStrStatusIntCodeCodeMap[*v]
+		*x, ok = _ProjectStrStatusIntCodeDbCodeMap[*v]
 	case *int64:
 		if v == nil {
 			return ErrProjectStrStatusIntCodeNilPtr
 		}
-		*x, ok = _ProjectStrStatusIntCodeCodeMap[int(*v)]
+		*x, ok = _ProjectStrStatusIntCodeDbCodeMap[int(*v)]
 	case *uint:
 		if v == nil {
 			return ErrProjectStrStatusIntCodeNilPtr
 		}
-		*x, ok = _ProjectStrStatusIntCodeCodeMap[int(*v)]
+		*x, ok = _ProjectStrStatusIntCodeDbCodeMap[int(*v)]
 	case *uint64:
 		if v == nil {
 			return ErrProjectStrStatusIntCodeNilPtr
 		}
-		*x, ok = _ProjectStrStatusIntCodeCodeMap[int(*v)]
+		*x, ok = _ProjectStrStatusIntCodeDbCodeMap[int(*v)]
 	case *float64:
 		if v == nil {
 			return ErrProjectStrStatusIntCodeNilPtr
 		}
-		*x, ok = _ProjectStrStatusIntCodeCodeMap[int(*v)]
+		*x, ok = _ProjectStrStatusIntCodeDbCodeMap[int(*v)]
 	case ProjectStrStatusIntCode:
 		*x = v
 		ok = x.IsValid()
@@ -410,5 +410,5 @@ func (x *ProjectStrStatusIntCode) Scan(value any) (err error) {
 
 // Value implements the driver Valuer interface.
 func (x ProjectStrStatusIntCode) Value() (driver.Value, error) {
-	return x.Code(), nil
+	return x.DbCode(), nil
 }

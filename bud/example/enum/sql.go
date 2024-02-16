@@ -10,9 +10,9 @@ type ProjectStatus int
 // @ENUM{pending, inWork, completed, rejected}
 type ProjectStrStatus string
 
-// @EnumConfig(sql, ptr, marshal, nocomments, sqlName=Code)
+// @EnumConfig(sql, ptr, marshal, nocomments, sqlName=dbCode)
 //
-//	@ENUM(code int) {
+//	@ENUM(dbCode int) {
 //		pending(0)
 //		inWork(10)
 //		completed(20)
