@@ -334,6 +334,9 @@ func (x *{{.Name}}) Scan(value any) (err error) {
     case {{.Name}}:
         *x = v
     case *{{.Name}}:
+        if v == nil {
+            return Err{{.Name}}NilPtr
+        }
         *x = *v
     }
 
@@ -356,45 +359,50 @@ func (x *{{.Name}}) Scan(value any) (err error) {
         *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[*v]
 	{{- else -}}
 	case int:
-        *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[v]
+        *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[{{ WT "v" "int" $sqlAttr.Type.String }}]
     case int64:
-        *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[v]
+        *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[{{ WT "v" "int64" $sqlAttr.Type.String }}]
     case uint:
-        *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[v]
+        *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[{{ WT "v" "uint" $sqlAttr.Type.String }}]
     case uint64:
-        *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[v]
+        *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[{{ WT "v" "uint64" $sqlAttr.Type.String }}]
     case float64:
-        *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[v]
+        *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[{{ WT "v" "float64" $sqlAttr.Type.String }}]
     case *int:
         if v == nil {
             return Err{{.Name}}NilPtr
         }
-        *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[*v]
+        *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[{{ WT "*v" "int" $sqlAttr.Type.String }}]
     case *int64:
         if v == nil {
             return Err{{.Name}}NilPtr
         }
-        *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[*v]
+        *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[{{ WT "*v" "int64" $sqlAttr.Type.String }}]
     case *uint:
         if v == nil {
             return Err{{.Name}}NilPtr
         }
-        *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[*v]
+        *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[{{ WT "*v" "uint" $sqlAttr.Type.String }}]
     case *uint64:
         if v == nil {
             return Err{{.Name}}NilPtr
         }
-        *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[*v]
+        *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[{{ WT "*v" "uint64" $sqlAttr.Type.String }}]
     case *float64:
         if v == nil {
             return Err{{.Name}}NilPtr
         }
-        *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[*v]
+        *x, ok = {{$sqlAttr.Attribute2EnumVarName}}[{{ WT "*v" "float64" $sqlAttr.Type.String }}]
 	{{- end }}
     case {{.Name}}:
         *x = v
+        ok = x.IsValid()
     case *{{.Name}}:
+        if v == nil {
+            return Err{{.Name}}NilPtr
+        }
         *x = *v
+        ok = x.IsValid()
     }
 
     if !ok {

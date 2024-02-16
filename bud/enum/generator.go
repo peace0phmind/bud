@@ -20,6 +20,14 @@ type EnumGenerator struct {
 	ast.BaseGenerator[Enum]
 }
 
+func wrapType(inner string, sourceType string, targetType string) string {
+	if sourceType == targetType {
+		return inner
+	}
+
+	return fmt.Sprintf("%s(%s)", targetType, inner)
+}
+
 func newEnumGenerator(allEnums []*Enum) *EnumGenerator {
 	result := &EnumGenerator{}
 
@@ -27,6 +35,7 @@ func newEnumGenerator(allEnums []*Enum) *EnumGenerator {
 
 	funcs := template.FuncMap{}
 	funcs["IA"] = util.IndefiniteArticle
+	funcs["WT"] = wrapType
 	tmpl.Funcs(funcs)
 
 	result.Tmpl = template.Must(tmpl.ParseFS(enumTmpl, "*.tmpl"))

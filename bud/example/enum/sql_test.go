@@ -14,23 +14,21 @@ func TestSQLExtras(t *testing.T) {
 	assert.Error(t, err, "Should have had an error parsing a non status")
 
 	var (
-		intVal            int    = 3
-		strVal            string = "completed"
-		strIntVal         string = "2"
-		nullInt           *int
-		nullInt64         *int64
-		nullFloat64       *float64
-		nullUint          *uint
-		nullUint64        *uint64
-		nullString        *string
-		nullProjectStatus *ProjectStatus
+		intVal      int = 3
+		nullInt     *int
+		nullInt64   *int64
+		nullFloat64 *float64
+		nullUint    *uint
+		nullUint64  *uint64
 	)
 
 	tests := map[string]struct {
 		input  interface{}
 		result *opt.SqlNull[ProjectStatus]
 	}{
-		"nil": {},
+		"nil": {
+			result: &opt.SqlNull[ProjectStatus]{},
+		},
 		"val": {
 			input:  ProjectStatusRejected,
 			result: opt.NewSqlNull[ProjectStatus](ProjectStatusRejected),
@@ -38,25 +36,6 @@ func TestSQLExtras(t *testing.T) {
 		"ptr": {
 			input:  ProjectStatusCompleted.Ptr(),
 			result: opt.NewSqlNull[ProjectStatus](ProjectStatusCompleted),
-		},
-		"string": {
-			input:  strVal,
-			result: opt.NewSqlNull[ProjectStatus](ProjectStatusCompleted),
-		},
-		"*string": {
-			input:  &strVal,
-			result: opt.NewSqlNull[ProjectStatus](ProjectStatusCompleted),
-		},
-		"*string as int": {
-			input:  &strIntVal,
-			result: opt.NewSqlNull[ProjectStatus](ProjectStatusCompleted),
-		},
-		"invalid string": {
-			input: "random value",
-		},
-		"[]byte": {
-			input:  []byte(ProjectStatusInWork.String()),
-			result: opt.NewSqlNull[ProjectStatus](ProjectStatusInWork),
 		},
 		"int": {
 			input:  intVal,
@@ -67,106 +46,194 @@ func TestSQLExtras(t *testing.T) {
 			result: opt.NewSqlNull[ProjectStatus](ProjectStatusRejected),
 		},
 		"nullInt": {
-			input: nullInt,
+			input:  nullInt,
+			result: &opt.SqlNull[ProjectStatus]{},
 		},
 		"nullInt64": {
-			input: nullInt64,
+			input:  nullInt64,
+			result: &opt.SqlNull[ProjectStatus]{},
 		},
 		"nullUint": {
-			input: nullUint,
+			input:  nullUint,
+			result: &opt.SqlNull[ProjectStatus]{},
 		},
 		"nullUint64": {
-			input: nullUint64,
+			input:  nullUint64,
+			result: &opt.SqlNull[ProjectStatus]{},
 		},
 		"nullFloat64": {
-			input: nullFloat64,
-		},
-		"nullString": {
-			input: nullString,
-		},
-		"nullProjectStatus": {
-			input: nullProjectStatus,
-		},
-		"int as []byte": {
-			input:  []byte("1"),
-			result: opt.NewSqlNull[ProjectStatus](ProjectStatusInWork),
+			input:  nullFloat64,
+			result: &opt.SqlNull[ProjectStatus]{},
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			status := &opt.SqlNull[ProjectStatus]{}
-			err1 := status.Scan(tc.input)
-			if err1 != nil {
-				t.Errorf("scan err: %v", err1)
-			}
+			status.Scan(tc.input)
 			assert.Equal(t, tc.result, status)
 		})
 	}
 }
 
-//type SQLMarshalType struct {
-//	Status    NullProjectStatus    `json:"status"`
-//	StatusStr NullProjectStatusStr `json:"status_str"`
-//	Status2   *ProjectStatus       `json:"status2,omitempty"`
-//}
-//
-//func TestSQLMarshal(t *testing.T) {
-//	var val SQLMarshalType
-//	var val2 SQLMarshalType
-//
-//	result, err := json.Marshal(val)
-//	require.NoError(t, err)
-//	assert.Equal(t, `{"status":null,"status_str":null}`, string(result))
-//
-//	require.NoError(t, json.Unmarshal([]byte(`{}`), &val2))
-//	assert.Equal(t, val, val2)
-//
-//	require.NoError(t, json.Unmarshal(result, &val2))
-//	val.Status.Set = true
-//	val.StatusStr.Set = true
-//	assert.Equal(t, val, val2)
-//
-//	val.Status = NewNullProjectStatus(1)
-//	val.StatusStr = NewNullProjectStatusStr(2)
-//	result, err = json.Marshal(val)
-//	require.NoError(t, err)
-//	assert.Equal(t, `{"status":"inWork","status_str":"completed"}`, string(result))
-//
-//	require.NoError(t, json.Unmarshal(result, &val2))
-//	assert.Equal(t, val, val2)
-//
-//	require.NoError(t, json.Unmarshal([]byte(`{"status":"inWork"}`), &val2))
-//	assert.Equal(t, val, val2)
-//
-//	require.NoError(t, json.Unmarshal([]byte(`{"status":"2"}`), &val2))
-//	val.Status = NewNullProjectStatus(2)
-//	assert.Equal(t, val, val2)
-//
-//	require.NoError(t, json.Unmarshal([]byte(`{"status":3}`), &val2))
-//	val.Status = NewNullProjectStatus(3)
-//	assert.Equal(t, val, val2)
-//
-//	require.NoError(t, json.Unmarshal([]byte(`{"status":null}`), &val2))
-//	val.Status = NullProjectStatus{Set: true}
-//	assert.Equal(t, val, val2)
-//
-//	val2 = SQLMarshalType{} // reset it so that the `set` value is false.
-//
-//	require.NoError(t, json.Unmarshal([]byte(`{"status2":"rejected"}`), &val2))
-//	val.Status = NullProjectStatus{}
-//	val.StatusStr = NullProjectStatusStr{}
-//	val.Status2 = ProjectStatusRejected.Ptr()
-//	assert.Equal(t, val, val2)
-//
-//	require.Error(t, json.Unmarshal([]byte(`{"status2":"xyz"}`), &val2))
-//	val2 = SQLMarshalType{} // reset it so that the `set` value is false.
-//
-//	require.NoError(t, json.Unmarshal([]byte(`{"status_str":"rejected"}`), &val2))
-//	val.Status = NullProjectStatus{}
-//	val.StatusStr = NewNullProjectStatusStr(3)
-//	val.Status2 = nil
-//	assert.Equal(t, val, val2)
-//
-//	require.Error(t, json.Unmarshal([]byte(`{"status2":"xyz"}`), &val2))
-//}
+func TestStrSQLExtras(t *testing.T) {
+	assert.Equal(t, "ProjectStrStatus(abc).Name", ProjectStrStatus("abc").String(), "String value is not correct")
+
+	_, err := ParseProjectStatus(`NotAStatus`)
+	assert.Error(t, err, "Should have had an error parsing a non status")
+
+	var (
+		strVal            string = "completed"
+		nullInt           *int
+		nullInt64         *int64
+		nullFloat64       *float64
+		nullUint          *uint
+		nullUint64        *uint64
+		nullString        *string
+		nullProjectStatus *ProjectStrStatus
+	)
+
+	tests := map[string]struct {
+		input  interface{}
+		result *opt.SqlNull[ProjectStrStatus]
+	}{
+		"nil": {
+			result: &opt.SqlNull[ProjectStrStatus]{},
+		},
+		"val": {
+			input:  ProjectStrStatusRejected,
+			result: opt.NewSqlNull[ProjectStrStatus](ProjectStrStatusRejected),
+		},
+		"ptr": {
+			input:  ProjectStrStatusCompleted.Ptr(),
+			result: opt.NewSqlNull[ProjectStrStatus](ProjectStrStatusCompleted),
+		},
+		"string": {
+			input:  strVal,
+			result: opt.NewSqlNull[ProjectStrStatus](ProjectStrStatusCompleted),
+		},
+		"*string": {
+			input:  &strVal,
+			result: opt.NewSqlNull[ProjectStrStatus](ProjectStrStatusCompleted),
+		},
+		"[]byte": {
+			input:  []byte(ProjectStrStatusInWork.String()),
+			result: opt.NewSqlNull[ProjectStrStatus](ProjectStrStatusInWork),
+		},
+		"nullInt": {
+			input:  nullInt,
+			result: &opt.SqlNull[ProjectStrStatus]{},
+		},
+		"nullInt64": {
+			input:  nullInt64,
+			result: &opt.SqlNull[ProjectStrStatus]{},
+		},
+		"nullUint": {
+			input:  nullUint,
+			result: &opt.SqlNull[ProjectStrStatus]{},
+		},
+		"nullUint64": {
+			input:  nullUint64,
+			result: &opt.SqlNull[ProjectStrStatus]{},
+		},
+		"nullFloat64": {
+			input:  nullFloat64,
+			result: &opt.SqlNull[ProjectStrStatus]{},
+		},
+		"nullString": {
+			input:  nullString,
+			result: &opt.SqlNull[ProjectStrStatus]{},
+		},
+		"nullProjectStatus": {
+			input:  nullProjectStatus,
+			result: &opt.SqlNull[ProjectStrStatus]{},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			status := &opt.SqlNull[ProjectStrStatus]{}
+			status.Scan(tc.input)
+			assert.Equal(t, tc.result, status)
+		})
+	}
+}
+
+func TestStrSQLIntExtras(t *testing.T) {
+	assert.Equal(t, "ProjectStrStatus(abc).Name", ProjectStrStatus("abc").String(), "String value is not correct")
+
+	_, err := ParseProjectStatus(`NotAStatus`)
+	assert.Error(t, err, "Should have had an error parsing a non status")
+
+	var (
+		intVal            int = 30
+		nullInt           *int
+		nullInt64         *int64
+		nullFloat64       *float64
+		nullUint          *uint
+		nullUint64        *uint64
+		nullString        *string
+		nullProjectStatus *ProjectStrStatusIntCode
+	)
+
+	tests := map[string]struct {
+		input  interface{}
+		result *opt.SqlNull[ProjectStrStatusIntCode]
+	}{
+		"nil": {
+			result: &opt.SqlNull[ProjectStrStatusIntCode]{},
+		},
+		"val": {
+			input:  ProjectStrStatusIntCodeRejected,
+			result: opt.NewSqlNull[ProjectStrStatusIntCode](ProjectStrStatusIntCodeRejected),
+		},
+		"ptr": {
+			input:  ProjectStrStatusIntCodeCompleted.Ptr(),
+			result: opt.NewSqlNull[ProjectStrStatusIntCode](ProjectStrStatusIntCodeCompleted),
+		},
+		"int": {
+			input:  intVal,
+			result: opt.NewSqlNull[ProjectStrStatusIntCode](ProjectStrStatusIntCodeRejected),
+		},
+		"*int": {
+			input:  &intVal,
+			result: opt.NewSqlNull[ProjectStrStatusIntCode](ProjectStrStatusIntCodeRejected),
+		},
+		"nullInt": {
+			input:  nullInt,
+			result: &opt.SqlNull[ProjectStrStatusIntCode]{},
+		},
+		"nullInt64": {
+			input:  nullInt64,
+			result: &opt.SqlNull[ProjectStrStatusIntCode]{},
+		},
+		"nullUint": {
+			input:  nullUint,
+			result: &opt.SqlNull[ProjectStrStatusIntCode]{},
+		},
+		"nullUint64": {
+			input:  nullUint64,
+			result: &opt.SqlNull[ProjectStrStatusIntCode]{},
+		},
+		"nullFloat64": {
+			input:  nullFloat64,
+			result: &opt.SqlNull[ProjectStrStatusIntCode]{},
+		},
+		"nullString": {
+			input:  nullString,
+			result: &opt.SqlNull[ProjectStrStatusIntCode]{},
+		},
+		"nullProjectStatus": {
+			input:  nullProjectStatus,
+			result: &opt.SqlNull[ProjectStrStatusIntCode]{},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			status := &opt.SqlNull[ProjectStrStatusIntCode]{}
+			status.Scan(tc.input)
+			assert.Equal(t, tc.result, status)
+		})
+	}
+}

@@ -263,9 +263,10 @@ func isBlankIdentifier(value any) bool {
 }
 
 func (e *Enum) FindAttributeByName(name string) *Attribute {
+	capName := util.Capitalize(name)
 	if len(e.Attrs) > 0 {
 		for _, ee := range e.Attrs {
-			if ee.Name == name {
+			if ee.Name == capName {
 				return ee
 			}
 		}

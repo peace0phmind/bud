@@ -63,7 +63,7 @@ func (ea *Attribute) Enum2AttributeMap() string {
 			case reflect.String:
 				buf.WriteString(fmt.Sprintf("	%s: \"%s\",\n", item.GetCodeName(), structure.MustConvertTo[string](item.AttributeData[ea.idx])))
 			default:
-				buf.WriteString(fmt.Sprintf("	%s: %s,\n", item.GetCodeName(), structure.MustConvertToKind(item.AttributeData[ea.idx], ea.Type)))
+				buf.WriteString(fmt.Sprintf("	%s: %v,\n", item.GetCodeName(), structure.MustConvertToKind(item.AttributeData[ea.idx], ea.Type)))
 			}
 		}
 	}
@@ -108,7 +108,7 @@ func (ea *Attribute) Attribute2EnumMap() string {
 				buf.WriteString(fmt.Sprintf("	\"%s\": %s,\n", itemValue, item.GetCodeName()))
 			}
 		} else {
-			buf.WriteString(fmt.Sprintf("	%d: %s,\n", structure.MustConvertToKind(item.AttributeData[ea.idx], ea.Type), item.GetCodeName()))
+			buf.WriteString(fmt.Sprintf("	%v: %s,\n", structure.MustConvertToKind(item.AttributeData[ea.idx], ea.Type), item.GetCodeName()))
 		}
 		if ea.enum.Config.NoCase && ea.Type == reflect.String && (itemValue != strings.ToLower(itemValue)) {
 			if ea.Name == ItemName && ea.enum.Type != reflect.String {
