@@ -56,6 +56,7 @@ func (c *Cache[K, V]) GetOrStore(k K, v V) (ov V, got bool) {
 		return ci.(*cacheItem[V]).getValue()
 	} else {
 		got = false
+		ov = v
 		return
 	}
 }

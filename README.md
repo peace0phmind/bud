@@ -12,6 +12,7 @@ Feature List
 - [ ] plugin: TODO
 - [ ] util: TODO
 - [ ] remote: TODO:
+- [ ] sys info: TODO: github.com/shirou/gopsutil
 
 ## wire
 
