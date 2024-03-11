@@ -156,7 +156,6 @@ func TestGetDialer(t *testing.T) {
 	}{
 		{mustParseURI("tcp://1.2.3.4:5678"), true, false, false},   // ok
 		{mustParseURI("tcp4://1.2.3.4:5678"), true, false, false},  // ok
-		{mustParseURI("kcp://1.2.3.4:5678"), false, false, true},   // deprecated
 		{mustParseURI("relay://1.2.3.4:5678"), false, true, false}, // disabled
 		{mustParseURI("http://1.2.3.4:5678"), false, false, false}, // generally bad
 		{mustParseURI("bananas!"), false, false, false},            // wat
