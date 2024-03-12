@@ -43,48 +43,22 @@ type internalConn struct {
 	connectionID  string // set after Hello exchange
 }
 
+//go:generate bud
+
+/*
+connType is connection type
+
+	@EnumConfig(NoCamel)
+	@Enum(name string, transport string) {
+		RelayClient("relay-client", "relay")
+		RelayServer("relay-server", "relay")
+		TCPClient("tcp-client", "tcp")
+		TCPServer("tcp-server", "tcp")
+		QUICClient("quic-client", "quic")
+		QUICServer("quic-server", "quic")
+	}
+*/
 type connType int
-
-const (
-	connTypeRelayClient connType = iota
-	connTypeRelayServer
-	connTypeTCPClient
-	connTypeTCPServer
-	connTypeQUICClient
-	connTypeQUICServer
-)
-
-func (t connType) String() string {
-	switch t {
-	case connTypeRelayClient:
-		return "relay-client"
-	case connTypeRelayServer:
-		return "relay-server"
-	case connTypeTCPClient:
-		return "tcp-client"
-	case connTypeTCPServer:
-		return "tcp-server"
-	case connTypeQUICClient:
-		return "quic-client"
-	case connTypeQUICServer:
-		return "quic-server"
-	default:
-		return "unknown-type"
-	}
-}
-
-func (t connType) Transport() string {
-	switch t {
-	case connTypeRelayClient, connTypeRelayServer:
-		return "relay"
-	case connTypeTCPClient, connTypeTCPServer:
-		return "tcp"
-	case connTypeQUICClient, connTypeQUICServer:
-		return "quic"
-	default:
-		return "unknown"
-	}
-}
 
 func newInternalConn(tc tlsConn, connType connType, isLocal bool, priority int) internalConn {
 	now := time.Now()

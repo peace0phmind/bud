@@ -399,7 +399,6 @@ func TestConnectionEstablishment(t *testing.T) {
 				}
 			})
 		})
-
 	}
 }
 
